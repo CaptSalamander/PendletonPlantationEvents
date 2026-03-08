@@ -1,0 +1,381 @@
+/* ── PAGE HERO ── */
+.dash-hero {
+  padding: 140px 48px 56px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74,103,65,0.12) 0%, transparent 70%),
+    var(--warm-white);
+}
+
+.dash-hero .section-title { font-size: clamp(2.2rem, 4vw, 3.6rem); }
+.dash-hero .section-rule  { margin-top: 20px; }
+
+.dash-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.last-updated {
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.refresh-btn {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--moss);
+  background: transparent;
+  border: 1px solid rgba(74,103,65,0.3);
+  border-radius: 2px;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.refresh-btn:hover {
+  background: rgba(74,103,65,0.06);
+  border-color: var(--moss);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── CONTENT WRAPPER ── */
+.dash-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 48px 100px;
+}
+
+@media (max-width: 768px) {
+  .dash-hero    { padding: 110px 24px 48px; }
+  .dash-content { padding: 32px 24px 80px; }
+}
+
+/* ── LOADING / ERROR STATES ── */
+.dash-loading, .dash-error {
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
+
+.dash-loading::before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(201,168,76,0.2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.dash-error { color: #a04040; }
+
+/* ── SUMMARY STATS ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 56px;
+}
+
+.stat-card {
+  background: var(--cream);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 4px;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.stat-number {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3rem;
+  font-weight: 300;
+  color: var(--forest);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── COVERAGE SUMMARY BAR ── */
+.coverage-bar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 56px;
+}
+
+.coverage-pill {
+  flex: 1;
+  min-width: 220px;
+  background: var(--forest);
+  border-radius: 4px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.coverage-pill-icon { font-size: 1.4rem; }
+
+.coverage-pill-text { flex: 1; }
+
+.coverage-pill-fraction {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--cream);
+  line-height: 1;
+}
+
+.coverage-pill-label {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.5);
+  margin-top: 3px;
+}
+
+.coverage-track {
+  width: 80px;
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.coverage-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+/* ── SECTION HEADER ── */
+.dash-section {
+  margin-bottom: 56px;
+}
+
+.dash-section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.dash-section-title {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.dash-section-rule {
+  flex: 1;
+  height: 1px;
+  background: rgba(201,168,76,0.2);
+}
+
+/* ── VOLUNTEER GRID ── */
+.vol-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.vol-card {
+  background: var(--cream);
+  border: 1px solid rgba(201,168,76,0.18);
+  border-radius: 4px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.2s;
+}
+
+.vol-card.covered  { border-color: rgba(74,103,65,0.35); }
+.vol-card.uncovered { opacity: 0.55; }
+
+.vol-badge {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.vol-card.covered   .vol-badge { background: var(--moss); color: var(--cream); }
+.vol-card.uncovered .vol-badge { background: rgba(0,0,0,0.06); color: var(--muted); }
+
+.vol-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vol-name {
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: var(--forest);
+  line-height: 1.3;
+}
+
+.vol-count {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--moss);
+}
+
+.vol-card.uncovered .vol-name  { color: var(--muted); }
+.vol-card.uncovered .vol-count { color: var(--muted); }
+
+/* ── DONATION CATEGORIES ── */
+.don-category { margin-bottom: 36px; }
+
+.don-category-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--blush);
+  margin-bottom: 12px;
+}
+
+.don-item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.don-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--cream);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 4px;
+  padding: 14px 16px;
+}
+
+.don-item.covered   { border-color: rgba(74,103,65,0.3); }
+.don-item.uncovered { opacity: 0.5; }
+
+.don-item-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.don-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.don-item.covered   .don-dot { background: var(--moss); }
+.don-item.uncovered .don-dot { background: #ccc; }
+
+.don-label {
+  flex: 1;
+  font-size: 0.84rem;
+  font-weight: 400;
+  color: var(--forest);
+  line-height: 1.3;
+}
+
+.don-item.uncovered .don-label { color: var(--muted); }
+
+.don-stats {
+  display: flex;
+  gap: 16px;
+  padding-left: 18px;
+}
+
+.don-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 52px;
+}
+
+.don-stat-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  font-weight: 300;
+  color: var(--forest);
+  line-height: 1;
+}
+
+.don-stat-val.zero { color: var(--muted); }
+
+.don-stat.met .don-stat-val { color: var(--moss); }
+
+.don-stat-label {
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.don-item.uncovered .don-stat-val   { color: var(--muted); }
+.don-item.uncovered .don-stat-label { opacity: 0.6; }
+
+/* ── POTLUCK LIST ── */
+.potluck-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.potluck-tag {
+  background: var(--cream);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 100px;
+  padding: 7px 18px;
+  font-size: 0.84rem;
+  font-weight: 300;
+  color: var(--forest);
+}
+
+.potluck-empty {
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-weight: 300;
+  font-style: italic;
+}

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Dashboard — Pendleton Plantation</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="index-styles.css" />
+  <link rel="stylesheet" href="dashboard-styles.css" />
+</head>
+
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#awards">Awards</a></li>
+      <li><a href="index.html#events">Events</a></li>
+      <li><a href="index.html#memories">Memories</a></li>
+      <li><a href="index.html#announcements">Announcements</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="community-signup-form.html">Sign Up</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+    </ul>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <div class="dash-hero">
+    <p class="section-eyebrow">✦ &nbsp; Easter Egg Hunt 2025 &nbsp; ✦</p>
+    <h1 class="section-title">Sign-Up <em>Dashboard</em></h1>
+    <div class="section-rule"></div>
+    <div class="dash-meta">
+      <span class="last-updated" id="last-updated">Loading…</span>
+      <button class="refresh-btn" id="refresh-btn" onclick="loadDashboard()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD CONTENT -->
+  <div class="dash-content">
+    <div id="dash-body">
+      <div class="dash-loading">Loading sign-up data…</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">Pendleton Plantation</div>
+    <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
+    <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp;
+      <a href="mailto:mandyvaliquette00@gmail.com" style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact
+        Us</a>
+    </p>
+  </footer>
+
+  <script>
+
+    // ============================================================
+    //  ✏️  CONFIG — update these to match your event & form
+    // ============================================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzV33epavb-pFgJ7CjP2uQh49LWSw1XG1f19R_USPI5DP5iEskWIsRb1b9dHrQQ-zrYlA/exec";
+
+    // Volunteer roles — must match exactly what's in community-signup-form.html
+    const VOLUNTEER_ROLES = [
+      "Hide the Eggs",
+      "Check-In Table",
+      "Age Zone Monitor",
+      "Craft Station",
+      "Photo Booth",
+      "Cleanup Crew",
+      "Setup / Decor",
+      "Snack Table",
+    ];
+
+    // Donation categories — must match community-signup-form.html
+    // needed: target quantity (null = no specific goal set)
+    const DONATION_CATEGORIES = [
+      {
+        category: "Eggs & Filling",
+        items: [
+          { label: "Plastic Eggs — standard mixed colors", needed: 450 },
+          { label: "Plastic Eggs — teal (allergy-friendly)", needed: 30 },
+          { label: "Golden Eggs — special prize eggs", needed: 6 },
+          { label: "Candy — individually wrapped, nut-free", needed: 225 },
+          { label: "Candy — allergy-friendly (non-nut)", needed: 30 },
+          { label: "Bouncy Balls — small", needed: 45 },
+          { label: "Mini Erasers — fun shapes", needed: 45 },
+          { label: "Mini Play-Doh or putty containers", needed: 20 },
+          { label: "Stickers — mini sheets", needed: 45 },
+          { label: "Small Coins (pennies/quarters)", needed: 45 },
+          { label: "Fake Tattoo / Fun Coupons (DIY)", needed: 20 },
+          { label: "Temporary Tattoos — mini", needed: 45 },
+          { label: "Golden Egg Prize Baskets", needed: 3 },
+          { label: "Storage bins to save eggs for next year", needed: 2 },
+        ],
+      },
+      {
+        category: "Prizes",
+        items: [
+          { label: "Prize baskets — golden egg winners", needed: 3 },
+          { label: "Prizes for Inside Baskets", needed: null },
+          { label: "Ribbon for prize baskets", needed: 1 },
+        ],
+      },
+      {
+        category: "Snack Table & Potluck",
+        items: [
+          { label: "Juice boxes for kids", needed: 35 },
+          { label: "Water bottles or water jug + cups", needed: 55 },
+          { label: "Lemonade / punch supplies", needed: 1 },
+          { label: "Cookie cake or cupcakes (donated/requested)", needed: 1 },
+          { label: "Easter candy dish for adults", needed: 2 },
+          { label: "Baked Goods", needed: null },
+          { label: "Napkins", needed: 100 },
+          { label: "Small plates", needed: 60 },
+          { label: "Serving platters / trays (borrowed OK)", needed: 10 },
+          { label: "Aluminum foil trays (backup)", needed: 5 },
+          { label: "Allergy warning signs", needed: 3 },
+        ],
+      },
+      {
+        category: "Crafts",
+        items: [
+          { label: "Sticker sheets for decorating", needed: 30 },
+          { label: "Glitter glue sticks", needed: 15 },
+          { label: "Crayons — boxes", needed: 10 },
+          { label: "Washable markers — sets", needed: 8 },
+          { label: "Drop cloth / disposable tablecloth", needed: 2 },
+        ],
+      },
+      {
+        category: "Decor (including DIY-friendly)",
+        items: [
+          { label: "Pastel balloons — latex", needed: 50 },
+          { label: "Pastel streamers", needed: 10 },
+          { label: "Tissue paper pom-poms", needed: 10 },
+          { label: "Paper flower garland (DIY)", needed: null },
+          { label: "Easter banner ('Happy Easter!' or custom)", needed: 1 },
+          { label: "Plastic Easter lawn decorations", needed: null },
+          { label: "Ribbon / raffia for baskets & decor", needed: null },
+          { label: "Easter-themed tablecloth weights/clips", needed: null },
+          { label: "Chalkboard or whiteboard + markers", needed: 1 },
+          { label: "Easel to hold signs", needed: 1 },
+          { label: "Balloon pump (hand or electric)", needed: 1 },
+          { label: "Balloon weights", needed: null },
+        ],
+      },
+      {
+        category: "Photo Booth",
+        items: [
+          { label: "Photobooth backdrop", needed: 1 },
+          { label: "Photobooth backdrop stand", needed: 1 },
+          { label: "Easter basket prop (real or faux)", needed: 1 },
+          { label: "Printable photo booth props (DIY)", needed: null },
+          { label: "Popsicle sticks for props", needed: null },
+          { label: "Tripod (for phone)", needed: 1 },
+        ],
+      },
+      {
+        category: "Hunt Supplies",
+        items: [
+          { label: "Baskets / Easter bags for kids", needed: null },
+          { label: "Rope, twine, or pennant flags", needed: null },
+          { label: "Wooden stakes / dowel rods for signs", needed: null },
+          { label: "Zip ties or clips to attach rope", needed: null },
+        ],
+      },
+      {
+        category: "Admin & Logistics",
+        items: [
+          { label: "Folding tables — refreshments", needed: 2 },
+          { label: "Folding tables — craft station", needed: 2 },
+          { label: "Folding tables — check-in", needed: 1 },
+          { label: "Folding tables — raffle/prize display", needed: 1 },
+          { label: "Folding chairs", needed: null },
+          { label: "Tablecloths — pastel/Easter themed", needed: null },
+          { label: "Plastic cups", needed: null },
+          { label: "Plastic serving utensils", needed: null },
+          { label: "Paper towels / napkins", needed: null },
+          { label: "Trash bags — large (39 gal)", needed: null },
+          { label: "Recycling bags", needed: null },
+          { label: "Hand sanitizer", needed: null },
+          { label: "Pens / clipboards for sign-in", needed: null },
+          { label: "Portable bluetooth speaker", needed: 1 },
+          { label: "Extension cord (if music/PA)", needed: 1 },
+          { label: "First aid kit", needed: 1 },
+          { label: "Bug spray", needed: null },
+          { label: "Sunscreen station", needed: 1 },
+        ],
+      },
+    ];
+    // ============================================================
+    //  End of config
+    // ============================================================
+
+
+    // ── Fetch & render ─────────────────────────────────────────────
+    async function loadDashboard() {
+      const body = document.getElementById("dash-body");
+      const btn = document.getElementById("refresh-btn");
+      const ts = document.getElementById("last-updated");
+
+      btn.disabled = true;
+      body.innerHTML = '<div class="dash-loading">Loading sign-up data…</div>';
+
+      try {
+        const res = await fetch(SCRIPT_URL);
+        const data = await res.json();
+
+        if (data.error) throw new Error(data.error);
+
+        renderDashboard(data);
+        const d = new Date(data.lastUpdated);
+        ts.textContent = "Last refreshed: " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+      } catch (err) {
+        body.innerHTML = `<div class="dash-error">
+          Could not load data. Make sure the script is deployed and try refreshing.<br />
+          <small style="opacity:0.6;">${err.message}</small>
+        </div>`;
+        ts.textContent = "—";
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function renderDashboard(data) {
+      const body = document.getElementById("dash-body");
+
+      // Coverage counts
+      const volTotal = VOLUNTEER_ROLES.length;
+      const volCovered = VOLUNTEER_ROLES.filter(r => (data.volunteerCounts[r] || 0) > 0).length;
+      const allItems = DONATION_CATEGORIES.flatMap(c => c.items);
+      const donTotal = allItems.length;
+      const donCovered = allItems.filter(i => (data.donationCounts[i.label] || 0) > 0).length;
+      const volPct = volTotal ? Math.round(volCovered / volTotal * 100) : 0;
+      const donPct = donTotal ? Math.round(donCovered / donTotal * 100) : 0;
+
+      body.innerHTML = `
+
+        <!-- Summary stats -->
+        <div class="stat-grid">
+          ${stat(data.totalSignups, "Total Sign-Ups")}
+          ${stat(data.attendingCount, "Attending")}
+          ${stat(data.totalAdults, "Adults")}
+          ${stat(data.totalChildren, "Children")}
+        </div>
+
+        <!-- Coverage pills -->
+        <div class="coverage-bar">
+          ${coveragePill("🙋", "Volunteer Roles", volCovered, volTotal, volPct)}
+          ${coveragePill("🎁", "Donation Items", donCovered, donTotal, donPct)}
+        </div>
+
+        <!-- Volunteer roles -->
+        <div class="dash-section">
+          <div class="dash-section-header">
+            <span class="dash-section-title">Volunteer Roles</span>
+            <div class="dash-section-rule"></div>
+          </div>
+          <div class="vol-grid">
+            ${VOLUNTEER_ROLES.map(role => {
+        const count = data.volunteerCounts[role] || 0;
+        const covered = count > 0;
+        return `<div class="vol-card ${covered ? "covered" : "uncovered"}">
+                <div class="vol-badge">${covered ? count : "–"}</div>
+                <div class="vol-info">
+                  <div class="vol-name">${role}</div>
+                  <div class="vol-count">${count === 0 ? "No sign-ups yet" : count === 1 ? "1 volunteer" : count + " volunteers"}</div>
+                </div>
+              </div>`;
+      }).join("")}
+          </div>
+        </div>
+
+        <!-- Donation items -->
+        <div class="dash-section">
+          <div class="dash-section-header">
+            <span class="dash-section-title">Donations &amp; Supplies</span>
+            <div class="dash-section-rule"></div>
+          </div>
+          ${DONATION_CATEGORIES.map(cat => `
+            <div class="don-category">
+              <div class="don-category-label">${cat.category}</div>
+              <div class="don-item-grid">
+                ${cat.items.map(item => {
+        const pledged = data.donationCounts[item.label] || 0;
+        const covered = pledged > 0;
+        const remaining = item.needed !== null ? Math.max(0, item.needed - pledged) : null;
+        return `<div class="don-item ${covered ? "covered" : "uncovered"}">
+                    <div class="don-item-top">
+                      <div class="don-dot"></div>
+                      <div class="don-label">${item.label}</div>
+                    </div>
+                    <div class="don-stats">
+                      ${item.needed !== null ? `<div class="don-stat"><div class="don-stat-val">${item.needed}</div><div class="don-stat-label">Total Needed</div></div>` : ""}
+                      <div class="don-stat"><div class="don-stat-val ${pledged === 0 ? "zero" : ""}">${pledged}</div><div class="don-stat-label">Pledged</div></div>
+                      ${remaining !== null ? `<div class="don-stat ${remaining === 0 ? "met" : ""}"><div class="don-stat-val">${remaining}</div><div class="don-stat-label">Remaining</div></div>` : ""}
+                    </div>
+                  </div>`;
+      }).join("")}
+              </div>
+            </div>`).join("")}
+        </div>
+
+        <!-- Potluck items -->
+        <div class="dash-section">
+          <div class="dash-section-header">
+            <span class="dash-section-title">Potluck Items</span>
+            <div class="dash-section-rule"></div>
+          </div>
+          ${data.potluckItems.length
+          ? `<div class="potluck-grid">
+                ${data.potluckItems.map(p => `<span class="potluck-tag">${p}</span>`).join("")}
+               </div>`
+          : `<p class="potluck-empty">No potluck items signed up yet.</p>`
+        }
+        </div>
+
+      `;
+    }
+
+    function stat(value, label) {
+      return `<div class="stat-card">
+        <div class="stat-number">${value}</div>
+        <div class="stat-label">${label}</div>
+      </div>`;
+    }
+
+    function coveragePill(icon, label, covered, total, pct) {
+      return `<div class="coverage-pill">
+        <div class="coverage-pill-icon">${icon}</div>
+        <div class="coverage-pill-text">
+          <div class="coverage-pill-fraction">${covered} / ${total}</div>
+          <div class="coverage-pill-label">${label} covered</div>
+        </div>
+        <div class="coverage-track">
+          <div class="coverage-fill" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+    }
+
+    // Load on page open
+    loadDashboard();
+
+  </script>
+
+</body>
+
+</html>

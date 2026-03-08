@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="page-title">Community Sign-Up — Pendleton Plantation</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#awards">Awards</a></li>
+      <li><a href="index.html#events">Events</a></li>
+      <li><a href="index.html#memories">Memories</a></li>
+      <li><a href="index.html#announcements">Announcements</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="community-signup-form.html">Sign Up</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-wrapper">
+
+    <div class="header">
+      <div class="egg-row" id="emoji-row"></div>
+      <h1 id="page-heading"></h1>
+      <p class="subtitle" id="page-subtitle"></p>
+    </div>
+
+    <div class="event-meta" id="event-meta"></div>
+
+    <div class="card">
+      <div id="form-content">
+        <form id="signup-form">
+
+          <!-- SECTION 1: About You (static — same for every event) -->
+          <div class="section-label">🌷 About You</div>
+          <div class="field-row">
+            <div class="field">
+              <label>First Name <span class="req">*</span></label>
+              <input type="text" id="first_name" placeholder="Jane" required />
+            </div>
+            <div class="field">
+              <label>Last Name <span class="req">*</span></label>
+              <input type="text" id="last_name" placeholder="Smith" required />
+            </div>
+          </div>
+          <div class="field">
+            <label>Email Address <span class="req">*</span></label>
+            <input type="email" id="email" placeholder="you@email.com" required />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Phone (optional)</label>
+              <input type="tel" id="phone" placeholder="(864) 555-0123" />
+            </div>
+            <div class="field">
+              <label>Street / Address</label>
+              <input type="text" id="address" placeholder="123 Maple Lane" />
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- SECTION 2: Attending? (static) -->
+          <div class="section-label" id="section-attending"></div>
+          <div class="field">
+            <label>Will you attend the event? <span class="req">*</span></label>
+            <select id="attending" required>
+              <option value="" disabled selected>Select one…</option>
+              <option value="Yes, we'll be there!">Yes, we'll be there! 🎉</option>
+              <option value="No, but I still want to help">No, but I still want to help</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Who's coming?</label>
+            <div class="age-bracket-row">
+              <div class="age-bracket">
+                <span class="age-bracket-label">Adults</span>
+                <input type="number" id="num_adults" min="0" max="50" placeholder="0" />
+              </div>
+              <div class="age-bracket">
+                <span class="age-bracket-label">Ages 0–3</span>
+                <input type="number" id="children_0_3" min="0" max="20" placeholder="0" />
+              </div>
+              <div class="age-bracket">
+                <span class="age-bracket-label">Ages 4–8</span>
+                <input type="number" id="children_4_8" min="0" max="20" placeholder="0" />
+              </div>
+              <div class="age-bracket">
+                <span class="age-bracket-label">Ages 9+</span>
+                <input type="number" id="children_9_plus" min="0" max="20" placeholder="0" />
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Potluck item you plan to bring (optional)</label>
+            <input type="text" id="potluck_item" placeholder="e.g., Pasta salad, lemonade, fruit tray…" />
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- SECTION 3: Volunteer roles (populated from EVENT config) -->
+          <div class="section-label" id="section-volunteer"></div>
+          <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px;">Check everything you'd be willing to
+            help with — no commitment yet!</p>
+          <div class="checkbox-grid" id="volunteer-grid"></div>
+
+          <div class="divider"></div>
+
+          <!-- SECTION 4: Donations (populated from EVENT config) -->
+          <div class="section-label" id="section-donate"></div>
+          <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px;">Select what you're able to
+            contribute — every little bit helps!</p>
+          <div class="checkbox-grid" id="donate-grid"></div>
+          <div class="field">
+            <label>Anything else you'd like to donate?</label>
+            <input type="text" id="other_donation" placeholder="e.g., I have a folding table you can borrow…" />
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- SECTION 5: Notes (static) -->
+          <div class="section-label">💬 Anything Else?</div>
+          <div class="field">
+            <label>Questions, notes, or ideas</label>
+            <textarea id="notes"
+              placeholder="e.g., My daughter has a nut allergy — will there be safe options?"></textarea>
+          </div>
+
+          <div class="submit-area">
+            <button type="submit" class="submit-btn" id="submit-btn"></button>
+            <div class="error-msg" id="error-msg">
+              Something went wrong — please try again or contact your organizer directly.
+            </div>
+            <p class="fine-print">Your info is only used to coordinate this event.<br />
+              Questions? Contact <a id="contact-link" href="#"></a>.</p>
+          </div>
+
+        </form>
+      </div>
+
+      <div class="success-msg" id="success-msg">
+        <div class="big-emoji" id="success-emoji"></div>
+        <h2>You're in — thank you!</h2>
+        <p id="success-message"></p>
+      </div>
+    </div>
+
+    <div class="footer" id="page-footer"></div>
+
+  </div>
+
+  <script>
+
+    // ============================================================
+    //  ✏️  EVENT CONFIG — edit everything in this block
+    //  when reusing this form for a new event.
+    // ============================================================
+    const EVENT = {
+
+      // Browser tab title
+      pageTitle: "Easter Egg Hunt — Sign Up to Help!",
+
+      // Decorative emoji row in the header
+      emojiRow: "🐰 🥚 🌸 🥚 🐰",
+
+      // Main headline — wrap words in <em>…</em> for italics
+      headline: "Help Make Our<br /><em>Easter Egg Hunt</em> Magical",
+
+      // Subtitle paragraph below the headline
+      subtitle: "We're bringing the neighborhood together — and we'd love your help! Sign up to volunteer, donate supplies, or just let us know you're coming.",
+
+      // Event info chips
+      date: "Saturday, March 21, 2025",
+      time: "10:00 AM – 1:00 PM",
+      location: "HOA Common Green",
+
+      // Section labels (change emoji to match your event theme)
+      attendingLabel: "🐣 Are You Coming?",
+      volunteerLabel: "🙋 Volunteer Roles",
+      donationsLabel: "🎁 Donations",
+
+      // Submit button text
+      submitText: "Count Me In! 🐰",
+
+      // Contact email shown in the fine print
+      contactEmail: "mandyvaliquette00@gmail.com",
+
+      // Text at the very bottom of the page (HTML allowed)
+      footerText: "Organized by <strong>your HOA community</strong> · Easter Egg Hunt 2025",
+
+      // Success screen message
+      successEmoji: "🎉",
+      successMessage: "We'll be in touch as the event gets closer.<br />We're so grateful for neighbors like you.",
+
+      // ── Google Sheets integration ──────────────────────────────
+      // Paste your Google Apps Script Web App URL here.
+      // It looks like: https://script.google.com/macros/s/ABC.../exec
+      scriptUrl: "https://script.google.com/macros/s/AKfycbzV33epavb-pFgJ7CjP2uQh49LWSw1XG1f19R_USPI5DP5iEskWIsRb1b9dHrQQ-zrYlA/exec",
+
+      // Event name stored in the spreadsheet column
+      eventName: "Easter Egg Hunt 2025",
+
+      // ── Volunteer checkboxes ───────────────────────────────────
+      // Add, remove, or reorder as needed.
+      // { label: "Display title", detail: "Short description" }
+      volunteerRoles: [
+        { label: "Hide the Eggs", detail: "Arrive 45 min early to help set up" },
+        { label: "Check-In Table", detail: "Welcome families & hand out bags" },
+        { label: "Age Zone Monitor", detail: "Keep the groups organized" },
+        { label: "Craft Station", detail: "Help kids decorate eggs" },
+        { label: "Photo Booth", detail: "Help snap memories" },
+        { label: "Cleanup Crew", detail: "Help tidy up afterward" },
+        { label: "Setup / Decor", detail: "Help set up tables & decorations" },
+        { label: "Snack Table", detail: "Help manage the refreshments" },
+      ],
+
+      // ── Donation items ─────────────────────────────────────────
+      // Organized by category. Each category shows a header in the form.
+      // { category: "Category Name", items: [ { label, needed } ] }
+      // needed: target quantity (null = no specific goal, just show pledged count)
+      donationItems: [
+        {
+          category: "Eggs & Filling",
+          items: [
+            { label: "Plastic Eggs — any color", needed: 450 },
+            { label: "Plastic Eggs — teal (allergy-friendly)", needed: 30 },
+            { label: "Golden Eggs — special prize eggs", needed: 6 },
+            { label: "Candy — individually wrapped, nut-free", needed: 225 },
+            { label: "Bouncy Balls — small", needed: 45 },
+            { label: "Mini Erasers — fun shapes", needed: 45 },
+            { label: "Mini Play-Doh or putty containers", needed: 20 },
+            { label: "Stickers — mini sheets", needed: 45 },
+            { label: "Small Coins (nickels, dimes, quarters)", needed: 45 },
+            { label: "Fake Tattoo / Fun Coupons (DIY)", needed: 20 },
+            { label: "Temporary Tattoos — mini", needed: 45 },
+            { label: "Storage bins to save eggs for next year", needed: 2 },
+          ],
+        },
+        {
+          category: "Prizes",
+          items: [
+            { label: "Golden Egg Prize Baskets — golden egg winners", needed: 6 },
+            { label: "Prizes for Inside Baskets", needed: 30 },
+            { label: "Ribbon for prize baskets", needed: 1 },
+          ],
+        },
+        {
+          category: "Snack Table & Potluck",
+          items: [
+            { label: "Juice boxes for kids", needed: 50 },
+            { label: "Water bottles or water jug + cups", needed: 100 },
+            { label: "Other beverage", needed: 2 },
+            { label: "Main entree", needed: 6 },
+            { label: "Side entree", needed: 6 },
+            { label: "Dessert", needed: 3 },
+            { label: "Easter candy for grown-ups", needed: 2 },
+            { label: "Small plates", needed: 100 },
+            { label: "Large plates", needed: 100 },
+            { label: "Plastic cups", needed: 100 },
+            { label: "Plastic eating utensils", needed: 100 },
+            { label: "Paper towels / napkins", needed: 100 },
+          ],
+        },
+        {
+          category: "Crafts",
+          items: [
+            { label: "Sticker sheets for decorating", needed: 30 },
+            { label: "Glitter glue sticks", needed: 15 },
+            { label: "Crayons — boxes", needed: 10 },
+            { label: "Washable markers — sets", needed: 8 },
+            { label: "Drop cloth / disposable tablecloth", needed: 1 },
+          ],
+        },
+        {
+          category: "Decor (including DIY-friendly)",
+          items: [
+            { label: "Pastel balloons — latex", needed: 50 },
+            { label: "Pastel streamers", needed: 10 },
+            { label: "Tissue paper pom-poms", needed: 10 },
+            { label: "Paper flower garland (DIY)", needed: 15 },
+            { label: "Easter banner ('Happy Easter!' or custom)", needed: 1 },
+            { label: "Plastic Easter lawn decorations", needed: 5 },
+            { label: "Ribbon / raffia for baskets & decor", needed: 2 },
+            { label: "Easter-themed tablecloth weights/clips", needed: 20 },
+            { label: "Chalkboard or whiteboard + markers", needed: 1 },
+            { label: "Easel to hold signs", needed: 2 },
+            { label: "Balloon pump (hand or electric)", needed: 1 },
+            { label: "Balloon weights", needed: 10 },
+          ],
+        },
+        {
+          category: "Photo Booth",
+          items: [
+            { label: "Photobooth backdrop", needed: 1 },
+            { label: "Photobooth backdrop stand", needed: 1 },
+            { label: "Easter basket prop (real or faux)", needed: 2 },
+            { label: "Printable photo booth props (DIY)", needed: 1 },
+            { label: "Other photo booth props (DIY)", needed: 1 },
+            { label: "Popsicle sticks for props", needed: 20 },
+            { label: "Tripod (for phone)", needed: 1 },
+          ],
+        },
+        {
+          category: "Hunt Supplies",
+          items: [
+            { label: "Baskets / Easter bags for kids", needed: 20 },
+            { label: "Rope, twine, or pennant flags", needed: 50 },
+            { label: "Wooden stakes / dowel rods for signs", needed: 6 },
+            { label: "Zip ties or clips to attach rope", needed: 20 },
+          ],
+        },
+        {
+          category: "Admin & Logistics",
+          items: [
+            { label: "Folding tables — refreshments", needed: 3 },
+            { label: "Folding tables — craft station", needed: 2 },
+            { label: "Folding tables — check-in", needed: 1 },
+            { label: "Folding tables — raffle/prize display", needed: 1 },
+            { label: "Folding chairs", needed: 100 },
+            { label: "Tablecloths — pastel/Easter themed", needed: 7 },
+            { label: "Trash bags — large (39 gal)", needed: 10 },
+            { label: "Recycling bags", needed: 4 },
+            { label: "Hand sanitizer", needed: 4 },
+            { label: "Pens / clipboards for sign-in", needed: 4 },
+            { label: "Portable bluetooth speaker", needed: 1 },
+            { label: "Extension cord (if music/PA)", needed: 2 },
+            { label: "First aid kit", needed: 1 },
+            { label: "Bug spray", needed: 2 },
+            { label: "Sunscreen", needed: 1 },
+          ],
+        },
+      ],
+
+    };
+    // ============================================================
+    //  End of config — no edits needed below this line
+    // ============================================================
+
+
+    // ── Populate page from config ──────────────────────────────────
+    document.title = EVENT.pageTitle;
+    document.getElementById("emoji-row").textContent = EVENT.emojiRow;
+    document.getElementById("page-heading").innerHTML = EVENT.headline;
+    document.getElementById("page-subtitle").textContent = EVENT.subtitle;
+    document.getElementById("section-attending").textContent = EVENT.attendingLabel;
+    document.getElementById("section-volunteer").textContent = EVENT.volunteerLabel;
+    document.getElementById("section-donate").textContent = EVENT.donationsLabel;
+    document.getElementById("submit-btn").textContent = EVENT.submitText;
+    document.getElementById("page-footer").innerHTML = EVENT.footerText;
+    document.getElementById("success-emoji").textContent = EVENT.successEmoji;
+    document.getElementById("success-message").innerHTML = EVENT.successMessage;
+
+    const contactLink = document.getElementById("contact-link");
+    contactLink.href = "mailto:" + EVENT.contactEmail;
+    contactLink.textContent = EVENT.contactEmail;
+
+    document.getElementById("event-meta").innerHTML =
+      `<div class="meta-tag"><span>📅</span> ${EVENT.date}</div>
+       <div class="meta-tag"><span>🕙</span> ${EVENT.time}</div>
+       <div class="meta-tag"><span>📍</span> ${EVENT.location}</div>`;
+
+    document.getElementById("volunteer-grid").innerHTML = EVENT.volunteerRoles.map(r => `
+      <label class="checkbox-item">
+        <input type="checkbox" name="volunteer" value="${r.label}" />
+        <div class="item-label" data-item="${r.label}"><strong>${r.label}</strong>${r.detail}</div>
+      </label>`).join("");
+
+    document.getElementById("donate-grid").innerHTML = EVENT.donationItems.map(cat => `
+      <div class="donate-category">${cat.category}</div>
+      <div class="donate-qty-list">
+        ${cat.items.map(d => `
+          <div class="donate-item" data-donate-item="${d.label}" data-needed="${d.needed !== null && d.needed !== undefined ? d.needed : ''}">
+            <div class="donate-item-top">
+              <div class="donate-item-name">${d.label}</div>
+              <div class="donate-item-qty">
+                <span class="qty-label">Qty</span>
+                <input type="number" class="qty-input" min="0" max="999" placeholder="0" data-donate="${d.label}" />
+              </div>
+            </div>
+            ${d.needed !== null && d.needed !== undefined ? `
+              <div class="item-stats">
+                <div class="item-stat"><div class="item-stat-val">${d.needed}</div><div class="item-stat-label">Total Needed</div></div>
+                <div class="item-stat"><div class="item-stat-val zero" data-pledged-val>–</div><div class="item-stat-label">Pledged</div></div>
+                <div class="item-stat" data-remaining-stat><div class="item-stat-val" data-remaining-val>–</div><div class="item-stat-label">Remaining</div></div>
+              </div>` : ''}
+          </div>`).join("")}
+      </div>
+    `).join("");
+
+    // ── Fetch live sign-up counts and display on each item ─────────
+    async function fetchCounts() {
+      try {
+        const res = await fetch(EVENT.scriptUrl);
+        const data = await res.json();
+        const counts = Object.assign({}, data.volunteerCounts, data.donationCounts);
+
+        // Update volunteer role badges
+        document.querySelectorAll(".item-label[data-item]").forEach(el => {
+          const key = el.getAttribute("data-item");
+          const pledged = data.volunteerCounts[key] || 0;
+          const badge = document.createElement("span");
+          badge.className = "item-count" + (pledged === 0 ? " count-zero" : "");
+          badge.textContent = pledged === 0 ? "Be the first!" : pledged === 1 ? "1 signed up" : pledged + " signed up";
+          el.appendChild(badge);
+        });
+
+        // Update donation item stats
+        document.querySelectorAll(".donate-item[data-donate-item]").forEach(el => {
+          const key = el.getAttribute("data-donate-item");
+          const neededAttr = el.getAttribute("data-needed");
+          const pledged = data.donationCounts[key] || 0;
+          const pledgedEl = el.querySelector("[data-pledged-val]");
+          if (!pledgedEl) return;
+
+          const needed = parseInt(neededAttr) || 0;
+          const remaining = Math.max(0, needed - pledged);
+          const remainingVal = el.querySelector("[data-remaining-val]");
+          const remainingStat = el.querySelector("[data-remaining-stat]");
+
+          pledgedEl.textContent = pledged;
+          pledgedEl.className = "item-stat-val" + (pledged === 0 ? " zero" : "");
+          remainingVal.textContent = remaining;
+          remainingStat.className = "item-stat" + (remaining === 0 ? " met" : "");
+        });
+      } catch (_) {
+        // Counts are a nice-to-have; fail silently so the form still works
+      }
+    }
+    fetchCounts();
+
+    // ── Form submission ────────────────────────────────────────────
+    document.getElementById("signup-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const btn = document.getElementById("submit-btn");
+      const errorMsg = document.getElementById("error-msg");
+      errorMsg.style.display = "none";
+
+      const volunteerChecked = Array.from(
+        document.querySelectorAll('input[name="volunteer"]:checked')
+      ).map(cb => cb.value);
+
+      const donateEntries = [];
+      document.querySelectorAll(".qty-input[data-donate]").forEach(input => {
+        const qty = parseInt(input.value) || 0;
+        if (qty > 0) donateEntries.push(input.getAttribute("data-donate") + ": " + qty);
+      });
+
+      const children_0_3 = parseInt(document.getElementById("children_0_3").value) || 0;
+      const children_4_8 = parseInt(document.getElementById("children_4_8").value) || 0;
+      const children_9_plus = parseInt(document.getElementById("children_9_plus").value) || 0;
+
+      const payload = new URLSearchParams({
+        first_name: document.getElementById("first_name").value.trim(),
+        last_name: document.getElementById("last_name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        address: document.getElementById("address").value.trim(),
+        attending: document.getElementById("attending").value,
+        num_adults: document.getElementById("num_adults").value,
+        num_children: children_0_3 + children_4_8 + children_9_plus,
+        children_0_3: children_0_3,
+        children_4_8: children_4_8,
+        children_9_plus: children_9_plus,
+        potluck_item: document.getElementById("potluck_item").value.trim(),
+        volunteer_roles: volunteerChecked.length ? volunteerChecked.join(", ") : "None selected",
+        donation_items: donateEntries.length ? donateEntries.join(", ") : "None selected",
+        other_donation: document.getElementById("other_donation").value.trim(),
+        notes: document.getElementById("notes").value.trim(),
+        event: EVENT.eventName,
+      });
+
+      btn.textContent = "Sending… 🌸";
+      btn.disabled = true;
+
+      try {
+        await fetch(EVENT.scriptUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: payload.toString(),
+        });
+
+        document.getElementById("form-content").style.display = "none";
+        document.getElementById("success-msg").style.display = "block";
+
+      } catch (err) {
+        btn.textContent = EVENT.submitText;
+        btn.disabled = false;
+        errorMsg.style.display = "block";
+      }
+    });
+
+  </script>
+</body>
+
+</html>

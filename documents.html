@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Community Links — Pendleton Plantation</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="index-styles.css" />
+    <link rel="stylesheet" href="links-styles.css" />
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#awards">Awards</a></li>
+            <li><a href="index.html#events">Events</a></li>
+            <li><a href="index.html#memories">Memories</a></li>
+            <li><a href="index.html#announcements">Announcements</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+            <li><a href="community-signup-form.html">Sign Up</a></li>
+            <li><a href="links.html">Links</a></li>
+            <li><a href="documents.html">Documents</a></li>
+        </ul>
+    </nav>
+
+    <!-- PAGE HEADER -->
+    <div class="links-hero">
+        <p class="section-eyebrow">✦ &nbsp; Helpful Resources &nbsp; ✦</p>
+        <h1 class="section-title">Community <em>Documents</em></h1>
+        <div class="section-rule"></div>
+        <p class="hero-sub">Access important community documents and forms.</p>
+    </div>
+
+    <!-- LINKS -->
+    <div class="links-content" id="links-content"></div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-brand">Pendleton Plantation</div>
+        <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
+        <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp;
+            <a href="mailto:mandyvaliquette00@gmail.com"
+                style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact Us</a>
+        </p>
+    </footer>
+
+    <script>
+
+
+        // ============================================================
+        //  ✏️  EDIT YOUR LINKS HERE
+        //  Each category has a label and an array of links.
+        //  Each link: { icon, title, desc, url, urlLabel }
+        //    - icon:     emoji shown on the card
+        //    - title:    bold card heading
+        //    - desc:     one-line description
+        //    - url:      the full URL the card links to
+        //    - urlLabel: short display text shown at the bottom of the card
+        // ============================================================
+
+        const categories = [
+            {
+                label: "Neighborhood Documents — Click to Download",
+                links: [
+                    {
+                        icon: "📝",
+                        title: "Annual Meeting Proxy Form",
+                        desc: "Pendleton Plantation Homeowners Association Annual Meeting Proxy Form — Please complete and submit this form if you are unable to attend the annual HOA meeting but would like to designate another resident to vote on your behalf.",
+                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/PND%20Proxy%20-%202024%20Annual%20Meeting.pdf",
+                    },
+                    {
+                        icon: "🛠️",
+                        title: "Architectural Review Committee Request Form (Physical Copy)",
+                        desc: "Use this form to submit a physical copy of an ARC request if you prefer not to submit through the online portal.",
+                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/ARC%20Request%20Form.pdf",
+
+                    },
+                    {
+                        icon: "⚖️",
+                        title: "Pendleton Plantation Bylaws",
+                        desc: "Bylaws of the Pendleton Plantation Homeowners Association, outlining the rules and regulations governing our community.",
+                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20-Bylaws.pdf",
+
+                    },
+                    {
+                        icon: "⚠️",
+                        title: "Declaration of Covenants, Conditions, and Restrictions",
+                        desc: "This document details the covenants, conditions, and restrictions that apply to all properties within Pendleton Plantation.",
+                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20-%20Declaration%20of%20Covenants.pdf",
+
+                    },
+                    {
+                        icon: "📝",
+                        title: "ARC Guidelines Updates (Effective February 2020)",
+                        desc: "Updated guidelines from the Architectural Review Committee outlining the standards and procedures for submitting architectural requests in Pendleton Plantation.",
+                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20-%20ARC%20Guidelines%202020.02.pdf",
+
+                    },
+                    {
+                        icon: "📄",
+                        title: "First Bylaws Amendment (Effective July 2003)",
+                        desc: "This document contains the amendments made to the original bylaws of Pendleton Plantation as of July 2003.",
+                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20Amendment%20deed%20book%20page%2000085.pdf",
+
+                    },
+                    {
+                        icon: "📄",
+                        title: "Second Bylaws Amendment (Effective July 2003)",
+                        desc: "This document contains the amendments made to the original bylaws of Pendleton Plantation as of July 2003.",
+                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20Amendment%20deed%20book%20page%2000103.pdf",
+
+                    },
+                    {
+                        icon: "📄",
+                        title: "Pool Rules (Effective 2024)",
+                        desc: "This document outlines the rules and regulations for the use of the Pendleton Plantation pool.",
+                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PND%202024%20POOL%20RULES.pdf",
+                        urlLabel: "",
+                    },
+                    {
+                        icon: "📄",
+                        title: "Pendleton Plantation Financial Statements",
+                        desc: "This webpage links to the financial statements for Pendleton Plantation, including budgets, income statements, and balance sheets.",
+                        url: "https://engage.goenumerate.com/s/pendletonplantation/dyndocuments.php?group=230231",
+                    },
+                ],
+            },
+        ];
+
+        // ============================================================
+        //  Rendering — no edits needed below this line
+        // ============================================================
+        const container = document.getElementById("links-content");
+        container.innerHTML = categories.map(cat => `
+      <div class="link-category">
+        <div class="category-label">${cat.label}</div>
+        <div class="link-grid">
+          ${cat.links.map(link => `
+            <a href="${link.url}" class="link-card" target="_blank" rel="noopener noreferrer">
+              <div class="link-card-icon">${link.icon}</div>
+              <div class="link-card-body">
+                <div class="link-card-title">${link.title}</div>
+                <div class="link-card-desc">${link.desc}</div>
+              </div>
+            </a>`).join("")}
+        </div>
+      </div>`).join("");
+
+    </script>
+
+</body>
+
+</html>

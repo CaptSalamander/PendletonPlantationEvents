@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neighborhood Memories — Pendleton Plantation</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="index-styles.css" />
+  <link rel="stylesheet" href="memories-styles.css" />
+</head>
+
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#awards">Awards</a></li>
+      <li><a href="index.html#events">Events</a></li>
+      <li><a href="index.html#memories">Memories</a></li>
+      <li><a href="index.html#announcements">Announcements</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="community-signup-form.html">Sign Up</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+    </ul>
+  </nav>
+
+  <!-- HEADER -->
+  <div class="memories-hero">
+    <p class="section-eyebrow">✦ &nbsp; Community Gallery &nbsp; ✦</p>
+    <h1 class="section-title">Neighborhood <em>Memories</em></h1>
+    <div class="section-rule"></div>
+  </div>
+
+  <!-- GALLERY -->
+  <div class="memories-grid" id="memories-grid"></div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox">
+    <span class="lb-close" id="lb-close">×</span>
+    <span class="lb-counter" id="lb-counter"></span>
+    <span class="lb-prev" id="lb-prev">‹</span>
+    <img id="lb-img" src="" alt="" />
+    <span class="lb-next" id="lb-next">›</span>
+    <div class="lb-caption" id="lb-caption"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">Pendleton Plantation</div>
+    <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
+    <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp;
+      <a href="mailto:mandyvaliquette00@gmail.com" style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact
+        Us</a>
+    </p>
+  </footer>
+
+  <script>
+    // ============================================================
+    //  ✏️  ADD YOUR PHOTOS HERE
+    //  { src: "images/photo.jpg", alt: "Description", event: "Event Name" }
+    // ============================================================
+    const photos = [
+      { src: "images/Halloween2025-1.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
+      { src: "images/Halloween2025-2.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
+      { src: "images/Halloween2025-3.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
+      { src: "images/Halloween2025-4.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
+      { src: "images/Halloween2025-5.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
+      { src: "images/Halloween2025-6.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
+      { src: "images/Halloween2025-7.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
+    ];
+
+    // ── Render grid ──────────────────────────────────────────────
+    const grid = document.getElementById("memories-grid");
+    grid.innerHTML = photos.map((p, i) => `
+      <div class="memory-item" data-index="${i}">
+        <img src="${p.src}" alt="${p.alt}" loading="lazy" />
+        <div class="memory-overlay">
+          <div class="memory-caption">${p.event || p.alt}</div>
+        </div>
+      </div>`).join("");
+
+    // ── Lightbox ─────────────────────────────────────────────────
+    let current = 0;
+    const lightbox = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lb-img");
+    const lbCaption = document.getElementById("lb-caption");
+    const lbCounter = document.getElementById("lb-counter");
+
+    function update() {
+      const p = photos[current];
+      lbImg.src = p.src;
+      lbImg.alt = p.alt;
+      lbCaption.textContent = p.event || p.alt;
+      lbCounter.textContent = `${current + 1} / ${photos.length}`;
+    }
+
+    function open(index) {
+      current = index;
+      update();
+      lightbox.classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+
+    function close() {
+      lightbox.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+
+    grid.addEventListener("click", e => {
+      const item = e.target.closest(".memory-item");
+      if (item) open(parseInt(item.dataset.index));
+    });
+
+    document.getElementById("lb-close").addEventListener("click", close);
+    document.getElementById("lb-prev").addEventListener("click", e => {
+      e.stopPropagation();
+      current = (current - 1 + photos.length) % photos.length;
+      update();
+    });
+    document.getElementById("lb-next").addEventListener("click", e => {
+      e.stopPropagation();
+      current = (current + 1) % photos.length;
+      update();
+    });
+    lightbox.addEventListener("click", e => { if (e.target === lightbox) close(); });
+    document.addEventListener("keydown", e => {
+      if (!lightbox.classList.contains("active")) return;
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowRight") { current = (current + 1) % photos.length; update(); }
+      if (e.key === "ArrowLeft") { current = (current - 1 + photos.length) % photos.length; update(); }
+    });
+  </script>
+
+</body>
+
+</html>
