@@ -154,6 +154,9 @@
         <div class="big-emoji" id="success-emoji"></div>
         <h2>You're in — thank you!</h2>
         <p id="success-message"></p>
+        <button class="submit-btn" onclick="downloadICS()" style="margin-top:18px;">
+          📅 Add to My Calendar
+        </button>
       </div>
     </div>
 
@@ -211,6 +214,11 @@
 
       // Event name stored in the spreadsheet column
       eventName: "Easter Egg Hunt 2025",
+
+      // ── Calendar ICS download ──────────────────────────────────
+      // Format: YYYYMMDDTHHmmss (local time, no timezone)
+      icsStart: "20250321T100000",
+      icsEnd:   "20250321T130000",
 
       // ── Volunteer checkboxes ───────────────────────────────────
       // Add, remove, or reorder as needed.
@@ -502,6 +510,32 @@
         errorMsg.style.display = "block";
       }
     });
+
+    // ── ICS calendar download ──────────────────────────────────────
+    function downloadICS() {
+      const uid = Date.now() + "@pendletonplantation.com";
+      const ics = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Pendleton Plantation//EN",
+        "BEGIN:VEVENT",
+        "UID:" + uid,
+        "DTSTART:" + EVENT.icsStart,
+        "DTEND:" + EVENT.icsEnd,
+        "SUMMARY:" + EVENT.eventName,
+        "LOCATION:" + EVENT.location,
+        "DESCRIPTION:" + EVENT.subtitle.replace(/,/g, "\\,"),
+        "END:VEVENT",
+        "END:VCALENDAR"
+      ].join("\r\n");
+
+      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = EVENT.eventName.replace(/\s+/g, "-") + ".ics";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
 
   </script>
 </body>
