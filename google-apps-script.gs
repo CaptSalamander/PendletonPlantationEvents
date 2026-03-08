@@ -56,7 +56,15 @@ function doPost(e) {
       var headerRange = sheet.getRange(1, 1, 1, 18);
       headerRange.setFontWeight("bold");
       headerRange.setBackground("#f4c8c0");
+      headerRange.setFontColor("#5a2a27");
       sheet.setFrozenRows(1);
+
+      // Apply alternating row banding across 1000 rows (covers all future signups)
+      var tableRange = sheet.getRange(1, 1, 1000, 18);
+      tableRange.applyRowBanding(SpreadsheetApp.BandingTheme.PINK, true, false);
+
+      // Auto-resize all columns to fit content
+      sheet.autoResizeColumns(1, 18);
     }
 
     // --- 3. Append the new submission as a row ---
@@ -80,6 +88,9 @@ function doPost(e) {
       params.notes          || "",
       params.event          || EVENT_NAME
     ]);
+
+    // Auto-resize columns after each new row
+    sheet.autoResizeColumns(1, 18);
 
     // --- 4. Send a notification email ---
     var subject = "New Sign-Up: " + EVENT_NAME + " — "
