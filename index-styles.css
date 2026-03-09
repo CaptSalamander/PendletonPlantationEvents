@@ -1029,7 +1029,7 @@
     .btn-outline {
       text-align: center;
       width: 100%;
-      max-width: 300px;
+      max-width: 340px;
     }
   }
 
@@ -1046,5 +1046,16 @@
   @media (max-width: 640px) {
     .events-grid {
       grid-template-columns: 1fr;
+    }
+  }
+
+  /* Scale button text for long labels like "Sign Up for the Easter Egg Hunt" */
+  @media (max-width: 480px) {
+    .btn-primary,
+    .btn-outline {
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      padding: 12px 20px;
+      max-width: 100%;
     }
   }
