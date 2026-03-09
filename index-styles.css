@@ -20,6 +20,7 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
@@ -104,13 +105,72 @@
     color: var(--cream) !important;
   }
 
+  /* ── HAMBURGER BUTTON ── */
+  .nav-hamburger {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    flex-direction: column;
+    gap: 5px;
+    position: relative;
+    z-index: 101;
+  }
+
+  .nav-hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--forest);
+    border-radius: 2px;
+    transition: transform 0.3s, opacity 0.3s;
+  }
+
   @media (max-width: 768px) {
     nav {
       padding: 16px 24px;
     }
 
+    .nav-hamburger {
+      display: flex;
+    }
+
     .nav-links {
+      position: fixed;
+      inset: 0;
+      background: rgba(245, 240, 232, 0.97);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      z-index: 50;
       display: none;
+    }
+
+    .nav-links.open {
+      display: flex;
+    }
+
+    .nav-links a {
+      font-size: 1rem;
+      letter-spacing: 0.14em;
+      color: var(--forest);
+    }
+
+    .nav-hamburger.open span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    .nav-hamburger.open span:nth-child(2) {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+
+    .nav-hamburger.open span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
     }
   }
 
@@ -928,4 +988,63 @@
     letter-spacing: 0.5em;
     opacity: 0.5;
     margin: 0 0 48px;
+  }
+
+  /* ── MOBILE FIXES ── */
+  @media (max-width: 768px) {
+    /* Smaller hero corner lines */
+    .hero::before,
+    .hero::after {
+      width: 80px;
+      height: 80px;
+    }
+
+    .hero::before {
+      top: 70px;
+      left: 16px;
+    }
+
+    .hero::after {
+      bottom: 50px;
+      right: 16px;
+    }
+
+    /* Less bottom padding since scroll-hint is hidden */
+    .hero {
+      padding-bottom: 80px;
+    }
+
+    /* Hide scroll hint on mobile */
+    .scroll-hint {
+      display: none;
+    }
+
+    /* Stack CTA buttons vertically, no overlap */
+    .hero-actions {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .btn-primary,
+    .btn-outline {
+      text-align: center;
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+
+  /* Scale eyebrow text to fit on one line on narrow screens */
+  @media (max-width: 600px) {
+    .section-eyebrow {
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+    }
+  }
+
+  /* Events grid — single column on mobile */
+  @media (max-width: 640px) {
+    .events-grid {
+      grid-template-columns: 1fr;
+    }
   }
