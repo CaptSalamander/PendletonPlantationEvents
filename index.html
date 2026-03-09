@@ -17,6 +17,11 @@
   <!-- NAV -->
   <nav>
     <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+    <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="index.html#awards">Awards</a></li>
@@ -248,6 +253,26 @@
   //  Rendering — no edits needed below this line
   // ============================================================
   document.addEventListener("DOMContentLoaded", () => {
+
+    // Hamburger menu toggle
+    const hamburger = document.querySelector('.nav-hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    if (hamburger && navLinks) {
+      hamburger.addEventListener('click', () => {
+        const isOpen = navLinks.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        hamburger.setAttribute('aria-expanded', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      });
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          navLinks.classList.remove('open');
+          hamburger.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        });
+      });
+    }
 
     // Awards
     const awardsGrid = document.getElementById("awards-grid");
