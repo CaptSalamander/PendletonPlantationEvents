@@ -391,8 +391,10 @@
       </label>`).join("");
 
     document.getElementById("donate-grid").innerHTML = EVENT.donationItems.map(cat => `
-      <div class="donate-category">${cat.category}</div>
-      <div class="donate-qty-list">
+      <div class="donate-category accordion-header">
+        ${cat.category} <span class="accordion-icon">▼</span>
+      </div>
+      <div class="donate-qty-list accordion-content">
         ${cat.items.map(d => `
           <div class="donate-item" data-donate-item="${d.label}" data-needed="${d.needed !== null && d.needed !== undefined ? d.needed : ''}">
             <div class="donate-item-top">
@@ -411,6 +413,17 @@
           </div>`).join("")}
       </div>
     `).join("");
+
+    // ── Accordion Toggle Logic ──────────────────────────────────────
+    document.querySelectorAll('.accordion-header').forEach(header => {
+      header.addEventListener('click', () => {
+        // Toggle the arrow flip
+        header.classList.toggle('active');
+        // Open or close the list right below the header
+        const content = header.nextElementSibling;
+        content.classList.toggle('open');
+      });
+    });
 
     // ── Fetch live sign-up counts and display on each item ─────────
     async function fetchCounts() {

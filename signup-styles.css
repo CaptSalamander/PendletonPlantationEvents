@@ -188,6 +188,56 @@ body::after {
   margin-bottom: 16px;
 }
 
+
+/* ── DONATION ACCORDIONS ── */
+.accordion-header {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(201, 168, 76, 0.1);
+  /* Subtle gold background */
+  padding: 14px 18px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-family: 'Playfair Display', serif;
+  /* Matching your form header */
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--forest, #2c3d2e);
+  transition: background 0.2s;
+  user-select: none;
+}
+
+.accordion-header:hover {
+  background: rgba(201, 168, 76, 0.2);
+}
+
+.accordion-icon {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+  color: var(--gold, #c9a84c);
+}
+
+/* Flips the arrow upside down when open */
+.accordion-header.active .accordion-icon {
+  transform: rotate(180deg);
+}
+
+/* Hides the items by default */
+.accordion-content {
+  display: none;
+  padding: 8px 12px 24px;
+}
+
+/* Shows the items when the 'open' class is added via JS */
+.accordion-content.open {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
 @media (max-width: 480px) {
   .field-row {
     grid-template-columns: 1fr;
