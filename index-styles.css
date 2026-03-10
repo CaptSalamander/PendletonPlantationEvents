@@ -76,6 +76,7 @@
     display: flex;
     gap: 36px;
     list-style: none;
+    background: var(--cream); 
   }
 
   .nav-links a {
