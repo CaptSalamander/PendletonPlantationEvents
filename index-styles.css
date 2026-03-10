@@ -76,7 +76,6 @@
     display: flex;
     gap: 36px;
     list-style: none;
-    background: var(--cream); 
   }
 
   .nav-links a {
@@ -139,15 +138,11 @@
 
     .nav-links {
       position: fixed;
-      inset: 0;/* 
-      
-      /* Change to your solid --cream variable (or --warm-white) */
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       background: var(--cream); 
-      
-      /* 2. Remove or comment out the blur filters */
-      /* backdrop-filter: blur(12px); */
-      /* -webkit-backdrop-filter: blur(12px); */
-      
       flex-direction: column;
       align-items: center;
       justify-content: center;
