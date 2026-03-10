@@ -138,22 +138,11 @@
 
     .nav-links {
       position: fixed;
-      inset: 0;
-      width: 75vw;
-      /* This keeps it from taking up the full screen */
+      top: 0;
+      left: 0;
+      width: 100vw;
       height: 100vh;
-
-      /* ADDED: Position it on the right side of the screen */
-      left: 25vw;
-      /* This will start the panel 25% of the way across */
-      right: 0;
-
-      /* ADDED: Use your solid --cream variable for an opaque background */
       background: var(--cream);
-
-      /* ADDED: Add a subtle shadow for depth against the background content */
-      box-shadow: -4px 0 30px rgba(0, 0, 0, 0.1);
-
       flex-direction: column;
       align-items: center;
       justify-content: center;
