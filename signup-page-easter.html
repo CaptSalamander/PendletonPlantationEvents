@@ -422,6 +422,7 @@
         // Open or close the list right below the header
         const content = header.nextElementSibling;
         content.classList.toggle('open');
+        content.style.maxHeight = content.classList.contains('open') ? content.scrollHeight + "px" : null;
       });
     });
 
