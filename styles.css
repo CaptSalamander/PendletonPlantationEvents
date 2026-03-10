@@ -132,6 +132,36 @@ body::after {
   border: 1px solid rgba(244, 200, 192, 0.4);
 }
 
+.custom-collapsible .content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+  /* Add smooth transitions */
+  padding: 0 10px;
+}
+
+.custom-collapsible .header {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 10px;
+  background-color: #f1f1f1;
+}
+
+.custom-collapsible.active .content {
+  max-height: 200px;
+  /* Set a specific max-height or use a calculated one with JS */
+  padding: 10px;
+}
+
+.custom-collapsible .icon {
+  float: right;
+}
+
+.custom-collapsible.active .icon {
+  content: "-";
+  /* Doesn't work for real content, use JS or background images */
+}
+
 @media (max-width: 520px) {
   .card {
     padding: 28px 20px;
