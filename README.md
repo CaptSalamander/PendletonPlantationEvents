@@ -21,7 +21,7 @@ A neighborhood community website for Pendleton Plantation in Easley, South Carol
 | `dashboard.html` | Sign-up dashboard for event organizers |
 | `dashboard-styles.css` | Dashboard styles |
 | `styles.css` | Shared/global styles |
-| `community-signup-form.html` | Event sign-up form (embeddable) |
+| `signup-page-easter.html` | Event sign-up form (embeddable) |
 | `google-apps-script.gs` | Google Apps Script for form → Google Sheet |
 | `images/` | Photos and video for the gallery |
 
@@ -60,7 +60,7 @@ Links to email the organizer, the event sign-up form, Nextdoor group, and Facebo
 
 ## Event Sign-Up Form + Google Sheet Integration
 
-The `community-signup-form.html` form connects to a Google Sheet via `google-apps-script.gs`.
+The `signup-page-easter.html` form connects to a Google Sheet via `google-apps-script.gs`.
 
 ### STEP 1 — Create Your Google Sheet
 
@@ -91,7 +91,7 @@ The `community-signup-form.html` form connects to a Google Sheet via `google-app
 
 ### STEP 4 — Connect the Form
 
-1. Open `community-signup-form.html` in a text editor
+1. Open `signup-page-easter.html` in a text editor
 2. Find and replace:
    ```
    var SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
@@ -100,7 +100,7 @@ The `community-signup-form.html` form connects to a Google Sheet via `google-app
 
 ### STEP 5 — Test
 
-1. Open `community-signup-form.html` in a browser
+1. Open `signup-page-easter.html` in a browser
 2. Submit a test entry
 3. Confirm a new row appears in the **Signups** tab of your Google Sheet
 4. Confirm you received a notification email
