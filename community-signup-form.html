@@ -14,15 +14,13 @@
 <body>
 
   <!-- NAV -->
-<nav>
+  <nav>
     <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
-    
     <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
       <span></span>
       <span></span>
       <span></span>
     </button>
-
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="index.html#awards">Awards</a></li>
@@ -548,7 +546,7 @@
     document.addEventListener("DOMContentLoaded", () => {
       const hamburger = document.querySelector('.nav-hamburger');
       const navLinks = document.querySelector('.nav-links');
-      
+
       if (hamburger && navLinks) {
         hamburger.addEventListener('click', () => {
           const isOpen = navLinks.classList.toggle('open');
@@ -556,7 +554,7 @@
           hamburger.setAttribute('aria-expanded', isOpen);
           document.body.style.overflow = isOpen ? 'hidden' : '';
         });
-        
+
         // Close menu when a link is clicked
         navLinks.querySelectorAll('a').forEach(link => {
           link.addEventListener('click', () => {
