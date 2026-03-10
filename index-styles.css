@@ -138,21 +138,27 @@
 
     .nav-links {
       position: fixed;
-      scale:75%;
+      scale: 75%;
       inset: 0;
-      width: 75vw; /* This keeps it from taking up the full screen */
+      width: 75vw;
+      /* This keeps it from taking up the full screen */
+      scale: 75%;
+      inset: 0;
+      width: 75vw;
+      /* This keeps it from taking up the full screen */
       height: 90vh;
-      
+
       /* ADDED: Position it on the right side of the screen */
-      left: 25vw; /* This will start the panel 25% of the way across */
+      left: 25vw;
+      /* This will start the panel 25% of the way across */
       right: 0;
-      
+
       /* ADDED: Use your solid --cream variable for an opaque background */
-      background: var(--cream); 
-      
+      background: var(--cream);
+
       /* ADDED: Add a subtle shadow for depth against the background content */
       box-shadow: -4px 0 30px rgba(0, 0, 0, 0.1);
-      
+
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -353,7 +359,7 @@
     position: relative;
     overflow: hidden;
     border-radius: 10%;
-    border-bottom-style: ;
+    border-bottom-style: solid;
   }
 
   .scroll-line::after {
@@ -1003,6 +1009,7 @@
 
   /* ── MOBILE FIXES ── */
   @media (max-width: 768px) {
+
     /* Smaller hero corner lines */
     .hero::before,
     .hero::after {
@@ -1062,6 +1069,7 @@
 
   /* Scale button text for long labels like "Sign Up for the Easter Egg Hunt" */
   @media (max-width: 480px) {
+
     .btn-primary,
     .btn-outline {
       font-size: 0.7rem;
