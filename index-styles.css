@@ -138,7 +138,8 @@
 
     .nav-links {
       position: fixed;
-      inset: 10px;
+      scale:75%;
+      inset: 0;
       width: 75vw; /* This keeps it from taking up the full screen */
       height: 90vh;
       
