@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ============================================================
+     File:        bulletin-board.html
+     Purpose:     Community Bulletin Board — neighbors can browse
+                  posts by category (Crime & Safety, Lost & Found,
+                  For Sale & Free, Local Recommendations, Community
+                  News, Recommendations & Advice, Complaints/Rants).
+                  Posts are fetched live from the Google Apps Script
+                  backend once approved by the organizer.
+     Script:      bulletin-board-script.gs
+     Styles:      bulletin-board-styles.css
+     ============================================================ -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Community Bulletin Board — Pendleton Plantation</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="bulletin-board-styles.css" />
+</head>
+
+<body>
+
+  <!-- ── NAVIGATION ───────────────────────────────────────────-->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#awards">Awards</a></li>
+      <li><a href="index.html#events">Events</a></li>
+      <li><a href="index.html#memories">Memories</a></li>
+      <li><a href="index.html#announcements">Announcements</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="signup-page-easter.html">Easter Sign-Up</a></li>
+      <li><a href="nominations.html">Nominate a Neighbor</a></li>
+      <li><a href="bulletin-board.html">Bulletin Board</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+    </ul>
+  </nav>
+
+
+  <!-- ── PAGE WRAPPER ─────────────────────────────────────────-->
+  <div class="page-wrapper">
+
+    <header class="page-header">
+      <span class="board-icon">📋 🏘️ 📋</span>
+      <h1>Community<br /><em>Bulletin Board</em></h1>
+      <p class="subtitle">
+        The place to share neighborhood news, lost pets, local recommendations,
+        safety alerts, and more. Have something to share?
+      </p>
+      <a href="post-to-board.html" class="post-btn">📝 Post Something</a>
+    </header>
+
+
+    <!-- ── CATEGORY FILTER ─────────────────────────────────────-->
+    <div class="filter-bar" id="filter-bar" role="group" aria-label="Filter by category">
+      <button class="filter-btn active" data-filter="all">All Posts</button>
+      <button class="filter-btn" data-filter="Crime &amp; Safety">🚨 Crime &amp; Safety</button>
+      <button class="filter-btn" data-filter="Lost &amp; Found">🐾 Lost &amp; Found</button>
+      <button class="filter-btn" data-filter="For Sale &amp; Free">🏷️ For Sale &amp; Free</button>
+      <button class="filter-btn" data-filter="Local Recommendations">⭐ Local Recommendations</button>
+      <button class="filter-btn" data-filter="Community News">📰 Community News</button>
+      <button class="filter-btn" data-filter="Recommendations &amp; Advice">💬 Advice</button>
+      <button class="filter-btn" data-filter="Complaints / Rants">😤 Complaints</button>
+    </div>
+
+
+    <!-- ── POSTS GRID ───────────────────────────────────────────-->
+    <div class="posts-grid" id="posts-grid"></div>
+
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">📭</div>
+      <p>No posts in this category yet.<br />
+        <a href="post-to-board.html" style="color:var(--brick);">Be the first to post something!</a>
+      </p>
+    </div>
+
+
+    <div class="footer">
+      Pendleton Plantation HOA &nbsp;·&nbsp; Community Bulletin Board<br />
+      Posts are reviewed by the HOA before appearing here.
+    </div>
+
+  </div><!-- end .page-wrapper -->
+
+
+  <!-- ── LIGHTBOX ─────────────────────────────────────────────-->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <button class="lightbox-close" id="lb-close" aria-label="Close photo viewer">✕</button>
+    <img class="lightbox-img" id="lb-img" src="" alt="" />
+    <div class="lightbox-nav">
+      <button class="lightbox-btn" id="lb-prev" aria-label="Previous photo">‹</button>
+      <span class="lightbox-counter" id="lb-counter"></span>
+      <button class="lightbox-btn" id="lb-next" aria-label="Next photo">›</button>
+    </div>
+  </div>
+
+
+  <script>
+
+    // ============================================================
+    //  CONFIG — paste your deployed Web App URL here.
+    // ============================================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzfoCjpqVPMxAuyAn6WuKFKoH-U9cqvSto0nvqWeuCQgRbqXo95XXCPPsnvRnICcg-TJw/exec";
+    // ============================================================
+
+
+    // ── STATIC FALLBACK POSTS ─────────────────────────────────
+    // Shown while the live fetch resolves (or if the script URL
+    // hasn't been configured yet).
+    const STATIC_POSTS = [
+      {
+        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        name: "The HOA Team",
+        phone: "",
+        category: "Community News",
+        title: "Welcome to the Community Bulletin Board!",
+        content: "Neighbors can now post updates, alerts, recommendations, and more right here. " +
+          "Click "Post Something" above to share something with the community.\n\n" +
+            "All posts are reviewed by the HOA before appearing.",
+        photoIds: [],
+      },
+      {
+        date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        name: "Jane S.",
+        phone: "(555) 555-0101",
+        category: "Local Recommendations",
+        title: "Great Lawn Service — Highly Recommend!",
+        content: "Used Green Thumb Lawn Care for the first time last week and they did a fantastic job. " +
+          "Reasonable pricing, showed up on time, and left the yard looking perfect. " +
+          "Ask for Mike and mention Pendleton Plantation for a neighbor discount.",
+        photoIds: [],
+      },
+      {
+        date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+        name: "Tom W.",
+        phone: "(555) 555-0202",
+        category: "Lost & Found",
+        title: "Found: Orange Tabby Cat on Oak Lane",
+        content: "Found a friendly orange tabby near the corner of Oak Lane and Magnolia Ct. " +
+          "He has a blue collar but no tag. Currently safe at our house. " +
+          "Please reach out if this is your cat!",
+        photoIds: [],
+      },
+    ];
+
+
+    // ── HELPERS ───────────────────────────────────────────────
+    function driveThumb(id) {
+      return "https://drive.google.com/thumbnail?id=" + id + "&sz=w400";
+    }
+
+    function driveFullSize(id) {
+      return "https://drive.google.com/thumbnail?id=" + id + "&sz=w1600";
+    }
+
+    function formatDate(isoString) {
+      if (!isoString) return "";
+      var d = new Date(isoString);
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    }
+
+    // Map a category name to a CSS class for the badge.
+    function badgeClass(category) {
+      var map = {
+        "Crime & Safety": "crime",
+        "Lost & Found": "lost",
+        "For Sale & Free": "forsale",
+        "Local Recommendations": "localrecs",
+        "Community News": "news",
+        "Recommendations & Advice": "advice",
+        "Complaints / Rants": "rants",
+      };
+      return map[category] || "news";
+    }
+
+
+    // ── LIGHTBOX STATE ────────────────────────────────────────
+    let allPhotos = [];   // flat array of { src, fullSrc, alt }
+    let currentIdx = 0;
+
+    const lightbox = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lb-img");
+    const lbCounter = document.getElementById("lb-counter");
+    const lbPrev = document.getElementById("lb-prev");
+    const lbNext = document.getElementById("lb-next");
+    const lbClose = document.getElementById("lb-close");
+
+    function openLightbox(idx) {
+      if (allPhotos.length === 0) return;
+      currentIdx = idx;
+      lbImg.src = allPhotos[currentIdx].fullSrc;
+      lbImg.alt = allPhotos[currentIdx].alt;
+      lbCounter.textContent = (currentIdx + 1) + " / " + allPhotos.length;
+      lightbox.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    lbClose.addEventListener("click", closeLightbox);
+    lightbox.addEventListener("click", function (e) {
+      if (e.target === lightbox) closeLightbox();
+    });
+    lbPrev.addEventListener("click", function () {
+      currentIdx = (currentIdx - 1 + allPhotos.length) % allPhotos.length;
+      openLightbox(currentIdx);
+    });
+    lbNext.addEventListener("click", function () {
+      currentIdx = (currentIdx + 1) % allPhotos.length;
+      openLightbox(currentIdx);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (!lightbox.classList.contains("open")) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") { currentIdx = (currentIdx - 1 + allPhotos.length) % allPhotos.length; openLightbox(currentIdx); }
+      if (e.key === "ArrowRight") { currentIdx = (currentIdx + 1) % allPhotos.length; openLightbox(currentIdx); }
+    });
+
+
+    // ── RENDER POSTS ──────────────────────────────────────────
+    function renderPosts(posts) {
+      allPhotos = [];
+      const grid = document.getElementById("posts-grid");
+      grid.innerHTML = "";
+
+      var source = (posts && posts.length > 0) ? posts : STATIC_POSTS;
+
+      source.forEach(function (post) {
+        var card = document.createElement("div");
+        card.className = "post-card";
+        card.dataset.category = post.category || "";
+
+        // Photos
+        var photosHTML = "";
+        if (post.photoIds && post.photoIds.length > 0) {
+          var thumbsHTML = "";
+          post.photoIds.forEach(function (id, i) {
+            var photoIdx = allPhotos.length;
+            allPhotos.push({
+              fullSrc: driveFullSize(id),
+              alt: post.title + " — photo " + (i + 1),
+            });
+            thumbsHTML +=
+              '<img class="post-photo-thumb" src="' + driveThumb(id) + '" ' +
+              'alt="' + post.title + ' photo ' + (i + 1) + '" ' +
+              'data-lightbox-idx="' + photoIdx + '" />';
+          });
+          photosHTML = '<div class="post-photos">' + thumbsHTML + '</div>';
+        }
+
+        // Contact block — only shown if name, phone, or email present
+        var contactParts = [];
+        if (post.name) contactParts.push("<strong>" + escapeHtml(post.name) + "</strong>");
+        if (post.phone) contactParts.push('<a href="tel:' + escapeHtml(post.phone) + '">' + escapeHtml(post.phone) + '</a>');
+        if (post.email) contactParts.push('<a href="mailto:' + escapeHtml(post.email) + '">' + escapeHtml(post.email) + '</a>');
+        var contactHTML = contactParts.length
+          ? '<div class="post-contact">📬 ' + contactParts.join(" &nbsp;·&nbsp; ") + '</div>'
+          : "";
+
+        card.innerHTML =
+          '<div class="post-card-meta">' +
+          '<span class="cat-badge ' + badgeClass(post.category) + '">' + escapeHtml(post.category || "General") + '</span>' +
+          '<span class="post-date">' + formatDate(post.date) + '</span>' +
+          '</div>' +
+          '<div class="post-title">' + escapeHtml(post.title || "Untitled") + '</div>' +
+          '<div class="post-content">' + escapeHtml(post.content || "") + '</div>' +
+          photosHTML +
+          contactHTML;
+
+        grid.appendChild(card);
+      });
+
+      // Attach lightbox listeners to thumbnails
+      grid.querySelectorAll(".post-photo-thumb").forEach(function (thumb) {
+        thumb.addEventListener("click", function () {
+          openLightbox(parseInt(thumb.dataset.lightboxIdx));
+        });
+      });
+
+      applyFilter(document.querySelector(".filter-btn.active")?.dataset.filter || "all");
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+
+    // ── CATEGORY FILTER ───────────────────────────────────────
+    function applyFilter(filter) {
+      var cards = document.querySelectorAll(".post-card");
+      var visible = 0;
+
+      cards.forEach(function (card) {
+        var show = filter === "all" || card.dataset.category === filter;
+        card.style.display = show ? "" : "none";
+        if (show) visible++;
+      });
+
+      document.getElementById("empty-state").style.display =
+        visible === 0 ? "block" : "none";
+    }
+
+    document.getElementById("filter-bar").addEventListener("click", function (e) {
+      var btn = e.target.closest(".filter-btn");
+      if (!btn) return;
+
+      document.querySelectorAll(".filter-btn").forEach(function (b) {
+        b.classList.remove("active");
+      });
+      btn.classList.add("active");
+      applyFilter(btn.dataset.filter);
+    });
+
+
+    // ── HAMBURGER MENU ────────────────────────────────────────
+    const hamburger = document.querySelector(".nav-hamburger");
+    const navLinks = document.querySelector(".nav-links");
+
+    if (hamburger && navLinks) {
+      hamburger.addEventListener("click", () => {
+        const isOpen = navLinks.classList.toggle("open");
+        hamburger.classList.toggle("open", isOpen);
+        hamburger.setAttribute("aria-expanded", isOpen);
+        document.body.style.overflow = isOpen ? "hidden" : "";
+      });
+      navLinks.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", () => {
+          navLinks.classList.remove("open");
+          hamburger.classList.remove("open");
+          hamburger.setAttribute("aria-expanded", "false");
+          document.body.style.overflow = "";
+        });
+      });
+    }
+
+
+    // ── LOAD DATA ─────────────────────────────────────────────
+    // Render static fallback immediately so the page isn't blank.
+    renderPosts(null);
+
+    if (SCRIPT_URL !== "PASTE_YOUR_BULLETIN_BOARD_SCRIPT_URL_HERE") {
+      fetch(SCRIPT_URL)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.posts && data.posts.length > 0) {
+            renderPosts(data.posts);
+          }
+        })
+        .catch(function () {
+          // Static fallback already showing — nothing more to do.
+        });
+    }
+
+  </script>
+
+</body>
+
+</html>

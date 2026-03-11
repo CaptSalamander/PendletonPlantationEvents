@@ -2,32 +2,27 @@
 <html lang="en">
 
 <!-- ============================================================
-     File:        submit-memory.html
-     Purpose:     Lets any resident upload photos from a
-                  neighborhood event so they can be featured in
-                  the Memories section on the homepage.
-                  Collects uploader name, email, event name, an
-                  optional caption/message, and up to 10 photos.
-                  Photos are sent as base64 JSON to a Google Apps
-                  Script web app which saves them to Drive and
-                  e-mails the organizer.
-     Script:      Uses the same nominations-script endpoint but
-                  photos go to the same Drive folder. A dedicated
-                  script (submit-memory-script.gs) is included for
-                  a clean separation if preferred.
-     Styles:      submit-memory-styles.css
+     File:        post-to-board.html
+     Purpose:     Lets any Pendleton Plantation resident submit a
+                  post to the Community Bulletin Board. Collects
+                  poster name, email, phone, street address (for
+                  resident verification), category, title, message,
+                  and optional photos. Posts are held for HOA review
+                  before appearing on bulletin-board.html.
+     Script:      bulletin-board-script.gs
+     Styles:      post-to-board-styles.css
      ============================================================ -->
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Share a Memory — Pendleton Plantation</title>
+  <title>Post to the Board — Pendleton Plantation</title>
 
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="submit-memory-styles.css" />
+  <link rel="stylesheet" href="post-to-board-styles.css" />
 </head>
 
 <body>
@@ -60,19 +55,19 @@
   <div class="page-wrapper">
 
     <div class="header">
-      <div class="camera-row">📷 🌿 📸 🌿 📷</div>
-      <h1>Share a<br /><em>Neighborhood Memory</em></h1>
+      <span class="board-icon">📋 🏘️ 📋</span>
+      <h1>Post to the<br /><em>Bulletin Board</em></h1>
       <p class="subtitle">
-        Got photos from a block party, holiday event, or just a great moment in
-        the neighborhood? Upload them here and they may be featured in the
-        Memories gallery on the community homepage!
+        Share a safety alert, lost pet, recommendation, neighborhood news,
+        or anything else your neighbors should know about.
+        Posts are reviewed by the HOA before going live.
       </p>
     </div>
 
 
     <div class="card">
       <div id="form-content">
-        <form id="memory-form" novalidate>
+        <form id="board-form" novalidate>
 
 
           <!-- ── SECTION 1: ABOUT YOU ──────────────────────── -->
@@ -80,53 +75,79 @@
 
           <div class="field-row">
             <div class="field">
-              <label for="uploader_first">First Name <span class="req">*</span></label>
-              <input type="text" id="uploader_first" placeholder="Jane" required />
+              <label for="poster_first">First Name <span class="req">*</span></label>
+              <input type="text" id="poster_first" placeholder="Jane" required />
             </div>
             <div class="field">
-              <label for="uploader_last">Last Name <span class="req">*</span></label>
-              <input type="text" id="uploader_last" placeholder="Smith" required />
+              <label for="poster_last">Last Name <span class="req">*</span></label>
+              <input type="text" id="poster_last" placeholder="Smith" required />
             </div>
           </div>
 
           <div class="field">
-            <label for="uploader_email">Email Address <span class="req">*</span></label>
-            <input type="email" id="uploader_email" placeholder="you@email.com" required />
-            <span class="field-hint">We'll reach out if we have any questions about your photos.</span>
+            <label for="poster_email">Email Address <span class="req">*</span></label>
+            <input type="email" id="poster_email" placeholder="you@email.com" required />
+          </div>
+
+          <div class="field">
+            <label for="poster_phone">Phone Number</label>
+            <input type="tel" id="poster_phone" placeholder="(555) 555-1234" />
+            <span class="field-hint">Optional — displayed on your post so neighbors can contact you directly.</span>
+          </div>
+
+          <div class="field">
+            <label for="poster_address">Street Address <span class="req">*</span></label>
+            <input type="text" id="poster_address" placeholder="e.g., 123 Magnolia Ct" required />
+            <span class="field-hint">Used to verify you're a Pendleton Plantation resident. Not shown publicly.</span>
           </div>
 
           <div class="divider"></div>
 
 
-          <!-- ── SECTION 2: THE EVENT ───────────────────────── -->
-          <div class="section-label">🎉 The Event</div>
+          <!-- ── SECTION 2: YOUR POST ───────────────────────── -->
+          <div class="section-label">📋 Your Post</div>
 
           <div class="field">
-            <label for="event_name">Event Name <span class="req">*</span></label>
-            <input type="text" id="event_name" placeholder="e.g., Halloween 2025, Easter Egg Hunt, Block Party…"
+            <label for="post_category">Category <span class="req">*</span></label>
+            <select id="post_category" required>
+              <option value="" disabled selected>Choose a category…</option>
+              <option value="Crime &amp; Safety">🚨 Crime &amp; Safety</option>
+              <option value="Lost &amp; Found">🐾 Lost &amp; Found</option>
+              <option value="For Sale &amp; Free">🏷️ For Sale &amp; Free</option>
+              <option value="Local Recommendations">⭐ Local Recommendations</option>
+              <option value="Community News">📰 Community News</option>
+              <option value="Recommendations &amp; Advice">💬 Recommendations &amp; Advice</option>
+              <option value="Complaints / Rants">😤 Complaints / Rants</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="post_title">Title <span class="req">*</span></label>
+            <input type="text" id="post_title"
+              placeholder="e.g., Found: Black Lab on Oak Lane, Beware of Package Theft, Recommend Jones Plumbing…"
               required />
           </div>
 
           <div class="field">
-            <label for="caption">Caption or Message (optional)</label>
-            <textarea id="caption"
-              placeholder="Share anything you'd like — a funny moment, a thank-you, a story from the day…"></textarea>
-            <span class="field-hint">This may appear alongside your photos in the gallery.</span>
+            <label for="post_content">Message <span class="req">*</span></label>
+            <textarea id="post_content"
+              placeholder="Share the details — the more specific, the more helpful it will be for your neighbors…"
+              required></textarea>
           </div>
 
           <div class="divider"></div>
 
 
-          <!-- ── SECTION 3: YOUR PHOTOS ─────────────────────── -->
-          <div class="section-label">📷 Your Photos <span class="req">*</span></div>
+          <!-- ── SECTION 3: PHOTOS ──────────────────────────── -->
+          <div class="section-label">📷 Photos (optional)</div>
           <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px; line-height:1.65;">
-            Upload up to 10 photos. They'll be saved to a private HOA Drive folder
-            and reviewed before being added to the gallery.
+            A photo can make your post much more helpful — a snapshot of a found pet, a flyer,
+            a damaged area, or anything relevant. Up to 5 photos.
           </p>
 
           <div class="upload-zone" id="upload-zone" role="button" tabindex="0"
             aria-label="Click or drag photos here to upload">
-            <div class="upload-icon">🖼️</div>
+            <div class="upload-icon">📎</div>
             <div class="upload-prompt">
               <strong>Click to choose photos</strong> or drag &amp; drop them here<br />
               JPG, PNG, HEIC, WEBP accepted
@@ -135,7 +156,7 @@
           </div>
 
           <div class="photo-preview-grid" id="photo-preview-grid"></div>
-          <p class="upload-limit" id="upload-limit-hint">Up to 10 photos · 8 MB each</p>
+          <p class="upload-limit" id="upload-limit-hint">Up to 5 photos · 8 MB each</p>
 
           <div class="divider"></div>
 
@@ -143,7 +164,7 @@
           <!-- ── SUBMIT ─────────────────────────────────────── -->
           <div class="submit-area">
             <button type="submit" class="submit-btn" id="submit-btn">
-              Share My Photos 📸
+              Submit Post 📋
             </button>
 
             <div class="error-msg" id="error-msg">
@@ -152,7 +173,7 @@
             </div>
 
             <p class="fine-print">
-              Photos are reviewed by the HOA before being posted publicly.<br />
+              Posts are reviewed by the HOA before being published.<br />
               Questions? Contact <a href="mailto:mandyvaliquette00@gmail.com">mandyvaliquette00@gmail.com</a>.
             </p>
           </div>
@@ -163,13 +184,13 @@
 
       <!-- ── SUCCESS SCREEN ──────────────────────────────────-->
       <div class="success-msg" id="success-msg">
-        <div class="big-emoji">📸</div>
-        <h2>Photos Submitted!</h2>
+        <div class="big-emoji">📋</div>
+        <h2>Post Submitted!</h2>
         <p>
-          Thank you for sharing your memories with the neighborhood!
-          The HOA team will review your photos and add them to the
-          gallery on the homepage.<br /><br />
-          <em>These are the moments that make Pendleton Plantation feel like home.</em>
+          Thank you for contributing to the Community Bulletin Board!
+          The HOA team will review your post and publish it once approved.<br /><br />
+          <em>Neighbors helping neighbors — that's what makes Pendleton Plantation special.</em><br /><br />
+          <a href="bulletin-board.html">← Back to the Bulletin Board</a>
         </p>
       </div>
 
@@ -177,13 +198,13 @@
       <!-- ── LOADING OVERLAY ─────────────────────────────────-->
       <div class="submit-overlay" id="submit-overlay" aria-live="polite">
         <div class="spinner"></div>
-        <div class="overlay-status" id="overlay-status">Uploading photos…</div>
+        <div class="overlay-status" id="overlay-status">Submitting your post…</div>
       </div>
 
     </div><!-- end .card -->
 
     <div class="footer">
-      Pendleton Plantation HOA &nbsp;·&nbsp; Community Memories
+      Pendleton Plantation HOA &nbsp;·&nbsp; Community Bulletin Board
     </div>
 
   </div><!-- end .page-wrapper -->
@@ -192,18 +213,13 @@
   <script>
 
     // ============================================================
-    //  ✏️  CONFIG
+    //  CONFIG — paste your deployed bulletin-board-script.gs
+    //  Web App URL here after deploying.
     // ============================================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzfoCjpqVPMxAuyAn6WuKFKoH-U9cqvSto0nvqWeuCQgRbqXo95XXCPPsnvRnICcg-TJw/exec";
 
-    // Google Apps Script Web App URL.
-    // Deploy submit-memory-script.gs and paste the URL here.
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVAlddIDr2eRgolc-A4v5OviKhIfaiqXnuCONA9uJ71HjAeDjiprfRZDD-ZAcfzWc4_g/exec";
-
-    const MAX_PHOTOS = 10;
-    const MAX_FILE_BYTES = 8 * 1024 * 1024;  // 8 MB
-
-    // ============================================================
-    //  End of config
+    const MAX_PHOTOS = 5;
+    const MAX_FILE_BYTES = 8 * 1024 * 1024;   // 8 MB
     // ============================================================
 
 
@@ -325,7 +341,7 @@
 
 
     // ── FORM SUBMISSION ──────────────────────────────────────
-    document.getElementById("memory-form").addEventListener("submit", async function (e) {
+    document.getElementById("board-form").addEventListener("submit", async function (e) {
       e.preventDefault();
 
       const btn = document.getElementById("submit-btn");
@@ -336,11 +352,14 @@
       errorMsg.style.display = "none";
 
       // ── Validation ────────────────────────────────────────
-      const firstName = document.getElementById("uploader_first").value.trim();
-      const lastName = document.getElementById("uploader_last").value.trim();
-      const email = document.getElementById("uploader_email").value.trim();
-      const eventName = document.getElementById("event_name").value.trim();
-      const caption = document.getElementById("caption").value.trim();
+      const firstName = document.getElementById("poster_first").value.trim();
+      const lastName = document.getElementById("poster_last").value.trim();
+      const email = document.getElementById("poster_email").value.trim();
+      const phone = document.getElementById("poster_phone").value.trim();
+      const address = document.getElementById("poster_address").value.trim();
+      const category = document.getElementById("post_category").value;
+      const title = document.getElementById("post_title").value.trim();
+      const content = document.getElementById("post_content").value.trim();
 
       if (!firstName || !lastName) {
         errorMsg.textContent = "Please enter your name.";
@@ -352,20 +371,30 @@
         errorMsg.style.display = "block";
         return;
       }
-      if (!eventName) {
-        errorMsg.textContent = "Please enter the name of the event.";
+      if (!address) {
+        errorMsg.textContent = "Please enter your street address to verify you're a resident.";
         errorMsg.style.display = "block";
         return;
       }
-      if (selectedFiles.length === 0) {
-        errorMsg.textContent = "Please choose at least one photo to share.";
+      if (!category) {
+        errorMsg.textContent = "Please choose a category for your post.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      if (!title) {
+        errorMsg.textContent = "Please give your post a title.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      if (!content) {
+        errorMsg.textContent = "Please write a message for your post.";
         errorMsg.style.display = "block";
         return;
       }
 
       // ── Show overlay & encode photos ──────────────────────
       btn.disabled = true;
-      overlayStatus.textContent = "Uploading photos… 📸";
+      overlayStatus.textContent = selectedFiles.length > 0 ? "Uploading photos… 📸" : "Submitting your post…";
       overlay.classList.add("visible");
 
       let photosPayload = [];
@@ -386,13 +415,16 @@
       }
 
       // ── Build payload & POST ──────────────────────────────
-      overlayStatus.textContent = "Submitting… 🌿";
+      overlayStatus.textContent = "Submitting… 🏘️";
 
       const payload = {
-        uploader_name: firstName + " " + lastName,
+        name: firstName + " " + lastName,
         email,
-        event_name: eventName,
-        caption,
+        phone,
+        address,
+        category,
+        title,
+        content,
         photos: photosPayload,
       };
 

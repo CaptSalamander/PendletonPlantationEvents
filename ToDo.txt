@@ -2,3 +2,8 @@
 2. Add a neighborhood "BUlletin Board"
 3. A Resident-Owned Business & Service Directory
 Neighbors love supporting neighbors. A dedicated page where residents can list their own local businesses, side projects, or services would be a massive value-add for the community. It’s also the perfect spot to compile a community-sourced list of trusted Easley-area providers, such as plumbers, landscapers, teenage babysitters, and pet sitters.
+4. Create pages where I can update or add events, announcements, awards awarded, etc.
+5. Adjust links, buttons, etc to be more generic for future use.
+6. Add board, etc. to email notifications, etc.
+7. Add a community calendar?
+8. Add a resident directory maybe
