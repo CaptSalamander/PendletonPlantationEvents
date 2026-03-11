@@ -262,7 +262,7 @@ function doPost(e) {
     // ── Notify organizer with approval link ───────────────
     // NOTE: After deploying, the SCRIPT_URL is fixed; update it
     // here if you redeploy with a new URL.
-    var SCRIPT_URL = "PASTE_YOUR_SCRIPT_URL_HERE";
+    var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzfoCjpqVPMxAuyAn6WuKFKoH-U9cqvSto0nvqWeuCQgRbqXo95XXCPPsnvRnICcg-TJw/exec";
 
     var approveLink = SCRIPT_URL + "?action=approve&token=" + token;
 
