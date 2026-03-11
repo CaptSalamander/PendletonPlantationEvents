@@ -14,13 +14,20 @@
    tones compared to the main site to give the form a friendly,
    inviting feel. */
 :root {
-  --cream:      #fdf6ec;            /* Very warm off-white — the page background. */
-  --blush:      #f4c8c0;            /* Soft rose/blush — borders, accent elements. */
-  --sage:       #b5c9b2;            /* Muted sage green — supplementary accent. */
-  --goldenrod:  rgb(232, 167, 56);  /* Warm golden orange — primary accent color. */
-  --deep:       #3b3229;            /* Dark warm brown — primary text color. */
-  --soft-text:  #7a6a5a;            /* Medium warm brown — labels and secondary text. */
-  --white:      #ffffff;            /* Pure white — card backgrounds, input fields. */
+  --cream: #fdf6ec;
+  /* Very warm off-white — the page background. */
+  --blush: #f4c8c0;
+  /* Soft rose/blush — borders, accent elements. */
+  --sage: #b5c9b2;
+  /* Muted sage green — supplementary accent. */
+  --goldenrod: rgb(232, 167, 56);
+  /* Warm golden orange — primary accent color. */
+  --deep: #3b3229;
+  /* Dark warm brown — primary text color. */
+  --soft-text: #7a6a5a;
+  /* Medium warm brown — labels and secondary text. */
+  --white: #ffffff;
+  /* Pure white — card backgrounds, input fields. */
 }
 
 
@@ -40,7 +47,8 @@
    Horizontal overflow is hidden to prevent the blobs from
    causing a scrollbar. */
 body {
-  font-family: 'DM Sans', sans-serif;   /* Loaded from Google Fonts in the HTML file. */
+  font-family: 'DM Sans', sans-serif;
+  /* Loaded from Google Fonts in the HTML file. */
   background-color: var(--cream);
   color: var(--deep);
   min-height: 100vh;
@@ -54,14 +62,16 @@ body {
    wash without requiring an image file. */
 body::before {
   content: '';
-  position: fixed;   /* Stays in place as the user scrolls. */
+  position: fixed;
+  /* Stays in place as the user scrolls. */
   top: -120px;
   right: -120px;
   width: 420px;
   height: 420px;
   background: radial-gradient(circle, #f7dbd7 0%, transparent 70%);
   border-radius: 50%;
-  pointer-events: none;   /* Decorative — clicks pass through. */
+  pointer-events: none;
+  /* Decorative — clicks pass through. */
   z-index: 0;
 }
 
@@ -87,10 +97,14 @@ body::after {
    blobs (z-index: 1), constrained to a max width, and centered. */
 .page-wrapper {
   position: relative;
-  z-index: 1;           /* Sit above the decorative background blobs. */
-  max-width: 680px;     /* Comfortable form width — not too wide to read. */
-  margin: 0 auto;       /* Center on the page. */
-  padding: 108px 24px 80px;   /* Top padding accounts for the fixed nav bar. */
+  z-index: 1;
+  /* Sit above the decorative background blobs. */
+  max-width: 680px;
+  /* Comfortable form width — not too wide to read. */
+  margin: 0 auto;
+  /* Center on the page. */
+  padding: 108px 24px 80px;
+  /* Top padding accounts for the fixed nav bar. */
 }
 
 
@@ -109,13 +123,19 @@ body::after {
   font-size: 2.4rem;
   letter-spacing: 6px;
   margin-bottom: 16px;
-  animation: float 3s ease-in-out infinite alternate;   /* Endless gentle float. */
+  animation: float 3s ease-in-out infinite alternate;
+  /* Endless gentle float. */
 }
 
 /* Keyframe: moves the emoji row 8px upward and back down continuously. */
 @keyframes float {
-  from { transform: translateY(0px); }
-  to   { transform: translateY(-8px); }
+  from {
+    transform: translateY(0px);
+  }
+
+  to {
+    transform: translateY(-8px);
+  }
 }
 
 /* ── PAGE HEADLINE ────────────────────────────────────────────
@@ -123,7 +143,8 @@ body::after {
    Uses the Playfair Display serif font for elegance. */
 .header h1 {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(2rem, 5vw, 3rem);   /* Scales smoothly from mobile to desktop. */
+  font-size: clamp(2rem, 5vw, 3rem);
+  /* Scales smoothly from mobile to desktop. */
   font-weight: 700;
   color: var(--deep);
   line-height: 1.15;
@@ -154,16 +175,19 @@ body::after {
 .event-meta {
   display: flex;
   gap: 12px;
-  justify-content: center;   /* Center the tag row horizontally. */
-  flex-wrap: wrap;            /* Allow tags to wrap on very narrow screens. */
-  margin: 28px 0 44px;
+  justify-content: center;
+  /* Center the tag row horizontally. */
+  flex-wrap: wrap;
+  /* Allow tags to wrap on very narrow screens. */
+  margin: 28px 0 28px;
 }
 
 /* Individual meta tag pill. */
 .meta-tag {
   background: var(--white);
   border: 1.5px solid var(--blush);
-  border-radius: 100px;   /* Fully rounded pill shape. */
+  border-radius: 100px;
+  /* Fully rounded pill shape. */
   padding: 6px 16px;
   font-size: 0.85rem;
   font-weight: 500;
@@ -176,6 +200,26 @@ body::after {
 }
 
 
+/* ── EVENT DESCRIPTION ────────────────────────────────────────
+   Schedule and event details shown below the meta tag row,
+   above the form card. */
+.description {
+  font-size: 0.93rem;
+  color: var(--soft-text);
+  line-height: 1.85;
+  margin-bottom: 44px;
+  background: var(--white);
+  border: 1.5px solid var(--blush);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.description strong {
+  color: var(--deep);
+  font-weight: 600;
+}
+
+
 /* ── FORM CARD ────────────────────────────────────────────────
    The white rounded card that contains the entire sign-up form.
    A soft shadow gives it a subtle elevation effect. */
@@ -184,7 +228,8 @@ body::after {
   border-radius: 24px;
   padding: 40px 44px;
   box-shadow: 0 4px 40px rgba(59, 50, 41, 0.07);
-  border: 1px solid rgba(244, 200, 192, 0.4);   /* Very faint blush border. */
+  border: 1px solid rgba(244, 200, 192, 0.4);
+  /* Very faint blush border. */
 }
 
 /* On small screens, reduce card padding to prevent cramped text. */
@@ -218,7 +263,8 @@ body::after {
 
 /* When the "active" class is present, expand the content area. */
 .custom-collapsible.active .content {
-  max-height: 200px;   /* Set high enough to show all content inside. */
+  max-height: 200px;
+  /* Set high enough to show all content inside. */
   padding: 10px;
 }
 
@@ -251,7 +297,8 @@ body::after {
    (e.g., First Name and Last Name). */
 .field-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;   /* Two equal columns. */
+  grid-template-columns: 1fr 1fr;
+  /* Two equal columns. */
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -273,18 +320,22 @@ body::after {
 .accordion-header {
   cursor: pointer;
   display: flex;
-  justify-content: space-between;   /* Category name on the left, icon on the right. */
+  justify-content: space-between;
+  /* Category name on the left, icon on the right. */
   align-items: center;
-  background: rgba(201, 168, 76, 0.1);   /* Subtle gold background. */
-  padding: 14px 18px;
+  background: rgba(201, 168, 76, 0.1);
+  /* Subtle gold background. */
+  padding: 30px 18px;
   border-radius: 6px;
   margin-bottom: 8px;
   font-family: 'Playfair Display', serif;
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--forest, #2c3d2e);    /* Deep forest green text. */
+  color: var(--forest, #2c3d2e);
+  /* Deep forest green text. */
   transition: background 0.2s;
-  user-select: none;   /* Prevent text selection when clicking. */
+  user-select: none;
+  /* Prevent text selection when clicking. */
 }
 
 /* On hover: slightly darken the header background. */
@@ -324,7 +375,8 @@ body::after {
    and an input/select/textarea. */
 .field {
   display: flex;
-  flex-direction: column;   /* Stack the label above the input. */
+  flex-direction: column;
+  /* Stack the label above the input. */
   gap: 6px;
   margin-bottom: 16px;
 }
@@ -361,14 +413,17 @@ select,
 textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 1.5px solid #e6ddd4;    /* Warm gray/tan border. */
+  border: 1.5px solid #e6ddd4;
+  /* Warm gray/tan border. */
   border-radius: 10px;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.95rem;
   color: var(--deep);
-  background: #fdfaf7;            /* Very light warm background for the field. */
+  background: #fdfaf7;
+  /* Very light warm background for the field. */
   transition: border-color 0.2s, box-shadow 0.2s;
-  outline: none;                  /* Remove browser default focus outline — replaced below. */
+  outline: none;
+  /* Remove browser default focus outline — replaced below. */
 }
 
 /* When a field is focused: highlight with a gold border and a soft glow. */
@@ -376,7 +431,8 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--goldenrod);
-  box-shadow: 0 0 0 3px rgba(232, 168, 56, 0.15);   /* Subtle golden halo effect. */
+  box-shadow: 0 0 0 3px rgba(232, 168, 56, 0.15);
+  /* Subtle golden halo effect. */
   background: #fff;
 }
 
@@ -397,7 +453,8 @@ select {
    attendees fall into each age group (Adults, 0-3, 4-8, 9+). */
 .age-bracket-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);   /* Four equal columns by default. */
+  grid-template-columns: repeat(4, 1fr);
+  /* Four equal columns by default. */
   gap: 10px;
 }
 
@@ -446,7 +503,8 @@ select {
    open accordion section. Each item has a name and a quantity
    number input. */
 .donate-qty-list {
-  grid-column: 1 / -1;    /* Span all columns inside the grid parent. */
+  grid-column: 1 / -1;
+  /* Span all columns inside the grid parent. */
   margin-bottom: 12px;
 }
 
@@ -496,7 +554,8 @@ select {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-shrink: 0;   /* Prevent the qty input from collapsing. */
+  flex-shrink: 0;
+  /* Prevent the qty input from collapsing. */
 }
 
 /* Small "QTY" label to the left of the quantity input. */
@@ -510,7 +569,8 @@ select {
 
 /* The quantity number input — narrow and centered. */
 .qty-input {
-  width: 64px !important;   /* Fixed narrow width so it doesn't crowd the item name. */
+  width: 64px !important;
+  /* Fixed narrow width so it doesn't crowd the item name. */
   padding: 6px 8px !important;
   text-align: center;
 }
@@ -519,7 +579,8 @@ select {
 .donate-item .item-stats {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid rgba(236, 221, 208, 0.8);   /* Divider line above stats. */
+  border-top: 1px solid rgba(236, 221, 208, 0.8);
+  /* Divider line above stats. */
 }
 
 
@@ -528,7 +589,8 @@ select {
    within a checkbox-grid (used when not in accordion mode).
    Spans all grid columns. */
 .donate-category {
-  grid-column: 1 / -1;   /* Span all grid columns. */
+  grid-column: 1 / -1;
+  /* Span all grid columns. */
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.2em;
@@ -560,7 +622,8 @@ select {
   padding: 12px 14px;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
-  padding-bottom: 25px;   /* Extra bottom padding so the live count badge fits. */
+  padding-bottom: 25px;
+  /* Extra bottom padding so the live count badge fits. */
 }
 
 /* On hover: highlight the checkbox card with gold border and warm yellow tint. */
@@ -574,7 +637,8 @@ select {
   width: 17px;
   height: 17px;
   min-width: 17px;
-  accent-color: var(--goldenrod);   /* Colors the checkmark goldenrod when checked. */
+  accent-color: var(--goldenrod);
+  /* Colors the checkmark goldenrod when checked. */
   margin: 12px 0px;
   cursor: pointer;
 }
@@ -608,7 +672,8 @@ select {
   letter-spacing: 0.06em;
   padding: 2px 8px;
   border-radius: 20px;
-  background: rgba(232, 168, 56, 0.12);   /* Soft gold background for an active count. */
+  background: rgba(232, 168, 56, 0.12);
+  /* Soft gold background for an active count. */
   color: #b07d1a;
 }
 
@@ -634,7 +699,8 @@ select {
   flex-direction: column;
   gap: 2px;
   background-color: var(--white);
-  border: var(--goldenrod) 1.5px solid;   /* Gold border around each stat box. */
+  border: var(--goldenrod) 1.5px solid;
+  /* Gold border around each stat box. */
   border-radius: 20%;
   width: 60px;
   font-size: .75rem;
@@ -699,7 +765,8 @@ select {
   background: var(--goldenrod);
   color: var(--white);
   border: none;
-  border-radius: 100px;   /* Pill shape. */
+  border-radius: 100px;
+  /* Pill shape. */
   padding: 16px 52px;
   font-family: 'DM Sans', sans-serif;
   font-size: 1rem;
@@ -714,7 +781,8 @@ select {
 .submit-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(232, 168, 56, 0.45);
-  background: #d4952a;   /* Slightly darker goldenrod on hover. */
+  background: #d4952a;
+  /* Slightly darker goldenrod on hover. */
 }
 
 /* On click/press: return to normal position. */
@@ -750,7 +818,8 @@ select {
    A red-tinted error box shown if the form submission fails.
    Hidden by default and shown by JavaScript. */
 .error-msg {
-  display: none;          /* Hidden until JS sets display: block. */
+  display: none;
+  /* Hidden until JS sets display: block. */
   background: #fff0f0;
   border: 1.5px solid #f4c0c0;
   border-radius: 10px;
@@ -766,7 +835,8 @@ select {
    The confirmation screen shown after a successful form submission.
    Replaces the form content area. Hidden by default. */
 .success-msg {
-  display: none;   /* Hidden until JS sets display: block after submission. */
+  display: none;
+  /* Hidden until JS sets display: block after submission. */
   text-align: center;
   padding: 40px 20px;
 }
@@ -813,7 +883,8 @@ select {
    load index-styles.css. Matches the main site nav visually
    but uses DM Sans as the font to match the form page's theme. */
 nav {
-  position: fixed;        /* Stays at the top of the screen as the user scrolls. */
+  position: fixed;
+  /* Stays at the top of the screen as the user scrolls. */
   top: 0;
   left: 0;
   right: 0;
@@ -822,16 +893,20 @@ nav {
   align-items: center;
   justify-content: space-between;
   padding: 20px 48px;
-  background: rgba(245, 240, 232, 0.88);    /* Semi-transparent cream background. */
-  backdrop-filter: blur(12px);               /* Frosted-glass blur of content behind nav. */
+  background: rgba(245, 240, 232, 0.88);
+  /* Semi-transparent cream background. */
+  backdrop-filter: blur(12px);
+  /* Frosted-glass blur of content behind nav. */
   border-bottom: 1px solid rgba(201, 168, 76, 0.2);
   transition: padding 0.3s;
-  font-family: 'DM Sans', sans-serif;       /* Match the form page's font. */
+  font-family: 'DM Sans', sans-serif;
+  /* Match the form page's font. */
 }
 
 /* The site name / logo link in the top-left corner of the nav. */
 .nav-brand {
-  font-family: 'Playfair Display', serif;   /* Elegant serif for the brand name. */
+  font-family: 'Playfair Display', serif;
+  /* Elegant serif for the brand name. */
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -858,7 +933,8 @@ nav {
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #7a7060;       /* Muted warm gray by default. */
+  color: #7a7060;
+  /* Muted warm gray by default. */
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -911,7 +987,8 @@ nav {
       justify-content: center;
       gap: 36px;
       z-index: 50;
-      display: none;    /* Hidden until JS adds the "open" class. */
+      display: none;
+      /* Hidden until JS adds the "open" class. */
     }
 
     /* Show the overlay when the hamburger is clicked. */
