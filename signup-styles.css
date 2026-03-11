@@ -113,7 +113,7 @@ body::after {
    row, the main headline, and the subtitle. Centered text. */
 .header {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 8px;
 }
 
 /* ── ANIMATED EMOJI ROW ───────────────────────────────────────
@@ -207,7 +207,7 @@ body::after {
   font-size: 0.93rem;
   color: var(--soft-text);
   line-height: 1.85;
-  margin-bottom: 44px;
+  margin-bottom: 22px;
   background: var(--white);
   border: 1.5px solid var(--blush);
   border-radius: 16px;
@@ -217,6 +217,14 @@ body::after {
 .description strong {
   color: var(--deep);
   font-weight: 600;
+}
+
+.description-heading {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--deep);
+  margin: 16px 0 12px;
 }
 
 
@@ -323,19 +331,17 @@ body::after {
   justify-content: space-between;
   /* Category name on the left, icon on the right. */
   align-items: center;
-  background: rgba(201, 168, 76, 0.1);
-  /* Subtle gold background. */
-  padding: 30px 18px;
+  background: #fdf6ec;
+  border: 1.5px solid #ecddd0;
+  padding: 30px;
   border-radius: 6px;
-  margin-bottom: 8px;
   font-family: 'Playfair Display', serif;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--forest, #2c3d2e);
   /* Deep forest green text. */
   transition: background 0.2s;
-  user-select: none;
-  /* Prevent text selection when clicking. */
+
 }
 
 /* On hover: slightly darken the header background. */
@@ -359,7 +365,7 @@ body::after {
 /* The content area containing the donation items. Hidden by default. */
 .accordion-content {
   display: none;
-  padding: 8px 12px 24px;
+
 }
 
 /* When JS adds the "open" class, reveal the content as a two-column grid. */
@@ -596,16 +602,11 @@ select {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--goldenrod);
-  padding: 10px 0 6px;
+  padding: 14px;
   border-bottom: 1px solid rgba(232, 168, 56, 0.25);
-  margin-top: 10px;
+  margin-top: 9px;
 }
 
-/* No top margin on the very first category header. */
-.donate-category:first-child {
-  margin-top: 0;
-  padding-top: 0;
-}
 
 
 /* ── VOLUNTEER CHECKBOX ITEM ──────────────────────────────────
@@ -775,6 +776,7 @@ select {
   letter-spacing: 0.03em;
   transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
   box-shadow: 0 4px 20px rgba(232, 168, 56, 0.35);
+  margin-bottom: 18px;
 }
 
 /* On hover: lift the button and deepen the shadow. */
