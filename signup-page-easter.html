@@ -92,317 +92,307 @@
       <p class="subtitle" id="page-subtitle"></p>
     </div>
 
-    <!-- ── EVENT META TAGS ───────────────────────────────────
+    <!-- Event description. Content set from EVENT.description. -->
+    <p class="description" id="page-description"></p>
+  </div>
+
+  <!-- ── EVENT META TAGS ───────────────────────────────────
          Pill-shaped tags showing date, time, and location.
          Built and injected by JavaScript from EVENT fields. -->
-    <div class="event-meta" id="event-meta"></div>
+  <div class="event-meta" id="event-meta"></div>
 
 
-    <!-- ── FORM CARD ─────────────────────────────────────────
+  <!-- ── FORM CARD ─────────────────────────────────────────
          White rounded card containing the full sign-up form. -->
-    <div class="card">
+  <div class="card">
 
-      <!-- #form-content wraps the form. When the user submits successfully,
+    <!-- #form-content wraps the form. When the user submits successfully,
            this div is hidden and #success-msg is shown in its place. -->
-      <div id="form-content">
-        <form id="signup-form">
+    <div id="form-content">
+      <form id="signup-form">
 
-          <!-- ── SECTION 1: ABOUT YOU ──────────────────────
+        <!-- ── SECTION 1: ABOUT YOU ──────────────────────
                Static section — same for every event.
                Collects name, email, phone, and address. -->
-          <div class="section-label">🌷 About You</div>
+        <div class="section-label">🌷 About You</div>
 
-          <!-- First and last name side by side. -->
-          <div class="field-row">
-            <div class="field">
-              <label>First Name <span class="req">*</span></label>
-              <input type="text" id="first_name" placeholder="Jane" required />
-            </div>
-            <div class="field">
-              <label>Last Name <span class="req">*</span></label>
-              <input type="text" id="last_name" placeholder="Smith" required />
-            </div>
-          </div>
-
-          <!-- Email address — required for the organizer to follow up. -->
+        <!-- First and last name side by side. -->
+        <div class="field-row">
           <div class="field">
-            <label>Email Address <span class="req">*</span></label>
-            <input type="email" id="email" placeholder="you@email.com" required />
+            <label>First Name <span class="req">*</span></label>
+            <input type="text" id="first_name" placeholder="Jane" required />
           </div>
-
-          <!-- Phone and street address side by side — both optional. -->
-          <div class="field-row">
-            <div class="field">
-              <label>Phone (optional)</label>
-              <input type="tel" id="phone" placeholder="(864) 555-0123" />
-            </div>
-            <div class="field">
-              <label>Street / Address</label>
-              <input type="text" id="address" placeholder="123 Maple Lane" />
-            </div>
+          <div class="field">
+            <label>Last Name <span class="req">*</span></label>
+            <input type="text" id="last_name" placeholder="Smith" required />
           </div>
+        </div>
 
-          TODO: Add description for the event. Something like: "Join us for our first annual neighborhood Easter Egg
-          Hunt! <br> We'll have separate egg hunt areas for different age
-          groups, a photo booth, a paper egg decorating station, and prizes for the lucky kids who find the golden eggs!
-          <br><br>
-          We really want to build the community aspect of this beautiful little neighborhood. <br><br> To make this all
-          a success,
-          we need volunteers to help hide eggs the morning of the event, run the craft station, and staff the photo
-          booth. We have
-          received some very donations from anonymous neighbors but if you're inclined to help, we do have a sign up
-          below for items
-          we'll need for the event. Even if you can't volunteer but want to attend, it would be so great if you would
-          RSVP to let
-          us know you're coming — it really helps with our planning! <br> <br> Thank you so much, and we can't wait to
-          see
-          everyone there!
+        <!-- Email address — required for the organizer to follow up. -->
+        <div class="field">
+          <label>Email Address <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="you@email.com" required />
+        </div>
 
-          TODO: Add a "How did you hear about the event?" dropdown or free-text field to collect info on how residents
-          found out
-          about the event (e.g., facebook, word of mouth, website). This can help the organizer understand which
-          outreach
-          methods are most effective for future events.
-
-          TODO: Add an optional field for residents to indicate if they have any special skills or resources that could
-          be helpful
-          for the event (e.g., "I have a truck and can help with transport", "I'm a graphic designer and can help make
-          signs", "I
-          speak Spanish and can help with translation"). This allows residents to offer help that might not fit into the
-          predefined volunteer roles or donation items, and gives the organizer more information to work with when
-          coordinating
-          volunteers and resources.
-
-          TODO: Add a checkbox for residents to opt in to receiving updates about future events or volunteer
-          opportunities. This
-          can help the organizer build a mailing list of interested residents for easier communication in the future,
-          while still
-          respecting privacy and giving people a clear choice.
-
-          TODO: Add email address field. Make it optional but explain that the organizer needs a way to follow up with
-          volunteers and donors. Also include checkboxes for: "Contact me about upcoming events.", "Sign up for monthly
-          neighborhood newsletter." Validate that it's in the correct format.
-
-          - Label: "Email Address *"
-          - Input type: email
-          - Placeholder: "email@email.com"
-          - Validation: optional, must be a valid email format
-          - Ask if they prefer e-mail or text messages.
-          - Explanation text below the field: "We'll use this to contact you about your volunteer/donation selections
-          and follow up with any questions. We won't share your email or send you anything unrelated to this event."
-          - If added, this field would be included in the form submission and visible to the organizer in the
-          spreadsheet and notification email, just like the name and phone fields. The validation would ensure that if
-          an email is provided, it's in a valid format, but it wouldn't be required to submit the form.
-          - This allows residents to provide an email for follow-up without making it a barrier for those who prefer not
-          to share their email or don't have one. The organizer can still contact volunteers and donors via phone if
-          they choose, but having the option for email can make communication easier for some people and allows the
-          organizer to send more detailed information or updates if needed.
-          - The opt-in checkboxes for updates and newsletter would also be included in the form submission, allowing the
-          organizer to easily see who is interested in future communications and build a mailing list for future events
-          or newsletters. This can help with community engagement and make it easier to promote future events without
-          needing to do separate outreach to build a mailing list.
-          - If the email field is added, it would be important to ensure that the form submission handling in the Google
-          Apps Script is updated to include this new field and that the notification email sent to the organizer
-          includes the email address provided by the resident. This way, the organizer has all the contact information
-          they need in one place when they receive a new sign-up.
-          - If the "Contact me about upcoming events" and "Sign up for monthly neighborhood newsletter" checkboxes are
-          added, these would also need to be included in the form submission data and visible to the organizer. The
-          organizer could then use this information to segment their mailing list and send targeted communications to
-          those who are interested in future events or newsletters.
-          - This also allows the organizer to respect residents' communication preferences and only send updates to
-          those who have opted in, which can help build trust and engagement with the community.
+        <!-- Phone and street address side by side — both optional. -->
+        <div class="field-row">
+          <div class="field">
+            <label>Phone (optional)</label>
+            <input type="tel" id="phone" placeholder="(864) 555-0123" />
+          </div>
+          <div class="field">
+            <label>Street / Address</label>
+            <input type="text" id="address" placeholder="123 Maple Lane" />
+          </div>
+        </div>
 
 
-          <!-- Decorative divider line between sections. -->
-          <div class="divider"></div>
+
+        TODO: Add a "How did you hear about the event?" dropdown or free-text field to collect info on how residents
+        found out
+        about the event (e.g., facebook, word of mouth, website). This can help the organizer understand which
+        outreach
+        methods are most effective for future events.
+
+        TODO: Add an optional field for residents to indicate if they have any special skills or resources that could
+        be helpful
+        for the event (e.g., "I have a truck and can help with transport", "I'm a graphic designer and can help make
+        signs", "I
+        speak Spanish and can help with translation"). This allows residents to offer help that might not fit into the
+        predefined volunteer roles or donation items, and gives the organizer more information to work with when
+        coordinating
+        volunteers and resources.
+
+        TODO: Add a checkbox for residents to opt in to receiving updates about future events or volunteer
+        opportunities. This
+        can help the organizer build a mailing list of interested residents for easier communication in the future,
+        while still
+        respecting privacy and giving people a clear choice.
+
+        TODO: Add email address field. Make it optional but explain that the organizer needs a way to follow up with
+        volunteers and donors. Also include checkboxes for: "Contact me about upcoming events.", "Sign up for monthly
+        neighborhood newsletter." Validate that it's in the correct format.
+
+        - Label: "Email Address *"
+        - Input type: email
+        - Placeholder: "email@email.com"
+        - Validation: optional, must be a valid email format
+        - Ask if they prefer e-mail or text messages.
+        - Explanation text below the field: "We'll use this to contact you about your volunteer/donation selections
+        and follow up with any questions. We won't share your email or send you anything unrelated to this event."
+        - If added, this field would be included in the form submission and visible to the organizer in the
+        spreadsheet and notification email, just like the name and phone fields. The validation would ensure that if
+        an email is provided, it's in a valid format, but it wouldn't be required to submit the form.
+        - This allows residents to provide an email for follow-up without making it a barrier for those who prefer not
+        to share their email or don't have one. The organizer can still contact volunteers and donors via phone if
+        they choose, but having the option for email can make communication easier for some people and allows the
+        organizer to send more detailed information or updates if needed.
+        - The opt-in checkboxes for updates and newsletter would also be included in the form submission, allowing the
+        organizer to easily see who is interested in future communications and build a mailing list for future events
+        or newsletters. This can help with community engagement and make it easier to promote future events without
+        needing to do separate outreach to build a mailing list.
+        - If the email field is added, it would be important to ensure that the form submission handling in the Google
+        Apps Script is updated to include this new field and that the notification email sent to the organizer
+        includes the email address provided by the resident. This way, the organizer has all the contact information
+        they need in one place when they receive a new sign-up.
+        - If the "Contact me about upcoming events" and "Sign up for monthly neighborhood newsletter" checkboxes are
+        added, these would also need to be included in the form submission data and visible to the organizer. The
+        organizer could then use this information to segment their mailing list and send targeted communications to
+        those who are interested in future events or newsletters.
+        - This also allows the organizer to respect residents' communication preferences and only send updates to
+        those who have opted in, which can help build trust and engagement with the community.
 
 
-          <!-- ── SECTION 2: ATTENDING? ─────────────────────
+        <!-- Decorative divider line between sections. -->
+        <div class="divider"></div>
+
+
+        <!-- ── SECTION 2: ATTENDING? ─────────────────────
                Static section. Collects attendance confirmation
                and headcount broken down by age group.
                Label is set from EVENT.attendingLabel by JavaScript. -->
-          <div class="section-label" id="section-attending"></div>
+        <div class="section-label" id="section-attending"></div>
 
-          <!-- Yes/No attendance dropdown. -->
-          <div class="field">
-            <label>Will you attend the event? <span class="req">*</span></label>
-            <select id="attending" required>
-              <option value="" disabled selected>Select one…</option>
-              <option value="Yes, we'll be there!">Yes, we'll be there! 🎉</option>
-              <option value="No, but I still want to help">No, but I still want to help</option>
-            </select>
-          </div>
+        <!-- Yes/No attendance dropdown. -->
+        <div class="field">
+          <label>Will you attend the event? <span class="req">*</span></label>
+          <select id="attending" required>
+            <option value="" disabled selected>Select one…</option>
+            <option value="Yes, we'll be there!">Yes, we'll be there! 🎉</option>
+            <option value="No, but I still want to help">No, but I still want to help</option>
+          </select>
+        </div>
 
-          <!-- Age bracket headcount — four number inputs side by side. -->
-          <div class="field">
-            <label>Who's coming?</label>
-            <div class="age-bracket-row">
-              <!-- Number of adults attending. -->
-              <div class="age-bracket">
-                <span class="age-bracket-label">Adults</span>
-                <input type="number" id="num_adults" min="0" max="50" placeholder="0" />
-              </div>
-              <!-- Children in the 0-3 age group. -->
-              <div class="age-bracket">
-                <span class="age-bracket-label">Ages 0–3</span>
-                <input type="number" id="children_0_3" min="0" max="20" placeholder="0" />
-              </div>
-              <!-- Children in the 4-8 age group. -->
-              <div class="age-bracket">
-                <span class="age-bracket-label">Ages 4–8</span>
-                <input type="number" id="children_4_8" min="0" max="20" placeholder="0" />
-              </div>
-              <!-- Children age 9 and up. -->
-              <div class="age-bracket">
-                <span class="age-bracket-label">Ages 9+</span>
-                <input type="number" id="children_9_plus" min="0" max="20" placeholder="0" />
-              </div>
+        <!-- Age bracket headcount — four number inputs side by side. -->
+        <div class="field">
+          <label>Who's coming?</label>
+          <div class="age-bracket-row">
+            <!-- Number of adults attending. -->
+            <div class="age-bracket">
+              <span class="age-bracket-label">Adults</span>
+              <input type="number" id="num_adults" min="0" max="50" placeholder="0" />
+            </div>
+            <!-- Children in the 0-3 age group. -->
+            <div class="age-bracket">
+              <span class="age-bracket-label">Ages 0–3</span>
+              <input type="number" id="children_0_3" min="0" max="20" placeholder="0" />
+            </div>
+            <!-- Children in the 4-8 age group. -->
+            <div class="age-bracket">
+              <span class="age-bracket-label">Ages 4–8</span>
+              <input type="number" id="children_4_8" min="0" max="20" placeholder="0" />
+            </div>
+            <!-- Children age 9 and up. -->
+            <div class="age-bracket">
+              <span class="age-bracket-label">Ages 9+</span>
+              <input type="number" id="children_9_plus" min="0" max="20" placeholder="0" />
             </div>
           </div>
+        </div>
 
-          <!-- Optional potluck contribution field. -->
-          <div class="field">
-            <label>Potluck item you plan to bring (optional)</label>
-            <input type="text" id="potluck_item" placeholder="e.g., Pasta salad, lemonade, fruit tray…" />
-          </div>
+        <!-- Optional potluck contribution field. -->
+        <div class="field">
+          <label>Potluck item you plan to bring (optional)</label>
+          <input type="text" id="potluck_item" placeholder="e.g., Pasta salad, lemonade, fruit tray…" />
+        </div>
 
-          <div class="divider"></div>
+        <div class="divider"></div>
 
-          <!-- ── SECTION 3: VOLUNTEER ROLES ───────────────
+        <!-- ── SECTION 3: VOLUNTEER ROLES ───────────────
                Populated dynamically from EVENT.volunteerRoles.
                Each role becomes a checkbox card with the role name
                and a short description of responsibilities.
                Live sign-up counts are fetched and added by fetchCounts(). -->
-          <div class="section-label" id="section-volunteer"></div>
-          <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px;">Check everything you'd be willing to
-            help with — Teamwork makes the dream work! (That's what I've heard at least. 😆)</p>
+        <div class="section-label" id="section-volunteer"></div>
+        <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px;">Check everything you'd be willing to
+          help with — Teamwork makes the dream work! (That's what I've heard at least. 😆)</p>
 
-          <!-- Volunteer checkbox cards are injected here by JavaScript. -->
-          <div class="checkbox-grid" id="volunteer-grid"></div>
-          <div class="divider"></div>
+        <!-- Volunteer checkbox cards are injected here by JavaScript. -->
+        <div class="checkbox-grid" id="volunteer-grid"></div>
+        <div class="divider"></div>
 
 
-          <!-- ── SECTION 4: DONATIONS ──────────────────────
+        <!-- ── SECTION 4: DONATIONS ──────────────────────
                Donation items grouped into collapsible accordion
                categories. Each category is a clickable header
                that reveals a list of items with quantity inputs.
                Live pledged counts are shown below each item.
                Items rendered dynamically from EVENT.donationItems. -->
-          <div class="section-label" id="section-donate"></div>
-          <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px;">Select what you're able to
-            contribute — every little bit helps!</p>
+        <div class="section-label" id="section-donate"></div>
+        <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px;">Select what you're able to
+          contribute — every little bit helps!</p>
 
-          <!-- Donation accordion sections are injected here by JavaScript. -->
-          <div class="checkbox-grid" id="donate-grid"></div>
+        <!-- Donation accordion sections are injected here by JavaScript. -->
+        <div class="checkbox-grid" id="donate-grid"></div>
 
-          TODO: Add a "Donate $X" free-text field for cash donations that don't fit into the predefined item list? Or
-          just instruct people to email the organizer if they'd like to donate cash/prizes instead of supplies?
-          - If added, this would be a simple text input with a label like "I'd like to donate cash/prizes instead of
-          supplies. Add venmo, cashapp, cash, check, paypal, etc. so they can easily contribute.". The input value would
-          be included in the form submission and visible to the organizer in the spreadsheet and notification email.
-          - This allows for more flexible donations while still giving the organizer a way to track and follow up on
-          them, without needing to set up a separate payment system.
-          - Would also be good to include some suggested amounts or prize ideas in the placeholder text to guide people
-          who might want to donate cash but aren't sure how much or what it would go towards.
-          - Note that any excess funds would go into an account for future events and would be publicly trackable.
-          - Add a donation tracker page in the future that shows all pledged and received donations, both cash and
-          supplies, to keep everything transparent and encourage more contributions! This could be a simple page that
-          pulls data from the same Google Sheet and displays it in a nice format with totals and progress towards goals.
-          It would also be a way to publicly recognize and thank donors who have contributed, which can help build
-          community spirit and encourage more participation. Donors can contribute anonymously or publicly.
-          - For cash donations, the organizer would need to manually update the Google Sheet with the amount received
-          and the donor's name (if they choose to share it) since these wouldn't be automatically tracked like the
-          supply donations. This could be done through a simple admin interface or even just by editing the sheet
-          directly. The donation tracker page would then reflect these updates so everyone can see the impact of both
-          cash and supply donations in one place.
-          - If a free-text field for cash donations is added, it would be important to clearly communicate to residents
-          how to use it and what the funds will go towards, as well as providing instructions for how to actually send
-          the donation (e.g., "Please enter the amount you'd like to donate and your preferred payment method (Venmo,
-          CashApp, PayPal, etc.) in the field below. After submitting the form, please send your donation using your
-          chosen method and include your name in the notes if you'd like to be recognized. Thank you so much for your
-          generosity!"). This way, residents have a clear understanding of how to contribute cash donations and can
-          easily do so if they choose.
-          - The organizer can then follow up with cash donors as needed to coordinate the donation and ensure it gets
-          recorded properly. This allows for a more inclusive and flexible donation process while still giving the
-          organizer the tools they need to manage everything effectively.
-          - Check with board regarding laws and rules around collecting and tracking cash donations for a community
-          event, and make sure to include any necessary disclaimers or information about how the funds will be used and
-          tracked to maintain transparency and trust with residents.
-          - If a cash donation field is added, it would be important to ensure that the form submission handling in the
-          Google Apps Script is updated to include this new field and that the notification email sent to the organizer
-          includes the cash donation information provided by the resident. This way, the organizer has all the relevant
-          information in one place when they receive a new sign-up and can follow up with cash donors as needed.
-
-
+        TODO: Add a "Donate $X" free-text field for cash donations that don't fit into the predefined item list? Or
+        just instruct people to email the organizer if they'd like to donate cash/prizes instead of supplies?
+        - If added, this would be a simple text input with a label like "I'd like to donate cash/prizes instead of
+        supplies. Add venmo, cashapp, cash, check, paypal, etc. so they can easily contribute.". The input value would
+        be included in the form submission and visible to the organizer in the spreadsheet and notification email.
+        - This allows for more flexible donations while still giving the organizer a way to track and follow up on
+        them, without needing to set up a separate payment system.
+        - Would also be good to include some suggested amounts or prize ideas in the placeholder text to guide people
+        who might want to donate cash but aren't sure how much or what it would go towards.
+        - Note that any excess funds would go into an account for future events and would be publicly trackable.
+        - Add a donation tracker page in the future that shows all pledged and received donations, both cash and
+        supplies, to keep everything transparent and encourage more contributions! This could be a simple page that
+        pulls data from the same Google Sheet and displays it in a nice format with totals and progress towards goals.
+        It would also be a way to publicly recognize and thank donors who have contributed, which can help build
+        community spirit and encourage more participation. Donors can contribute anonymously or publicly.
+        - For cash donations, the organizer would need to manually update the Google Sheet with the amount received
+        and the donor's name (if they choose to share it) since these wouldn't be automatically tracked like the
+        supply donations. This could be done through a simple admin interface or even just by editing the sheet
+        directly. The donation tracker page would then reflect these updates so everyone can see the impact of both
+        cash and supply donations in one place.
+        - If a free-text field for cash donations is added, it would be important to clearly communicate to residents
+        how to use it and what the funds will go towards, as well as providing instructions for how to actually send
+        the donation (e.g., "Please enter the amount you'd like to donate and your preferred payment method (Venmo,
+        CashApp, PayPal, etc.) in the field below. After submitting the form, please send your donation using your
+        chosen method and include your name in the notes if you'd like to be recognized. Thank you so much for your
+        generosity!"). This way, residents have a clear understanding of how to contribute cash donations and can
+        easily do so if they choose.
+        - The organizer can then follow up with cash donors as needed to coordinate the donation and ensure it gets
+        recorded properly. This allows for a more inclusive and flexible donation process while still giving the
+        organizer the tools they need to manage everything effectively.
+        - Check with board regarding laws and rules around collecting and tracking cash donations for a community
+        event, and make sure to include any necessary disclaimers or information about how the funds will be used and
+        tracked to maintain transparency and trust with residents.
+        - If a cash donation field is added, it would be important to ensure that the form submission handling in the
+        Google Apps Script is updated to include this new field and that the notification email sent to the organizer
+        includes the cash donation information provided by the resident. This way, the organizer has all the relevant
+        information in one place when they receive a new sign-up and can follow up with cash donors as needed.
 
 
 
-          <!-- Free-text field for donations not listed above. -->
-          <div class="field">
-            <label>Anything else you'd like to donate?</label>
-            <input type="text" id="other_donation" placeholder="e.g., I have a folding table you can borrow…" />
-          </div>
-
-          <div class="divider"></div>
 
 
-          <!-- ── SECTION 5: NOTES ──────────────────────────
+        <!-- Free-text field for donations not listed above. -->
+        <div class="field">
+          <label>Anything else you'd like to donate?</label>
+          <input type="text" id="other_donation" placeholder="e.g., I have a folding table you can borrow…" />
+        </div>
+
+        <div class="divider"></div>
+
+
+        <!-- ── SECTION 5: NOTES ──────────────────────────
                Static section for any additional questions,
                ideas, or special notes from the resident. -->
-          <div class="section-label">💬 Anything Else?</div>
-          <div class="field">
-            <label>Questions, notes, or ideas</label>
-            <textarea id="notes"
-              placeholder="e.g., My daughter has a nut allergy — will there be safe options?"></textarea>
-          </div>
+        <div class="section-label">💬 Anything Else?</div>
+        <div class="field">
+          <label>Questions, notes, or ideas</label>
+          <textarea id="notes"
+            placeholder="e.g., My daughter has a nut allergy — will there be safe options?"></textarea>
+        </div>
 
-          <!-- ── SUBMIT AREA ───────────────────────────────
+        <!-- ── SUBMIT AREA ───────────────────────────────
                The submit button, error message box, and fine
                print privacy note at the very bottom of the form. -->
-          <div class="submit-area">
-            <!-- Submit button — text set from EVENT.submitText by JavaScript.
+        <div class="submit-area">
+          <!-- Submit button — text set from EVENT.submitText by JavaScript.
                  Disabled and shows "Sending… 🌸" while the request is in flight. -->
-            <button type="submit" class="submit-btn" id="submit-btn"></button>
+          <button type="submit" class="submit-btn" id="submit-btn"></button>
 
-            <!-- Error message box — hidden by default, shown if the fetch fails. -->
-            <div class="error-msg" id="error-msg">
-              Something went wrong — please try again or contact your organizer directly.
-            </div>
-
-            <!-- Fine print: privacy note and contact link. -->
-            <p class="fine-print">Your info is only used to coordinate this event.<br />
-              Questions? Contact <a id="contact-link" href="#"></a>.</p>
+          <!-- Error message box — hidden by default, shown if the fetch fails. -->
+          <div class="error-msg" id="error-msg">
+            Something went wrong — please try again or contact your organizer directly.
           </div>
 
-        </form>
-      </div><!-- end #form-content -->
+          <!-- Fine print: privacy note and contact link. -->
+          <p class="fine-print">Your info is only used to coordinate this event.<br />
+            Questions? Contact <a id="contact-link" href="#"></a>.</p>
+        </div>
+
+      </form>
+    </div><!-- end #form-content -->
 
 
-      <!-- ── SUCCESS MESSAGE ───────────────────────────────────
+    <!-- ── SUCCESS MESSAGE ───────────────────────────────────
            Shown after a successful form submission in place of
            the form. Contains a celebration emoji, thank-you
            headline, custom message, and a calendar download button. -->
-      <div class="success-msg" id="success-msg">
-        <!-- Large celebration emoji — set from EVENT.successEmoji by JavaScript. -->
-        <div class="big-emoji" id="success-emoji"></div>
+    <div class="success-msg" id="success-msg">
+      <!-- Large celebration emoji — set from EVENT.successEmoji by JavaScript. -->
+      <div class="big-emoji" id="success-emoji"></div>
 
-        <!-- Fixed thank-you headline. -->
-        <h2>You're in — thank you!</h2>
+      <!-- Fixed thank-you headline. -->
+      <h2>You're in — thank you!</h2>
 
-        <!-- Custom success message — set from EVENT.successMessage by JavaScript. -->
-        <p id="success-message"></p>
+      <!-- Custom success message — set from EVENT.successMessage by JavaScript. -->
+      <p id="success-message"></p>
 
-        <!-- Button that triggers an ICS calendar file download
+      <!-- Button that triggers an ICS calendar file download
              so the user can add the event to their calendar app. -->
-        <button class="submit-btn" onclick="downloadICS()" style="margin-top:18px;">
-          📅 Add to My Calendar
-        </button>
-      </div>
+      <button class="submit-btn" onclick="downloadICS()" style="margin-top:18px;">
+        📅 Add to My Calendar
+      </button>
+    </div>
 
-    </div><!-- end .card -->
+  </div><!-- end .card -->
 
-    <!-- Page footer — text injected from EVENT.footerText by JavaScript. -->
-    <div class="footer" id="page-footer"></div>
+  <!-- Page footer — text injected from EVENT.footerText by JavaScript. -->
+  <div class="footer" id="page-footer"></div>
 
   </div><!-- end .page-wrapper -->
 
@@ -426,7 +416,10 @@
       headline: "Help Make Our<br /><em>Easter Egg Hunt</em> Magical",
 
       // The subtitle paragraph below the headline.
-      subtitle: "We're bringing the neighborhood together — and we'd love your help! Sign up to volunteer, donate supplies, or just let us know you're coming.",
+      subtitle: "We're bringing the neighborhood together — and we'd love your help! Sign up below to volunteer, donate supplies, or just let us know you're coming.",
+
+      // The event description paragraph. HTML is allowed here.
+      description: "We hope you and your family are as excited as we are!</br></br>< em > What to expect: </em></br></br>      <em>9:00 AM:</em> Volunteers arrive to help hide eggs, set up craft stations, and organize the snack table. If you're volunteering to hide eggs, please plan to arrive by 9:00 AM so we can get everything set up before the kids arrive!</br></br>      <em>      9:30 AM:</em> Check-in opens, crafts will be available for children, pot luck items will be arriving.</br></br><em>10:00 AM:</em> Brief welcome, rules explained </br></br><em>10:20 AM:</em> Egg hunt begins! Kids will be divided into age groups for the hunt to keep things fair and fun for everyone. There will also be two special Golden Eggs in each age bracket. The Golden Egg finders will walk away with a prize!</br></br><em>11:00 AM:</em> Group photo, prize distribution, and community potluck picnic. Feel free to bring a blanket or chairs to sit on, and don't forget to label your potluck dishes if they contain common allergens. </br></br><em>1:00 PM:</em> Event wraps up, but feel free to stick around and enjoy the company of your neighbors! We'll also need some help with cleanup after the event, so if you're able to lend a hand, we'd really appreciate it.</br></br>      To make the day go off smoothly we're rounding up the posse! 🤠 We'll need volunteers to help hide eggs, manage check-in, run craft stations, and more. We also need donations of plastic eggs, candy, small toys, and snacks for the event. Whether you can lend a hand or just want to join the fun, sign up below to let us know how you'd like to participate. Let's make this a memorable day for our community! 🐣",
 
       // Event info chip values shown in the meta tag row.
       date: "Saturday, March 21, 2026",
