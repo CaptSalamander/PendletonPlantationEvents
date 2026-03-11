@@ -237,19 +237,31 @@
         // Photos
         var photosHTML = "";
         if (post.photoIds && post.photoIds.length > 0) {
-          var thumbsHTML = "";
-          post.photoIds.forEach(function (id, i) {
+          var heroIdx = allPhotos.length;
+          allPhotos.push({
+            fullSrc: driveFullSize(post.photoIds[0]),
+            alt: post.title + " — photo 1",
+          });
+          var heroHTML =
+            '<img class="post-photo-hero" src="' + driveThumb(post.photoIds[0]) + '" ' +
+            'alt="' + post.title + ' photo 1" data-lightbox-idx="' + heroIdx + '" />';
+
+          var gridHTML = "";
+          for (var i = 1; i < post.photoIds.length; i++) {
             var photoIdx = allPhotos.length;
             allPhotos.push({
-              fullSrc: driveFullSize(id),
+              fullSrc: driveFullSize(post.photoIds[i]),
               alt: post.title + " — photo " + (i + 1),
             });
-            thumbsHTML +=
-              '<img class="post-photo-thumb" src="' + driveThumb(id) + '" ' +
+            gridHTML +=
+              '<img class="post-photo-thumb" src="' + driveThumb(post.photoIds[i]) + '" ' +
               'alt="' + post.title + ' photo ' + (i + 1) + '" ' +
               'data-lightbox-idx="' + photoIdx + '" />';
-          });
-          photosHTML = '<div class="post-photos">' + thumbsHTML + '</div>';
+          }
+
+          photosHTML = '<div class="post-photos">' + heroHTML +
+            (gridHTML ? '<div class="post-photos-grid">' + gridHTML + '</div>' : '') +
+            '</div>';
         }
 
         // Contact block — only shown if name, phone, or email present
