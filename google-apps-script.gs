@@ -142,13 +142,18 @@ var CORE_HEADERS = [
   "Volunteer Roles", // Comma-separated list of selected volunteer roles.
   "Other Donation",  // Free-text field for donations not in the list.
   "Notes",           // Any questions, comments, or special notes.
+  "Heard About",     // How they heard about the event.
+  "Special Skills",  // Special skills or resources offered.
+  "Opt-In: Events",  // Opted in to future event updates ("Yes" / "No").
+  "Opt-In: Newsletter", // Opted in to the neighborhood newsletter ("Yes" / "No").
+  "Cash Donation",   // Cash or prize donation offer (free-text).
   "Event",           // Event name — stored so data can be filtered if sheets are shared.
 ];
 
 // Combine the core columns with one column per donation item.
-// The total should be 17 core columns + the number of donation items.
+// The total should be 22 core columns + the number of donation items.
 var ALL_HEADERS = CORE_HEADERS.concat(DONATION_ITEMS);
-var TOTAL_COLS  = ALL_HEADERS.length;  // 17 core + 70 donation = 87 columns total
+var TOTAL_COLS  = ALL_HEADERS.length;  // 22 core + 70 donation = 92 columns total
 
 
 // ============================================================
@@ -240,9 +245,14 @@ function doPost(e) {
       params.children_9_plus || "0",
       params.potluck_item    || "",
       volunteerRoles,
-      params.other_donation  || "",
-      params.notes           || "",
-      params.event           || EVENT_NAME,  // Fall back to the configured event name.
+      params.other_donation    || "",
+      params.notes             || "",
+      params.heard_about       || "",
+      params.special_skills    || "",
+      params.opt_in_events     || "No",
+      params.opt_in_newsletter || "No",
+      params.cash_donation     || "",
+      params.event             || EVENT_NAME,  // Fall back to the configured event name.
     ];
 
     // Build the donation columns: one value per item in DONATION_ITEMS order.
@@ -291,6 +301,11 @@ function doPost(e) {
       "DONATING:\n" + donationLines + "\n\n" +
       "OTHER DONATION: " + (params.other_donation || "—") + "\n\n" +
       "NOTES:\n" + (params.notes || "—") + "\n\n" +
+      "HEARD ABOUT:     " + (params.heard_about       || "—") + "\n" +
+      "SPECIAL SKILLS:  " + (params.special_skills    || "—") + "\n" +
+      "OPT-IN EVENTS:   " + (params.opt_in_events     || "No") + "\n" +
+      "OPT-IN NEWSLETTER: " + (params.opt_in_newsletter || "No") + "\n" +
+      "CASH DONATION:   " + (params.cash_donation     || "—") + "\n\n" +
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
       "View all responses in your Google Sheet.";
 
