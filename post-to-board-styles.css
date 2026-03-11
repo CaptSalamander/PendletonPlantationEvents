@@ -216,6 +216,8 @@ nav {
 }
 .req { color: var(--brick); margin-left: 2px; }
 .field-hint { font-size: 0.78rem; color: var(--soft-text); margin-top: 2px; line-height: 1.5; }
+.checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--soft-text); cursor: pointer; user-select: none; }
+.checkbox-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brick); cursor: pointer; flex-shrink: 0; }
 
 .field-row {
   display: grid;

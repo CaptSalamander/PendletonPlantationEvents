@@ -45,11 +45,15 @@ var HEADERS = [
   "Photo URLs",
   "Approved",
   "Token",
+  "Show Phone",
+  "Show Email",
 ];
 
 // Column indices (0-based) — used when scanning rows.
-var COL_APPROVED = 9;   // Column J
-var COL_TOKEN    = 10;  // Column K
+var COL_APPROVED   = 9;   // Column J
+var COL_TOKEN      = 10;  // Column K
+var COL_SHOW_PHONE = 11;  // Column L
+var COL_SHOW_EMAIL = 12;  // Column M
 
 
 // ── doGet ────────────────────────────────────────────────────
@@ -84,15 +88,17 @@ function doGet(e) {
       // Only return approved posts.
       if (String(row[COL_APPROVED]).toUpperCase() !== "Y") continue;
 
-      var timestamp = row[0];   // Column A — Timestamp
-      var name      = row[1];   // Column B — Name
-      // row[2] Email     — kept private, not returned.
-      var phone     = row[3];   // Column D — Phone
+      var timestamp  = row[0];   // Column A — Timestamp
+      var name       = row[1];   // Column B — Name
+      var emailRaw   = row[2];   // Column C — Email (shown only if showEmail = "Y")
+      var phoneRaw   = row[3];   // Column D — Phone (shown only if showPhone = "Y")
       // row[4] Address   — kept private, not returned.
-      var category  = row[5];   // Column F — Category
-      var title     = row[6];   // Column G — Title
-      var content   = row[7];   // Column H — Content
-      var urlsRaw   = row[8];   // Column I — Photo URLs
+      var category   = row[5];   // Column F — Category
+      var title      = row[6];   // Column G — Title
+      var content    = row[7];   // Column H — Content
+      var urlsRaw    = row[8];   // Column I — Photo URLs
+      var showPhone  = String(row[COL_SHOW_PHONE]).toUpperCase() === "Y";
+      var showEmail  = String(row[COL_SHOW_EMAIL]).toUpperCase() === "Y";
 
       // Extract Drive file IDs from stored share URLs.
       var photoIds = [];
@@ -105,11 +111,12 @@ function doGet(e) {
 
       posts.push({
         date:     timestamp ? new Date(timestamp).toISOString() : "",
-        name:     name     || "",
-        phone:    phone    || "",
-        category: category || "General / Community News",
-        title:    title    || "",
-        content:  content  || "",
+        name:     name              || "",
+        phone:    showPhone ? (phoneRaw || "") : "",
+        email:    showEmail ? (emailRaw || "") : "",
+        category: category          || "General / Community News",
+        title:    title             || "",
+        content:  content           || "",
         photoIds: photoIds,
       });
     }
@@ -247,16 +254,18 @@ function doPost(e) {
     // ── Append the row (Approved = "N") ──────────────────
     sheet.appendRow([
       new Date(),
-      data.name     || "",
-      data.email    || "",
-      data.phone    || "",
-      data.address  || "",
-      data.category || "",
-      data.title    || "",
-      data.content  || "",
+      data.name      || "",
+      data.email     || "",
+      data.phone     || "",
+      data.address   || "",
+      data.category  || "",
+      data.title     || "",
+      data.content   || "",
       photoUrls.length ? photoUrls.join("\n") : "No photos",
       "N",
       token,
+      data.showPhone ? "Y" : "N",
+      data.showEmail ? "Y" : "N",
     ]);
 
     // ── Notify organizer with approval link ───────────────

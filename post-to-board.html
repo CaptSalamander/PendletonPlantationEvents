@@ -87,12 +87,19 @@
           <div class="field">
             <label for="poster_email">Email Address <span class="req">*</span></label>
             <input type="email" id="poster_email" placeholder="you@email.com" required />
+            <label class="checkbox-label" style="margin-top:8px;">
+              <input type="checkbox" id="show_email" />
+              Show my email address publicly on my post
+            </label>
           </div>
 
           <div class="field">
             <label for="poster_phone">Phone Number</label>
             <input type="tel" id="poster_phone" placeholder="(555) 555-1234" />
-            <span class="field-hint">Optional — displayed on your post so neighbors can contact you directly.</span>
+            <label class="checkbox-label" style="margin-top:8px;">
+              <input type="checkbox" id="show_phone" />
+              Show my phone number publicly on my post
+            </label>
           </div>
 
           <div class="field">
@@ -216,7 +223,7 @@
     //  CONFIG — paste your deployed bulletin-board-script.gs
     //  Web App URL here after deploying.
     // ============================================================
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxfiKjOkRTKJwkmS9Gwt_pQOFRqLVBt_r3X_t_NDIAZPBOTac5r8M_KgRmZFEnmaa8rEA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5e-TBqSYDO3tkrL0W6_WNz2L8sVmWF3oA3A1zIA9gBaU9kMYDVI4W1D9Y0FkB6DiCaw/exec";
 
     const MAX_PHOTOS = 5;
     const MAX_FILE_BYTES = 8 * 1024 * 1024;   // 8 MB
@@ -417,6 +424,9 @@
       // ── Build payload & POST ──────────────────────────────
       overlayStatus.textContent = "Submitting… 🏘️";
 
+      const showPhone = document.getElementById("show_phone").checked;
+      const showEmail = document.getElementById("show_email").checked;
+
       const payload = {
         name: firstName + " " + lastName,
         email,
@@ -425,6 +435,8 @@
         category,
         title,
         content,
+        showPhone,
+        showEmail,
         photos: photosPayload,
       };
 
