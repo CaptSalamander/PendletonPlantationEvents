@@ -259,9 +259,8 @@
               'data-lightbox-idx="' + photoIdx + '" />';
           }
 
-          photosHTML = '<div class="post-photos">' + heroHTML +
-            (gridHTML ? '<div class="post-photos-grid">' + gridHTML + '</div>' : '') +
-            '</div>';
+          photosHTML = '<div class="post-photos">' + heroHTML + '</div>';
+          gridHTML = gridHTML ? '<div class="post-photos post-photos-below"><div class="post-photos-more-label">📷 More Photos</div><div class="post-photos-grid">' + gridHTML + '</div></div>' : '';
         }
 
         // Contact block — only shown if name, phone, or email present
@@ -279,17 +278,18 @@
           '<span class="post-date">' + formatDate(post.date) + '</span>' +
           '</div>' +
           '<div class="post-title">' + escapeHtml(post.title || "Untitled") + '</div>' +
-          '<div class="post-content">' + escapeHtml(post.content || "") + '</div>' +
           photosHTML +
+          '<div class="post-content">' + escapeHtml(post.content || "") + '</div>' +
+          gridHTML +
           contactHTML;
 
         grid.appendChild(card);
       });
 
-      // Attach lightbox listeners to thumbnails
-      grid.querySelectorAll(".post-photo-thumb").forEach(function (thumb) {
-        thumb.addEventListener("click", function () {
-          openLightbox(parseInt(thumb.dataset.lightboxIdx));
+      // Attach lightbox listeners to hero and thumbnail images
+      grid.querySelectorAll(".post-photo-hero, .post-photo-thumb").forEach(function (img) {
+        img.addEventListener("click", function () {
+          openLightbox(parseInt(img.dataset.lightboxIdx));
         });
       });
 
