@@ -286,14 +286,14 @@
   //   icon:     Emoji displayed at the top of the card.
   //   category: The award category name (e.g., "Yard of the Month").
   //   winner:   The winner's name. Set to "Coming Soon" if no winner yet.
-  //   period:   The time period for this award (e.g., "April 2025").
+  //   period:   The time period for this award (e.g., "April 2026").
   //   empty:    Set to true when no winner has been named yet.
   //             This dims and italicizes the winner text on the card.
   const awards = [
-    { icon: "🌿", category: "Yard of the Month", winner: "Coming Soon", period: "April 2025", empty: true },
-    { icon: "🎄", category: "Best Seasonal Decoration", winner: "Coming Soon", period: "Spring 2025", empty: true },
-    { icon: "🦸", category: "Neighborhood Hero", winner: "Coming Soon", period: "Q1 2025", empty: true },
-    { icon: "⭐", category: "Above & Beyond", winner: "Coming Soon", period: "Q1 2025", empty: true },
+    { icon: "🌿", category: "Yard of the Month", winner: "Coming Soon", period: "April 2026", empty: true },
+    { icon: "🎄", category: "Best Seasonal Decoration", winner: "Coming Soon", period: "Spring 2026", empty: true },
+    { icon: "🦸", category: "Neighborhood Hero", winner: "Coming Soon", period: "Q1 2026", empty: true },
+    { icon: "⭐", category: "Above & Beyond", winner: "Coming Soon", period: "Q1 2026", empty: true },
   ];
 
 
@@ -317,42 +317,42 @@
     {
       emoji: "🥚", colorClass: "card-color-1",
       statusLabel: "Sign-Ups Open", statusClass: "status-open",
-      date: "March 21, 2025", time: "10:00 AM – 1:00 PM", name: "Easter Egg Hunt",
-      desc: "Join us for our first annual neighborhood Easter Egg Hunt! <br> We'll have separate egg hunt areas for different age groups, a photo booth, a paper egg decorating station, and prizes for the lucky kids who find the golden eggs! <br><br> We really want to build the community aspect of this beautiful little neighborhood. <br><br> To make this all a success, we need volunteers to help hide eggs the morning of the event, run the craft station, and staff the photo booth. We have received some very donations from anonymous neighbors but if you're inclined to help, we do have a sign up for items we'll need for the event. Even if you can't volunteer but want to attend, it would be so great if you would RSVP to let us know you're coming — it really helps with our planning! <br> <br> Thank you so much, and we can't wait to see everyone there!",
+      date: "March 21, 2026", time: "10:00 AM – 1:00 PM", name: "Easter Egg Hunt",
+      desc: "A fun-filled day for the whole family! We'll have egg hunts for different age groups, crafts, potluck snacks/lunch, and a photobooth. Volunteers and donations are still needed — sign up to help or just RSVP to join the fun!",
       link: "signup-page-easter.html", linkText: "Sign Up Now",
     },
     {
       emoji: "🍨", colorClass: "card-color-2",
       statusLabel: "Coming Soon", statusClass: "status-soon",
-      date: "May 2025", time: "", name: "Ice Cream Social",
+      date: "May 2026", time: "", name: "Ice Cream Social",
       desc: "Join us by the pool for some sweet treats! A perfect way to kick off the summer and connect with your neighbors.",
       link: "#events", linkText: "Details Coming Soon",
     },
     {
       emoji: "🎆", colorClass: "card-color-6",
       statusLabel: "Coming Soon", statusClass: "status-soon",
-      date: "July 4, 2025", time: "", name: "4th of July Block Party",
+      date: "July 4, 2026", time: "", name: "4th of July Block Party",
       desc: "Celebrate Independence Day with the whole neighborhood — food, games, and fireworks.",
       link: "#events", linkText: "Details Coming Soon",
     },
     {
       emoji: "🦐", colorClass: "card-color-4",
       statusLabel: "Coming Soon", statusClass: "status-soon",
-      date: "Summer 2025", time: "", name: "Shrimp Boil",
+      date: "Summer 2026", time: "", name: "Shrimp Boil",
       desc: "A classic Southern feast by the pool — bring your appetite and a side dish to share.",
       link: "#events", linkText: "Details Coming Soon",
     },
     {
       emoji: "🎃", colorClass: "card-color-5",
       statusLabel: "Coming Soon", statusClass: "status-soon",
-      date: "October 2025", time: "", name: "Halloween Trunk or Treat",
+      date: "October 2026", time: "", name: "Halloween Trunk or Treat",
       desc: "A safe, fun Halloween tradition right here in the neighborhood for our little ones.",
       link: "#events", linkText: "Details Coming Soon",
     },
     {
       emoji: "🎄", colorClass: "card-color-3",
       statusLabel: "Coming Soon", statusClass: "status-soon",
-      date: "December 2025", time: "", name: "Holiday Lights Contest",
+      date: "December 2026", time: "", name: "Holiday Lights Contest",
       desc: "Deck your halls and compete for the best-decorated home on the block.",
       link: "#events", linkText: "Details Coming Soon",
     },
@@ -377,23 +377,23 @@
   // ── HOA ANNOUNCEMENTS ─────────────────────────────────────────
   // Each object is one announcement row in the Announcements section.
   //   day:   Day of month as a string (e.g., "21"). Displayed large on the left.
-  //   month: Month abbreviation + year (e.g., "Apr 2025"). Shown below the day.
+  //   month: Month abbreviation + year (e.g., "Apr 2026"). Shown below the day.
   //   title: Bold announcement title.
   //   body:  Full announcement body text.
   const announcements = [
     {
-      day: "21", month: "Apr 2025",
+      day: "21", month: "Mar 2026",
       title: "Easter Egg Hunt — Sign-Ups Now Open!",
       body: "We're hosting our first neighborhood Easter egg hunt on March 21st! We're looking for volunteers, candy donations, and plastic egg donations. Fill out the sign-up form to let us know how you'd like to help — or just RSVP to join the fun.",
       link: "signup-page-easter.html", linkText: "Sign Up Now →",
     },
     {
-      day: "01", month: "Mar 2025",
+      day: "01", month: "Mar 2026",
       title: "Welcome to Our New Community Hub",
       body: "We've launched this website to keep Pendleton Plantation neighbors connected. Check back here for event sign-ups, announcements, and a growing photo gallery of our community memories.",
     },
     {
-      day: "2", month: "Feb 2025",
+      day: "2", month: "Feb 2026",
       title: "Spring HOA Meeting Recap",
       body: "Our spring HOA meeting was held on February 2nd.",
     },
@@ -446,7 +446,7 @@
         <div class="award-category">${a.category}</div>
         <!-- Winner's name, or "Coming Soon" if no winner yet. -->
         <div class="award-winner">${a.winner}</div>
-        <!-- Time period for this award, e.g., "April 2025". -->
+        <!-- Time period for this award, e.g., "April 2026". -->
         <div class="award-period">${a.period}</div>
       </div>`).join("");
     }
@@ -466,7 +466,7 @@
         </div>
         <!-- Card body: date, time, name, description, and "see more" link. -->
         <div class="event-card-body">
-          <!-- Date and optional time, e.g., "March 21, 2025 · 10:00 AM – 1:00 PM". -->
+          <!-- Date and optional time, e.g., "March 21, 2026 · 10:00 AM – 1:00 PM". -->
           <div class="event-date">${e.date}${e.time ? `<span class="event-time"> · ${e.time}</span>` : ""}</div>
           <div class="event-name">${e.name}</div>
           <div class="event-desc">${e.desc}</div>

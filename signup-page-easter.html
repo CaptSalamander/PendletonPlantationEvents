@@ -3,7 +3,7 @@
 
 <!-- ============================================================
      File:        signup-page-easter.html
-     Purpose:     Easter Egg Hunt 2025 community sign-up form.
+     Purpose:     Easter Egg Hunt 2026 community sign-up form.
                   Collects attendance, volunteer role selections,
                   donation pledges, and potluck items from residents.
                   Submits data to a Google Apps Script web app which
@@ -142,6 +142,77 @@
             </div>
           </div>
 
+          TODO: Add description for the event. Something like: "Join us for our first annual neighborhood Easter Egg
+          Hunt! <br> We'll have separate egg hunt areas for different age
+          groups, a photo booth, a paper egg decorating station, and prizes for the lucky kids who find the golden eggs!
+          <br><br>
+          We really want to build the community aspect of this beautiful little neighborhood. <br><br> To make this all
+          a success,
+          we need volunteers to help hide eggs the morning of the event, run the craft station, and staff the photo
+          booth. We have
+          received some very donations from anonymous neighbors but if you're inclined to help, we do have a sign up
+          below for items
+          we'll need for the event. Even if you can't volunteer but want to attend, it would be so great if you would
+          RSVP to let
+          us know you're coming — it really helps with our planning! <br> <br> Thank you so much, and we can't wait to
+          see
+          everyone there!
+
+          TODO: Add a "How did you hear about the event?" dropdown or free-text field to collect info on how residents
+          found out
+          about the event (e.g., facebook, word of mouth, website). This can help the organizer understand which
+          outreach
+          methods are most effective for future events.
+
+          TODO: Add an optional field for residents to indicate if they have any special skills or resources that could
+          be helpful
+          for the event (e.g., "I have a truck and can help with transport", "I'm a graphic designer and can help make
+          signs", "I
+          speak Spanish and can help with translation"). This allows residents to offer help that might not fit into the
+          predefined volunteer roles or donation items, and gives the organizer more information to work with when
+          coordinating
+          volunteers and resources.
+
+          TODO: Add a checkbox for residents to opt in to receiving updates about future events or volunteer
+          opportunities. This
+          can help the organizer build a mailing list of interested residents for easier communication in the future,
+          while still
+          respecting privacy and giving people a clear choice.
+
+          TODO: Add email address field. Make it optional but explain that the organizer needs a way to follow up with
+          volunteers and donors. Also include checkboxes for: "Contact me about upcoming events.", "Sign up for monthly
+          neighborhood newsletter." Validate that it's in the correct format.
+
+          - Label: "Email Address *"
+          - Input type: email
+          - Placeholder: "email@email.com"
+          - Validation: optional, must be a valid email format
+          - Ask if they prefer e-mail or text messages.
+          - Explanation text below the field: "We'll use this to contact you about your volunteer/donation selections
+          and follow up with any questions. We won't share your email or send you anything unrelated to this event."
+          - If added, this field would be included in the form submission and visible to the organizer in the
+          spreadsheet and notification email, just like the name and phone fields. The validation would ensure that if
+          an email is provided, it's in a valid format, but it wouldn't be required to submit the form.
+          - This allows residents to provide an email for follow-up without making it a barrier for those who prefer not
+          to share their email or don't have one. The organizer can still contact volunteers and donors via phone if
+          they choose, but having the option for email can make communication easier for some people and allows the
+          organizer to send more detailed information or updates if needed.
+          - The opt-in checkboxes for updates and newsletter would also be included in the form submission, allowing the
+          organizer to easily see who is interested in future communications and build a mailing list for future events
+          or newsletters. This can help with community engagement and make it easier to promote future events without
+          needing to do separate outreach to build a mailing list.
+          - If the email field is added, it would be important to ensure that the form submission handling in the Google
+          Apps Script is updated to include this new field and that the notification email sent to the organizer
+          includes the email address provided by the resident. This way, the organizer has all the contact information
+          they need in one place when they receive a new sign-up.
+          - If the "Contact me about upcoming events" and "Sign up for monthly neighborhood newsletter" checkboxes are
+          added, these would also need to be included in the form submission data and visible to the organizer. The
+          organizer could then use this information to segment their mailing list and send targeted communications to
+          those who are interested in future events or newsletters.
+          - This also allows the organizer to respect residents' communication preferences and only send updates to
+          those who have opted in, which can help build trust and engagement with the community.
+
+
           <!-- Decorative divider line between sections. -->
           <div class="divider"></div>
 
@@ -197,7 +268,6 @@
 
           <div class="divider"></div>
 
-
           <!-- ── SECTION 3: VOLUNTEER ROLES ───────────────
                Populated dynamically from EVENT.volunteerRoles.
                Each role becomes a checkbox card with the role name
@@ -224,6 +294,48 @@
 
           <!-- Donation accordion sections are injected here by JavaScript. -->
           <div class="checkbox-grid" id="donate-grid"></div>
+
+          TODO: Add a "Donate $X" free-text field for cash donations that don't fit into the predefined item list? Or
+          just instruct people to email the organizer if they'd like to donate cash/prizes instead of supplies?
+          - If added, this would be a simple text input with a label like "I'd like to donate cash/prizes instead of
+          supplies. Add venmo, cashapp, cash, check, paypal, etc. so they can easily contribute.". The input value would
+          be included in the form submission and visible to the organizer in the spreadsheet and notification email.
+          - This allows for more flexible donations while still giving the organizer a way to track and follow up on
+          them, without needing to set up a separate payment system.
+          - Would also be good to include some suggested amounts or prize ideas in the placeholder text to guide people
+          who might want to donate cash but aren't sure how much or what it would go towards.
+          - Note that any excess funds would go into an account for future events and would be publicly trackable.
+          - Add a donation tracker page in the future that shows all pledged and received donations, both cash and
+          supplies, to keep everything transparent and encourage more contributions! This could be a simple page that
+          pulls data from the same Google Sheet and displays it in a nice format with totals and progress towards goals.
+          It would also be a way to publicly recognize and thank donors who have contributed, which can help build
+          community spirit and encourage more participation. Donors can contribute anonymously or publicly.
+          - For cash donations, the organizer would need to manually update the Google Sheet with the amount received
+          and the donor's name (if they choose to share it) since these wouldn't be automatically tracked like the
+          supply donations. This could be done through a simple admin interface or even just by editing the sheet
+          directly. The donation tracker page would then reflect these updates so everyone can see the impact of both
+          cash and supply donations in one place.
+          - If a free-text field for cash donations is added, it would be important to clearly communicate to residents
+          how to use it and what the funds will go towards, as well as providing instructions for how to actually send
+          the donation (e.g., "Please enter the amount you'd like to donate and your preferred payment method (Venmo,
+          CashApp, PayPal, etc.) in the field below. After submitting the form, please send your donation using your
+          chosen method and include your name in the notes if you'd like to be recognized. Thank you so much for your
+          generosity!"). This way, residents have a clear understanding of how to contribute cash donations and can
+          easily do so if they choose.
+          - The organizer can then follow up with cash donors as needed to coordinate the donation and ensure it gets
+          recorded properly. This allows for a more inclusive and flexible donation process while still giving the
+          organizer the tools they need to manage everything effectively.
+          - Check with board regarding laws and rules around collecting and tracking cash donations for a community
+          event, and make sure to include any necessary disclaimers or information about how the funds will be used and
+          tracked to maintain transparency and trust with residents.
+          - If a cash donation field is added, it would be important to ensure that the form submission handling in the
+          Google Apps Script is updated to include this new field and that the notification email sent to the organizer
+          includes the cash donation information provided by the resident. This way, the organizer has all the relevant
+          information in one place when they receive a new sign-up and can follow up with cash donors as needed.
+
+
+
+
 
           <!-- Free-text field for donations not listed above. -->
           <div class="field">
@@ -317,15 +429,15 @@
       subtitle: "We're bringing the neighborhood together — and we'd love your help! Sign up to volunteer, donate supplies, or just let us know you're coming.",
 
       // Event info chip values shown in the meta tag row.
-      date:     "Saturday, March 21, 2025",
-      time:     "10:00 AM – 1:00 PM",
-      location: "HOA Common Green",
+      date: "Saturday, March 21, 2026",
+      time: "10:00 AM – 1:00 PM",
+      location: "Pendleton Plantation Pool Area <br> 100 Armistead Ln • Easley, SC 29642",
 
       // Labels for the three form section headings.
       // Change the emoji to match your event theme.
-      attendingLabel:  "🐣 Are You Coming?",
-      volunteerLabel:  "🙋 Volunteer Roles",
-      donationsLabel:  "🎁 Donations",
+      attendingLabel: "🐣 Are You Coming?",
+      volunteerLabel: "🙋 Volunteer Roles",
+      donationsLabel: "🎁 Donations",
 
       // Text displayed on the submit button.
       submitText: "Count Me In! 🐰",
@@ -335,10 +447,10 @@
 
       // The text displayed at the very bottom of the page (below the card).
       // HTML is allowed here.
-      footerText: "Organized by <strong>your HOA community</strong> · Easter Egg Hunt 2025",
+      footerText: "Organized by <strong>your HOA community</strong> · Easter Egg Hunt 2026",
 
       // The emoji and message shown on the success screen after submission.
-      successEmoji:   "🎉",
+      successEmoji: "🎉",
       successMessage: "We can't wait to connect with you!<br />We're so grateful for neighbors like you.",
 
       // ── Google Sheets Integration ──────────────────────────
@@ -349,26 +461,26 @@
       scriptUrl: "https://script.google.com/macros/s/AKfycbz794OVtiPSl8jTbfkvX4IHSIeZ2a4acXGWQ2T5lJBScDgcCsKu2RGq3ONr-ScJbdFDBA/exec",
 
       // Event name stored in the spreadsheet "Event" column.
-      eventName: "Easter Egg Hunt 2025",
+      eventName: "Easter Egg Hunt 2026",
 
       // ── Calendar ICS Download ──────────────────────────────
       // Start and end times in YYYYMMDDTHHmmss format (local time, no timezone).
-      icsStart: "20250321T100000",
-      icsEnd:   "20250321T130000",
+      icsStart: "20260321T100000",
+      icsEnd: "20260321T130000",
 
       // ── Volunteer Checkboxes ───────────────────────────────
       // Each object creates one checkbox card in the Volunteer Roles section.
       //   label:  The role name (must match VOLUNTEER_ROLES in google-apps-script.gs).
       //   detail: Short description of the responsibilities for this role.
       volunteerRoles: [
-        { label: "Hide the Eggs",    detail: "Arrive 45 min early to help set up" },
-        { label: "Check-In Table",   detail: "Welcome families & hand out bags" },
+        { label: "Hide the Eggs", detail: "Arrive 45 min early to help set up" },
+        { label: "Check-In Table", detail: "Welcome families & hand out bags" },
         { label: "Age Zone Monitor", detail: "Keep the groups organized" },
-        { label: "Craft Station",    detail: "Help kids decorate eggs" },
-        { label: "Photo Booth",      detail: "Help snap memories" },
-        { label: "Cleanup Crew",     detail: "Help tidy up afterward" },
-        { label: "Setup / Decor",    detail: "Help set up tables & decorations" },
-        { label: "Snack Table",      detail: "Help manage the refreshments" },
+        { label: "Craft Station", detail: "Help kids decorate eggs" },
+        { label: "Photo Booth", detail: "Help snap memories" },
+        { label: "Cleanup Crew", detail: "Help tidy up afterward" },
+        { label: "Setup / Decor", detail: "Help set up tables & decorations" },
+        { label: "Snack Table", detail: "Help manage the refreshments" },
       ],
 
       // ── Donation Items ─────────────────────────────────────
@@ -381,111 +493,111 @@
         {
           category: "Eggs & Filling",
           items: [
-            { label: "Plastic Eggs — any color",                    needed: 450 },
-            { label: "Plastic Eggs — teal (allergy-friendly)",      needed: 30  },
-            { label: "Golden Eggs — special prize eggs",            needed: 6   },
-            { label: "Candy — individually wrapped, nut-free",      needed: 225 },
-            { label: "Bouncy Balls — small",                        needed: 45  },
-            { label: "Mini Erasers — fun shapes",                   needed: 45  },
-            { label: "Mini Play-Doh or putty containers",           needed: 20  },
-            { label: "Stickers — mini sheets",                      needed: 45  },
-            { label: "Small Coins (nickels, dimes, quarters)",      needed: 45  },
-            { label: "Fake Tattoo / Fun Coupons (DIY)",             needed: 20  },
-            { label: "Temporary Tattoos — mini",                    needed: 45  },
-            { label: "Storage bins to save eggs for next year",     needed: 2   },
+            { label: "Plastic Eggs — any color", needed: 450 },
+            { label: "Plastic Eggs — teal (allergy-friendly)", needed: 30 },
+            { label: "Golden Eggs — special prize eggs", needed: 6 },
+            { label: "Candy — individually wrapped, nut-free", needed: 225 },
+            { label: "Bouncy Balls — small", needed: 45 },
+            { label: "Mini Erasers — fun shapes", needed: 45 },
+            { label: "Mini Play-Doh or putty containers", needed: 20 },
+            { label: "Stickers — mini sheets", needed: 45 },
+            { label: "Small Coins (nickels, dimes, quarters)", needed: 45 },
+            { label: "Fake Tattoo / Fun Coupons (DIY)", needed: 20 },
+            { label: "Temporary Tattoos — mini", needed: 45 },
+            { label: "Storage bins to save eggs for next year", needed: 2 },
           ],
         },
         {
           category: "Prizes",
           items: [
-            { label: "Golden Egg Prize Baskets — golden egg winners", needed: 6  },
-            { label: "Prizes for Inside Baskets",                     needed: 30 },
-            { label: "Ribbon for prize baskets",                      needed: 1  },
+            { label: "Golden Egg Prize Baskets — golden egg winners", needed: 6 },
+            { label: "Prizes for Inside Baskets", needed: 30 },
+            { label: "Ribbon for prize baskets", needed: 1 },
           ],
         },
         {
           category: "Snack Table & Potluck",
           items: [
-            { label: "Juice boxes for kids",                needed: 50  },
-            { label: "Water bottles or water jug + cups",   needed: 100 },
-            { label: "Other beverage",                      needed: 2   },
-            { label: "Main entree",                         needed: 6   },
-            { label: "Side entree",                         needed: 6   },
-            { label: "Dessert",                             needed: 3   },
-            { label: "Easter candy for grown-ups",          needed: 2   },
-            { label: "Small plates",                        needed: 100 },
-            { label: "Large plates",                        needed: 100 },
-            { label: "Plastic cups",                        needed: 100 },
-            { label: "Plastic eating utensils",             needed: 100 },
-            { label: "Paper towels / napkins",              needed: 100 },
+            { label: "Juice boxes for kids", needed: 50 },
+            { label: "Water bottles or water jug + cups", needed: 100 },
+            { label: "Other beverage", needed: 2 },
+            { label: "Main entree", needed: 6 },
+            { label: "Side entree", needed: 6 },
+            { label: "Dessert", needed: 3 },
+            { label: "Easter candy for grown-ups", needed: 2 },
+            { label: "Small plates", needed: 100 },
+            { label: "Large plates", needed: 100 },
+            { label: "Plastic cups", needed: 100 },
+            { label: "Plastic eating utensils", needed: 100 },
+            { label: "Paper towels / napkins", needed: 100 },
           ],
         },
         {
           category: "Crafts",
           items: [
-            { label: "Sticker sheets for decorating",       needed: 30 },
-            { label: "Glitter glue sticks",                 needed: 15 },
-            { label: "Crayons — boxes",                     needed: 10 },
-            { label: "Washable markers — sets",             needed: 8  },
-            { label: "Drop cloth / disposable tablecloth",  needed: 1  },
+            { label: "Sticker sheets for decorating", needed: 30 },
+            { label: "Glitter glue sticks", needed: 15 },
+            { label: "Crayons — boxes", needed: 10 },
+            { label: "Washable markers — sets", needed: 8 },
+            { label: "Drop cloth / disposable tablecloth", needed: 1 },
           ],
         },
         {
           category: "Decor (including DIY-friendly)",
           items: [
-            { label: "Pastel balloons — latex",                     needed: 50 },
-            { label: "Pastel streamers",                            needed: 10 },
-            { label: "Tissue paper pom-poms",                       needed: 10 },
-            { label: "Paper flower garland (DIY)",                  needed: 15 },
-            { label: "Easter banner ('Happy Easter!' or custom)",   needed: 1  },
-            { label: "Plastic Easter lawn decorations",             needed: 5  },
-            { label: "Ribbon / raffia for baskets & decor",        needed: 2  },
-            { label: "Easter-themed tablecloth weights/clips",      needed: 20 },
-            { label: "Chalkboard or whiteboard + markers",          needed: 1  },
-            { label: "Easel to hold signs",                         needed: 2  },
-            { label: "Balloon pump (hand or electric)",             needed: 1  },
-            { label: "Balloon weights",                             needed: 10 },
+            { label: "Pastel balloons — latex", needed: 50 },
+            { label: "Pastel streamers", needed: 10 },
+            { label: "Tissue paper pom-poms", needed: 10 },
+            { label: "Paper flower garland (DIY)", needed: 15 },
+            { label: "Easter banner ('Happy Easter!' or custom)", needed: 1 },
+            { label: "Plastic Easter lawn decorations", needed: 5 },
+            { label: "Ribbon / raffia for baskets & decor", needed: 2 },
+            { label: "Easter-themed tablecloth weights/clips", needed: 20 },
+            { label: "Chalkboard or whiteboard + markers", needed: 1 },
+            { label: "Easel to hold signs", needed: 2 },
+            { label: "Balloon pump (hand or electric)", needed: 1 },
+            { label: "Balloon weights", needed: 10 },
           ],
         },
         {
           category: "Photo Booth",
           items: [
-            { label: "Photobooth backdrop",                 needed: 1  },
-            { label: "Photobooth backdrop stand",           needed: 1  },
-            { label: "Easter basket prop (real or faux)",   needed: 2  },
-            { label: "Printable photo booth props (DIY)",   needed: 1  },
-            { label: "Other photo booth props (DIY)",       needed: 1  },
-            { label: "Popsicle sticks for props",           needed: 20 },
-            { label: "Tripod (for phone)",                  needed: 1  },
+            { label: "Photobooth backdrop", needed: 1 },
+            { label: "Photobooth backdrop stand", needed: 1 },
+            { label: "Easter basket prop (real or faux)", needed: 2 },
+            { label: "Printable photo booth props (DIY)", needed: 1 },
+            { label: "Other photo booth props (DIY)", needed: 1 },
+            { label: "Popsicle sticks for props", needed: 20 },
+            { label: "Tripod (for phone)", needed: 1 },
           ],
         },
         {
           category: "Hunt Supplies",
           items: [
-            { label: "Baskets / Easter bags for kids",          needed: 20 },
-            { label: "Rope, twine, or pennant flags",           needed: 50 },
-            { label: "Wooden stakes / dowel rods for signs",    needed: 6  },
-            { label: "Zip ties or clips to attach rope",        needed: 20 },
+            { label: "Baskets / Easter bags for kids", needed: 20 },
+            { label: "Rope, twine, or pennant flags", needed: 50 },
+            { label: "Wooden stakes / dowel rods for signs", needed: 6 },
+            { label: "Zip ties or clips to attach rope", needed: 20 },
           ],
         },
         {
           category: "Admin & Logistics",
           items: [
-            { label: "Folding tables — refreshments",           needed: 3   },
-            { label: "Folding tables — craft station",          needed: 2   },
-            { label: "Folding tables — check-in",              needed: 1   },
-            { label: "Folding tables — raffle/prize display",   needed: 1   },
-            { label: "Folding chairs",                          needed: 100 },
-            { label: "Tablecloths — pastel/Easter themed",      needed: 7   },
-            { label: "Trash bags — large (39 gal)",             needed: 10  },
-            { label: "Recycling bags",                          needed: 4   },
-            { label: "Hand sanitizer",                          needed: 4   },
-            { label: "Pens / clipboards for sign-in",           needed: 4   },
-            { label: "Portable bluetooth speaker",              needed: 1   },
-            { label: "Extension cord (if music/PA)",            needed: 2   },
-            { label: "First aid kit",                           needed: 1   },
-            { label: "Bug spray",                               needed: 2   },
-            { label: "Sunscreen",                              needed: 1   },
+            { label: "Folding tables — refreshments", needed: 3 },
+            { label: "Folding tables — craft station", needed: 2 },
+            { label: "Folding tables — check-in", needed: 1 },
+            { label: "Folding tables — raffle/prize display", needed: 1 },
+            { label: "Folding chairs", needed: 100 },
+            { label: "Tablecloths — pastel/Easter themed", needed: 7 },
+            { label: "Trash bags — large (39 gal)", needed: 10 },
+            { label: "Recycling bags", needed: 4 },
+            { label: "Hand sanitizer", needed: 4 },
+            { label: "Pens / clipboards for sign-in", needed: 4 },
+            { label: "Portable bluetooth speaker", needed: 1 },
+            { label: "Extension cord (if music/PA)", needed: 2 },
+            { label: "First aid kit", needed: 1 },
+            { label: "Bug spray", needed: 2 },
+            { label: "Sunscreen", needed: 1 },
           ],
         },
       ],
@@ -499,14 +611,14 @@
     // ── POPULATE PAGE FROM CONFIG ────────────────────────────
     // Inject all event-specific text into the HTML elements using the EVENT config above.
     document.title = EVENT.pageTitle;                                                            // Browser tab title.
-    document.getElementById("emoji-row").textContent     = EVENT.emojiRow;                      // Floating emoji row.
-    document.getElementById("page-heading").innerHTML    = EVENT.headline;                       // Main headline (allows HTML like <em>).
+    document.getElementById("emoji-row").textContent = EVENT.emojiRow;                      // Floating emoji row.
+    document.getElementById("page-heading").innerHTML = EVENT.headline;                       // Main headline (allows HTML like <em>).
     document.getElementById("page-subtitle").textContent = EVENT.subtitle;                       // Subtitle paragraph.
     document.getElementById("section-attending").textContent = EVENT.attendingLabel;             // "Are You Coming?" label.
     document.getElementById("section-volunteer").textContent = EVENT.volunteerLabel;             // "Volunteer Roles" label.
-    document.getElementById("section-donate").textContent   = EVENT.donationsLabel;             // "Donations" label.
-    document.getElementById("submit-btn").textContent    = EVENT.submitText;                     // Submit button text.
-    document.getElementById("page-footer").innerHTML     = EVENT.footerText;                     // Footer HTML.
+    document.getElementById("section-donate").textContent = EVENT.donationsLabel;             // "Donations" label.
+    document.getElementById("submit-btn").textContent = EVENT.submitText;                     // Submit button text.
+    document.getElementById("page-footer").innerHTML = EVENT.footerText;                     // Footer HTML.
     document.getElementById("success-emoji").textContent = EVENT.successEmoji;                   // Success screen emoji.
     document.getElementById("success-message").innerHTML = EVENT.successMessage;                 // Success screen message.
 
@@ -624,18 +736,18 @@
         // For each donation item card, update the Pledged and Remaining
         // stat values with live data from the spreadsheet.
         document.querySelectorAll(".donate-item[data-donate-item]").forEach(el => {
-          const key       = el.getAttribute("data-donate-item");  // Item label text.
+          const key = el.getAttribute("data-donate-item");  // Item label text.
           const neededAttr = el.getAttribute("data-needed");       // Target quantity (as string).
-          const pledged   = data.donationCounts[key] || 0;         // Total pledged so far.
+          const pledged = data.donationCounts[key] || 0;         // Total pledged so far.
 
           // Find the pledged value element — it may not exist if the item has no "needed" goal.
           const pledgedEl = el.querySelector("[data-pledged-val]");
           if (!pledgedEl) return;   // Skip this item if it has no stats row.
 
           // Calculate how many more are still needed.
-          const needed        = parseInt(neededAttr) || 0;
-          const remaining     = Math.max(0, needed - pledged);   // Never goes negative.
-          const remainingVal  = el.querySelector("[data-remaining-val]");
+          const needed = parseInt(neededAttr) || 0;
+          const remaining = Math.max(0, needed - pledged);   // Never goes negative.
+          const remainingVal = el.querySelector("[data-remaining-val]");
           const remainingStat = el.querySelector("[data-remaining-stat]");
 
           // Update the Pledged stat display.
@@ -690,33 +802,33 @@
 
       // ── Parse age bracket counts ──────────────────────────
       // Read the three age group inputs and default to 0 if empty.
-      const children_0_3    = parseInt(document.getElementById("children_0_3").value)    || 0;
-      const children_4_8    = parseInt(document.getElementById("children_4_8").value)    || 0;
+      const children_0_3 = parseInt(document.getElementById("children_0_3").value) || 0;
+      const children_4_8 = parseInt(document.getElementById("children_4_8").value) || 0;
       const children_9_plus = parseInt(document.getElementById("children_9_plus").value) || 0;
 
       // ── Build the form payload ────────────────────────────
       // URLSearchParams encodes the data in the format expected by the
       // Google Apps Script doPost() function (application/x-www-form-urlencoded).
       const payload = new URLSearchParams({
-        first_name:      document.getElementById("first_name").value.trim(),
-        last_name:       document.getElementById("last_name").value.trim(),
-        email:           document.getElementById("email").value.trim(),
-        phone:           document.getElementById("phone").value.trim(),
-        address:         document.getElementById("address").value.trim(),
-        attending:       document.getElementById("attending").value,
-        num_adults:      document.getElementById("num_adults").value,
-        num_children:    children_0_3 + children_4_8 + children_9_plus,  // Total children across all age groups.
-        children_0_3:    children_0_3,
-        children_4_8:    children_4_8,
+        first_name: document.getElementById("first_name").value.trim(),
+        last_name: document.getElementById("last_name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        address: document.getElementById("address").value.trim(),
+        attending: document.getElementById("attending").value,
+        num_adults: document.getElementById("num_adults").value,
+        num_children: children_0_3 + children_4_8 + children_9_plus,  // Total children across all age groups.
+        children_0_3: children_0_3,
+        children_4_8: children_4_8,
         children_9_plus: children_9_plus,
-        potluck_item:    document.getElementById("potluck_item").value.trim(),
+        potluck_item: document.getElementById("potluck_item").value.trim(),
         // Join selected roles into a comma-separated string, or "None selected" if none.
         volunteer_roles: volunteerChecked.length ? volunteerChecked.join(", ") : "None selected",
         // Join donation entries into a comma-separated string, or "None selected" if none.
-        donation_items:  donateEntries.length ? donateEntries.join(", ") : "None selected",
-        other_donation:  document.getElementById("other_donation").value.trim(),
-        notes:           document.getElementById("notes").value.trim(),
-        event:           EVENT.eventName,
+        donation_items: donateEntries.length ? donateEntries.join(", ") : "None selected",
+        other_donation: document.getElementById("other_donation").value.trim(),
+        notes: document.getElementById("notes").value.trim(),
+        event: EVENT.eventName,
       });
 
       // Disable the button and update the label to show the form is submitting.
@@ -794,7 +906,7 @@
     // Same logic as index.html — waits for DOM to be ready before querying elements.
     document.addEventListener("DOMContentLoaded", () => {
       const hamburger = document.querySelector('.nav-hamburger');
-      const navLinks  = document.querySelector('.nav-links');
+      const navLinks = document.querySelector('.nav-links');
 
       if (hamburger && navLinks) {
         // Toggle the mobile menu open/closed when the hamburger button is clicked.
