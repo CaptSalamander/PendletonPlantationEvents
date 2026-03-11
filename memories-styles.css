@@ -37,12 +37,22 @@
    thumbnails. Uses auto-fill so the number of columns adjusts
    based on the available screen width. */
 .memories-grid {
+  /* When showing event groups, this is just a block container.
+     When showing static fallback tiles directly, it becomes a grid. */
+  padding: 60px 0 100px;
+}
+
+/* Direct .memory-item children (static fallback mode) use a grid layout. */
+.memories-grid > .memory-item {
+  display: block;   /* Overridden by the grid below. */
+}
+
+.memories-grid:has(> .memory-item) {
   display: grid;
-  /* Each column is at least 300px wide. Extra space is distributed evenly. */
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 14px;           /* Space between photo tiles. */
-  max-width: 1200px;   /* Cap width on very wide monitors. */
-  margin: 0 auto;      /* Center the grid horizontally. */
+  gap: 14px;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 60px 48px 100px;
 }
 
@@ -50,7 +60,64 @@
 @media (max-width: 768px) {
   /* Reduce padding and switch to slightly smaller minimum column width. */
   .memories-hero { padding: 120px 24px 56px; }
-  .memories-grid { padding: 40px 24px 80px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .memories-grid { padding: 40px 0 80px; }
+  .memories-grid:has(> .memory-item) { padding: 40px 24px 80px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+}
+
+
+/* ── EVENT GROUP ──────────────────────────────────────────────
+   When photos are loaded dynamically, the grid is divided into
+   named event groups — one section per event. */
+.memory-event-group {
+  max-width: 1200px;
+  margin: 0 auto 56px;
+  padding: 0 48px;
+}
+
+@media (max-width: 768px) {
+  .memory-event-group { padding: 0 24px; margin-bottom: 40px; }
+}
+
+/* Event heading block: name, caption, and who submitted it. */
+.memory-event-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(44, 61, 46, 0.15);
+}
+
+.memory-event-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: var(--forest);
+  letter-spacing: 0.01em;
+}
+
+.memory-event-caption {
+  font-size: 0.9rem;
+  color: var(--charcoal);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.memory-event-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+/* Photo grid inside an event group — same tile style, tighter container. */
+.memory-event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .memory-event-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 }
 
 

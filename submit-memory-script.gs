@@ -35,6 +35,83 @@ var HEADERS = [
 ];
 
 
+// ── doGet ────────────────────────────────────────────────────
+// Called by index.html and memories.html to fetch all memory
+// submissions as JSON so photos can be displayed dynamically.
+//
+// Returns:
+//   { submissions: [ { date, uploader, event, caption, photoIds: [] }, … ] }
+//
+// photoIds are the raw Google Drive file IDs extracted from the
+// stored share URLs. The front-end converts them to displayable
+// image URLs:
+//   Thumbnail : https://drive.google.com/thumbnail?id=FILE_ID&sz=w600
+//   Full-size : https://drive.google.com/thumbnail?id=FILE_ID&sz=w1600
+function doGet() {
+  var output = ContentService.createTextOutput();
+  output.setMimeType(ContentService.MimeType.JSON);
+
+  try {
+    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(SHEET_NAME);
+
+    // If the sheet doesn't exist yet (no submissions) return empty list.
+    if (!sheet) {
+      output.setContent(JSON.stringify({ submissions: [] }));
+      return output;
+    }
+
+    var rows = sheet.getDataRange().getValues();
+    // rows[0] is the header row — skip it.
+    var submissions = [];
+
+    for (var i = 1; i < rows.length; i++) {
+      var row       = rows[i];
+      var timestamp = row[0];   // Column A — Timestamp (Date object)
+      var uploader  = row[1];   // Column B — Uploader Name
+      // row[2] is Email — intentionally omitted from public response.
+      var eventName = row[3];   // Column D — Event Name
+      var caption   = row[4];   // Column E — Caption / Message
+      var urlsRaw   = row[5];   // Column F — Photo URLs (newline-separated)
+
+      // Extract Drive file IDs from stored share URLs.
+      // URL format: https://drive.google.com/file/d/FILE_ID/view?…
+      var photoIds = [];
+      if (urlsRaw && urlsRaw !== "No photos") {
+        urlsRaw.toString().split("\n").forEach(function (url) {
+          var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+          if (match) photoIds.push(match[1]);
+        });
+      }
+
+      // Skip rows with no usable photos.
+      if (photoIds.length === 0) continue;
+
+      submissions.push({
+        date:     timestamp ? new Date(timestamp).toISOString() : "",
+        uploader: uploader  || "",
+        event:    eventName || "Community Event",
+        caption:  caption   || "",
+        photoIds: photoIds,
+      });
+    }
+
+    // Newest submissions first.
+    submissions.sort(function (a, b) {
+      return new Date(b.date) - new Date(a.date);
+    });
+
+    output.setContent(JSON.stringify({ submissions: submissions }));
+
+  } catch (err) {
+    Logger.log("doGet error: " + err);
+    output.setContent(JSON.stringify({ submissions: [], error: err.toString() }));
+  }
+
+  return output;
+}
+
+
 // ── doPost ───────────────────────────────────────────────────
 // Receives JSON from submit-memory.html with these keys:
 //   uploader_name, email, event_name, caption,

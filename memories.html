@@ -120,18 +120,15 @@
   <script>
 
     // ============================================================
-    //  ✏️  ADD YOUR PHOTOS HERE
-    //  Each object in the array represents one photo in the gallery.
-    //  Fields:
-    //    src:   Path to the image file, relative to this HTML file.
-    //           Example: "images/EasterHunt-1.jpg"
-    //    alt:   Short description of the photo (for screen readers
-    //           and accessibility). Shown as caption in the lightbox
-    //           if no "event" field is provided.
-    //    event: Name of the event (shown as the lightbox caption).
-    //           Example: "Halloween Trunk or Treat 2025"
+    //  ✏️  CONFIG
+    //  Paste your submit-memory-script.gs Web App URL here.
+    //  This is the same URL you put in submit-memory.html.
     // ============================================================
-    const photos = [
+    const MEMORY_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVAlddIDr2eRgolc-A4v5OviKhIfaiqXnuCONA9uJ71HjAeDjiprfRZDD-ZAcfzWc4_g/exec";
+
+    // Static fallback photos shown if the fetch fails or returns nothing.
+    // These are always shown while the page loads.
+    const STATIC_PHOTOS = [
       { src: "images/Halloween2025-1.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
       { src: "images/Halloween2025-2.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
       { src: "images/Halloween2025-3.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
@@ -140,127 +137,164 @@
       { src: "images/Halloween2025-6.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
       { src: "images/Halloween2025-7.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
     ];
+    // ============================================================
 
 
-    // ── RENDER GALLERY GRID ──────────────────────────────────
-    // Build the photo grid HTML from the photos array and insert it
-    // into the #memories-grid container.
     const grid = document.getElementById("memories-grid");
-    grid.innerHTML = photos.map((p, i) => `
-      <!-- Each tile stores its index in a data-index attribute so the
-           click handler knows which photo to open in the lightbox. -->
-      <div class="memory-item" data-index="${i}">
-        <!-- The photo image. loading="lazy" defers loading until the tile
-             is near the viewport, improving initial page load speed. -->
-        <img src="${p.src}" alt="${p.alt}" loading="lazy" />
-
-        <!-- Dark overlay revealed on hover, containing the caption text. -->
-        <div class="memory-overlay">
-          <!-- Caption shows the event name if available, or the alt text as a fallback. -->
-          <div class="memory-caption">${p.event || p.alt}</div>
-        </div>
-      </div>`).join("");
-
-
-    // ── LIGHTBOX STATE ───────────────────────────────────────
-    // Track which photo is currently shown in the lightbox.
-    let current = 0;
-
-    // Cache DOM references to avoid repeated getElementById calls.
-    const lightbox  = document.getElementById("lightbox");
-    const lbImg     = document.getElementById("lb-img");
+    const lightbox = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lb-img");
     const lbCaption = document.getElementById("lb-caption");
     const lbCounter = document.getElementById("lb-counter");
 
+    // The flat list of all photos currently rendered — used by the lightbox.
+    let allPhotos = [];
+    let current = 0;
 
-    // ── UPDATE LIGHTBOX ──────────────────────────────────────
-    // Updates the lightbox image, alt text, caption, and counter
-    // to reflect the photo at the current index.
-    function update() {
-      const p = photos[current];
-      lbImg.src           = p.src;
-      lbImg.alt           = p.alt;
-      lbCaption.textContent = p.event || p.alt;    // Show event name, or alt text fallback.
-      lbCounter.textContent = `${current + 1} / ${photos.length}`;  // e.g., "2 / 7"
+    // Convert a Drive file ID to thumbnail and full-size URLs.
+    function driveThumb(id) { return "https://drive.google.com/thumbnail?id=" + id + "&sz=w600"; }
+    function driveFull(id) { return "https://drive.google.com/thumbnail?id=" + id + "&sz=w1600"; }
+
+
+    // ── RENDER GRID ──────────────────────────────────────────
+    // Accepts an array of submission objects:
+    //   { event, caption, uploader, photoIds: [] }
+    // Groups submissions by event name. Each group gets its own
+    // heading and a grid of tiles. Falls back to flat grid for
+    // static photos (which have no photoIds).
+    function renderGrid(submissions) {
+      allPhotos = [];   // Reset the flat photo list used by the lightbox.
+
+      if (!submissions || submissions.length === 0) {
+        // No submissions — render static fallback as a flat grid.
+        allPhotos = STATIC_PHOTOS.map(p => ({ src: p.src, fullSrc: p.src, caption: p.event || p.alt }));
+        grid.innerHTML = STATIC_PHOTOS.map((p, i) => `
+          <div class="memory-item" data-index="${i}">
+            <img src="${p.src}" alt="${p.alt}" loading="lazy" />
+            <div class="memory-overlay"><div class="memory-caption">${p.event || p.alt}</div></div>
+          </div>`).join("");
+        return;
+      }
+
+      // Group submissions by event name.
+      const groups = {};
+      submissions.forEach(sub => {
+        if (!groups[sub.event]) groups[sub.event] = [];
+        groups[sub.event].push(sub);
+      });
+
+      let html = "";
+
+      Object.keys(groups).forEach(eventName => {
+        const subs = groups[eventName];
+
+        // Collect all photos for this event group.
+        const eventPhotos = [];
+        subs.forEach(sub => {
+          sub.photoIds.forEach(id => {
+            eventPhotos.push({
+              src: driveThumb(id),
+              fullSrc: driveFull(id),
+              caption: eventName + (sub.caption ? " — " + sub.caption : ""),
+            });
+          });
+        });
+
+        // Record the starting index in allPhotos before appending.
+        const startIndex = allPhotos.length;
+        allPhotos.push(...eventPhotos);
+
+        // Most recent uploader and caption for the group header.
+        const latest = subs[0];
+
+        html += `
+          <div class="memory-event-group">
+            <div class="memory-event-heading">
+              <span class="memory-event-title">${eventName}</span>
+              ${latest.caption ? `<span class="memory-event-caption">${latest.caption}</span>` : ""}
+              <span class="memory-event-meta">Shared by ${latest.uploader}</span>
+            </div>
+            <div class="memory-event-grid">
+              ${eventPhotos.map((p, j) => `
+                <div class="memory-item" data-index="${startIndex + j}">
+                  <img src="${p.src}" alt="${eventName}" loading="lazy" />
+                  <div class="memory-overlay"><div class="memory-caption">${eventName}</div></div>
+                </div>`).join("")}
+            </div>
+          </div>`;
+      });
+
+      grid.innerHTML = html;
     }
 
 
-    // ── OPEN LIGHTBOX ────────────────────────────────────────
-    // Opens the lightbox showing the photo at the given index.
-    // Disables body scrolling so the page doesn't scroll behind the overlay.
-    function open(index) {
+    // ── LIGHTBOX ─────────────────────────────────────────────
+    function lbUpdate() {
+      const p = allPhotos[current];
+      lbImg.src = p.fullSrc || p.src;
+      lbImg.alt = p.caption || "";
+      lbCaption.textContent = p.caption || "";
+      lbCounter.textContent = (current + 1) + " / " + allPhotos.length;
+    }
+
+    function lbOpen(index) {
       current = index;
-      update();
-      lightbox.classList.add("active");        // CSS shows the lightbox when "active" is present.
-      document.body.style.overflow = "hidden"; // Lock page scroll while lightbox is open.
+      lbUpdate();
+      lightbox.classList.add("active");
+      document.body.style.overflow = "hidden";
     }
 
-
-    // ── CLOSE LIGHTBOX ───────────────────────────────────────
-    // Dismisses the lightbox and re-enables page scrolling.
-    function close() {
+    function lbClose() {
       lightbox.classList.remove("active");
-      document.body.style.overflow = "";       // Restore normal page scrolling.
+      document.body.style.overflow = "";
     }
 
-
-    // ── CLICK ON GALLERY TILE ────────────────────────────────
-    // Uses event delegation — listens on the whole grid so one
-    // handler covers all tiles even if photos are added later.
+    // Click a tile to open the lightbox.
     grid.addEventListener("click", e => {
-      // Walk up the DOM from the click target to find the nearest .memory-item.
       const item = e.target.closest(".memory-item");
-      if (item) open(parseInt(item.dataset.index));  // Open lightbox at the clicked tile's index.
+      if (item) lbOpen(parseInt(item.dataset.index));
     });
 
+    document.getElementById("lb-close").addEventListener("click", lbClose);
 
-    // ── CLOSE BUTTON ─────────────────────────────────────────
-    // Close the lightbox when the "×" button is clicked.
-    document.getElementById("lb-close").addEventListener("click", close);
-
-
-    // ── PREVIOUS BUTTON ──────────────────────────────────────
-    // Navigate to the previous photo. Wraps around to the last
-    // photo if already at index 0 (circular navigation).
     document.getElementById("lb-prev").addEventListener("click", e => {
-      e.stopPropagation();   // Prevent the click from also closing the lightbox.
-      current = (current - 1 + photos.length) % photos.length;  // Wrap around.
-      update();
+      e.stopPropagation();
+      current = (current - 1 + allPhotos.length) % allPhotos.length;
+      lbUpdate();
     });
 
-
-    // ── NEXT BUTTON ──────────────────────────────────────────
-    // Navigate to the next photo. Wraps around to the first
-    // photo after the last (circular navigation).
     document.getElementById("lb-next").addEventListener("click", e => {
-      e.stopPropagation();   // Prevent the click from closing the lightbox.
-      current = (current + 1) % photos.length;  // Wrap around.
-      update();
+      e.stopPropagation();
+      current = (current + 1) % allPhotos.length;
+      lbUpdate();
     });
 
+    lightbox.addEventListener("click", e => { if (e.target === lightbox) lbClose(); });
 
-    // ── CLICK ON LIGHTBOX BACKDROP ───────────────────────────
-    // Close the lightbox when the user clicks on the dark backdrop
-    // area (outside the photo itself).
-    lightbox.addEventListener("click", e => {
-      if (e.target === lightbox) close();   // Only close if the backdrop itself was clicked.
-    });
-
-
-    // ── KEYBOARD NAVIGATION ──────────────────────────────────
-    // Allow keyboard users to navigate and close the lightbox.
     document.addEventListener("keydown", e => {
-      // Ignore keyboard events if the lightbox is not currently open.
       if (!lightbox.classList.contains("active")) return;
-
-      if (e.key === "Escape") close();   // Escape key closes the lightbox.
-
-      // Right arrow: advance to the next photo (with wrap-around).
-      if (e.key === "ArrowRight") { current = (current + 1) % photos.length; update(); }
-
-      // Left arrow: go back to the previous photo (with wrap-around).
-      if (e.key === "ArrowLeft") { current = (current - 1 + photos.length) % photos.length; update(); }
+      if (e.key === "Escape") lbClose();
+      if (e.key === "ArrowRight") { current = (current + 1) % allPhotos.length; lbUpdate(); }
+      if (e.key === "ArrowLeft") { current = (current - 1 + allPhotos.length) % allPhotos.length; lbUpdate(); }
     });
+
+
+    // ── LOAD DATA ────────────────────────────────────────────
+    // Render static photos immediately, then replace with live
+    // submitted photos if the fetch succeeds.
+    renderGrid(null);   // Start with static fallback.
+
+    if (MEMORY_SCRIPT_URL && MEMORY_SCRIPT_URL !== "PASTE_YOUR_MEMORY_SCRIPT_URL_HERE") {
+      fetch(MEMORY_SCRIPT_URL)
+        .then(r => r.json())
+        .then(data => {
+          if (data.submissions && data.submissions.length > 0) {
+            renderGrid(data.submissions);
+          }
+        })
+        .catch(() => {
+          // Static fallback already rendered — nothing to do.
+        });
+    }
 
   </script>
 
