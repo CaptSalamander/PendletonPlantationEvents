@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ============================================================
+     File:        submit-memory.html
+     Purpose:     Lets any resident upload photos from a
+                  neighborhood event so they can be featured in
+                  the Memories section on the homepage.
+                  Collects uploader name, email, event name, an
+                  optional caption/message, and up to 10 photos.
+                  Photos are sent as base64 JSON to a Google Apps
+                  Script web app which saves them to Drive and
+                  e-mails the organizer.
+     Script:      Uses the same nominations-script endpoint but
+                  photos go to the same Drive folder. A dedicated
+                  script (submit-memory-script.gs) is included for
+                  a clean separation if preferred.
+     Styles:      submit-memory-styles.css
+     ============================================================ -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Share a Memory — Pendleton Plantation</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="submit-memory-styles.css" />
+</head>
+
+<body>
+
+  <!-- ── NAVIGATION ───────────────────────────────────────────-->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#awards">Awards</a></li>
+      <li><a href="index.html#events">Events</a></li>
+      <li><a href="index.html#memories">Memories</a></li>
+      <li><a href="index.html#announcements">Announcements</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="signup-page-easter.html">Easter Sign-Up</a></li>
+      <li><a href="nominations.html">Nominate a Neighbor</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+    </ul>
+  </nav>
+
+
+  <!-- ── PAGE WRAPPER ─────────────────────────────────────────-->
+  <div class="page-wrapper">
+
+    <div class="header">
+      <div class="camera-row">📷 🌿 📸 🌿 📷</div>
+      <h1>Share a<br /><em>Neighborhood Memory</em></h1>
+      <p class="subtitle">
+        Got photos from a block party, holiday event, or just a great moment in
+        the neighborhood? Upload them here and they may be featured in the
+        Memories gallery on the community homepage!
+      </p>
+    </div>
+
+
+    <div class="card">
+      <div id="form-content">
+        <form id="memory-form" novalidate>
+
+
+          <!-- ── SECTION 1: ABOUT YOU ──────────────────────── -->
+          <div class="section-label">👤 About You</div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="uploader_first">First Name <span class="req">*</span></label>
+              <input type="text" id="uploader_first" placeholder="Jane" required />
+            </div>
+            <div class="field">
+              <label for="uploader_last">Last Name <span class="req">*</span></label>
+              <input type="text" id="uploader_last" placeholder="Smith" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="uploader_email">Email Address <span class="req">*</span></label>
+            <input type="email" id="uploader_email" placeholder="you@email.com" required />
+            <span class="field-hint">We'll reach out if we have any questions about your photos.</span>
+          </div>
+
+          <div class="divider"></div>
+
+
+          <!-- ── SECTION 2: THE EVENT ───────────────────────── -->
+          <div class="section-label">🎉 The Event</div>
+
+          <div class="field">
+            <label for="event_name">Event Name <span class="req">*</span></label>
+            <input type="text" id="event_name" placeholder="e.g., Halloween 2025, Easter Egg Hunt, Block Party…"
+              required />
+          </div>
+
+          <div class="field">
+            <label for="caption">Caption or Message (optional)</label>
+            <textarea id="caption"
+              placeholder="Share anything you'd like — a funny moment, a thank-you, a story from the day…"></textarea>
+            <span class="field-hint">This may appear alongside your photos in the gallery.</span>
+          </div>
+
+          <div class="divider"></div>
+
+
+          <!-- ── SECTION 3: YOUR PHOTOS ─────────────────────── -->
+          <div class="section-label">📷 Your Photos <span class="req">*</span></div>
+          <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px; line-height:1.65;">
+            Upload up to 10 photos. They'll be saved to a private HOA Drive folder
+            and reviewed before being added to the gallery.
+          </p>
+
+          <div class="upload-zone" id="upload-zone" role="button" tabindex="0"
+            aria-label="Click or drag photos here to upload">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-prompt">
+              <strong>Click to choose photos</strong> or drag &amp; drop them here<br />
+              JPG, PNG, HEIC, WEBP accepted
+            </div>
+            <input type="file" id="photo-input" accept="image/*" multiple />
+          </div>
+
+          <div class="photo-preview-grid" id="photo-preview-grid"></div>
+          <p class="upload-limit" id="upload-limit-hint">Up to 10 photos · 8 MB each</p>
+
+          <div class="divider"></div>
+
+
+          <!-- ── SUBMIT ─────────────────────────────────────── -->
+          <div class="submit-area">
+            <button type="submit" class="submit-btn" id="submit-btn">
+              Share My Photos 📸
+            </button>
+
+            <div class="error-msg" id="error-msg">
+              Something went wrong — please try again or contact
+              <a href="mailto:mandyvaliquette00@gmail.com">your HOA organizer</a> directly.
+            </div>
+
+            <p class="fine-print">
+              Photos are reviewed by the HOA before being posted publicly.<br />
+              Questions? Contact <a href="mailto:mandyvaliquette00@gmail.com">mandyvaliquette00@gmail.com</a>.
+            </p>
+          </div>
+
+        </form>
+      </div><!-- end #form-content -->
+
+
+      <!-- ── SUCCESS SCREEN ──────────────────────────────────-->
+      <div class="success-msg" id="success-msg">
+        <div class="big-emoji">📸</div>
+        <h2>Photos Submitted!</h2>
+        <p>
+          Thank you for sharing your memories with the neighborhood!
+          The HOA team will review your photos and add them to the
+          gallery on the homepage.<br /><br />
+          <em>These are the moments that make Pendleton Plantation feel like home.</em>
+        </p>
+      </div>
+
+
+      <!-- ── LOADING OVERLAY ─────────────────────────────────-->
+      <div class="submit-overlay" id="submit-overlay" aria-live="polite">
+        <div class="spinner"></div>
+        <div class="overlay-status" id="overlay-status">Uploading photos…</div>
+      </div>
+
+    </div><!-- end .card -->
+
+    <div class="footer">
+      Pendleton Plantation HOA &nbsp;·&nbsp; Community Memories
+    </div>
+
+  </div><!-- end .page-wrapper -->
+
+
+  <script>
+
+    // ============================================================
+    //  ✏️  CONFIG
+    // ============================================================
+
+    // Google Apps Script Web App URL.
+    // Deploy submit-memory-script.gs and paste the URL here.
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVAlddIDr2eRgolc-A4v5OviKhIfaiqXnuCONA9uJ71HjAeDjiprfRZDD-ZAcfzWc4_g/exec";
+
+    const MAX_PHOTOS = 10;
+    const MAX_FILE_BYTES = 8 * 1024 * 1024;  // 8 MB
+
+    // ============================================================
+    //  End of config
+    // ============================================================
+
+
+    // ── PHOTO MANAGEMENT ─────────────────────────────────────
+    let selectedFiles = [];
+
+    const uploadZone = document.getElementById("upload-zone");
+    const photoInput = document.getElementById("photo-input");
+    const previewGrid = document.getElementById("photo-preview-grid");
+    const limitHint = document.getElementById("upload-limit-hint");
+
+    uploadZone.addEventListener("click", () => photoInput.click());
+    uploadZone.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); photoInput.click(); }
+    });
+
+    photoInput.addEventListener("change", () => {
+      addFiles(Array.from(photoInput.files));
+      photoInput.value = "";
+    });
+
+    uploadZone.addEventListener("dragover", e => {
+      e.preventDefault();
+      uploadZone.classList.add("drag-over");
+    });
+    uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag-over"));
+    uploadZone.addEventListener("drop", e => {
+      e.preventDefault();
+      uploadZone.classList.remove("drag-over");
+      addFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/")));
+    });
+
+    function addFiles(incoming) {
+      incoming.forEach(file => {
+        if (selectedFiles.length >= MAX_PHOTOS) {
+          alert("You can attach up to " + MAX_PHOTOS + " photos. Remove one to add another.");
+          return;
+        }
+        if (file.size > MAX_FILE_BYTES) {
+          alert(file.name + " is too large (max 8 MB). Please choose a smaller file.");
+          return;
+        }
+        selectedFiles.push(file);
+        addThumb(file, selectedFiles.length - 1);
+      });
+      updateLimitHint();
+    }
+
+    function addThumb(file, index) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const thumb = document.createElement("div");
+        thumb.className = "photo-thumb";
+        thumb.dataset.index = index;
+
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.alt = file.name;
+
+        const btn = document.createElement("button");
+        btn.className = "photo-thumb-remove";
+        btn.type = "button";
+        btn.textContent = "✕";
+        btn.setAttribute("aria-label", "Remove " + file.name);
+        btn.addEventListener("click", () => removeFile(index));
+
+        thumb.appendChild(img);
+        thumb.appendChild(btn);
+        previewGrid.appendChild(thumb);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      previewGrid.innerHTML = "";
+      selectedFiles.forEach((f, i) => addThumb(f, i));
+      updateLimitHint();
+    }
+
+    function updateLimitHint() {
+      const remaining = MAX_PHOTOS - selectedFiles.length;
+      limitHint.textContent = selectedFiles.length === 0
+        ? "Up to " + MAX_PHOTOS + " photos · 8 MB each"
+        : selectedFiles.length + " photo" + (selectedFiles.length !== 1 ? "s" : "") +
+        " selected" + (remaining > 0 ? " · " + remaining + " more allowed" : " · limit reached");
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+
+    // ── HAMBURGER MENU ────────────────────────────────────────
+    const hamburger = document.querySelector(".nav-hamburger");
+    const navLinks = document.querySelector(".nav-links");
+
+    if (hamburger && navLinks) {
+      hamburger.addEventListener("click", () => {
+        const isOpen = navLinks.classList.toggle("open");
+        hamburger.classList.toggle("open", isOpen);
+        hamburger.setAttribute("aria-expanded", isOpen);
+        document.body.style.overflow = isOpen ? "hidden" : "";
+      });
+      navLinks.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", () => {
+          navLinks.classList.remove("open");
+          hamburger.classList.remove("open");
+          hamburger.setAttribute("aria-expanded", "false");
+          document.body.style.overflow = "";
+        });
+      });
+    }
+
+
+    // ── FORM SUBMISSION ──────────────────────────────────────
+    document.getElementById("memory-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const btn = document.getElementById("submit-btn");
+      const errorMsg = document.getElementById("error-msg");
+      const overlay = document.getElementById("submit-overlay");
+      const overlayStatus = document.getElementById("overlay-status");
+
+      errorMsg.style.display = "none";
+
+      // ── Validation ────────────────────────────────────────
+      const firstName = document.getElementById("uploader_first").value.trim();
+      const lastName = document.getElementById("uploader_last").value.trim();
+      const email = document.getElementById("uploader_email").value.trim();
+      const eventName = document.getElementById("event_name").value.trim();
+      const caption = document.getElementById("caption").value.trim();
+
+      if (!firstName || !lastName) {
+        errorMsg.textContent = "Please enter your name.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      if (!email) {
+        errorMsg.textContent = "Please enter your email address.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      if (!eventName) {
+        errorMsg.textContent = "Please enter the name of the event.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      if (selectedFiles.length === 0) {
+        errorMsg.textContent = "Please choose at least one photo to share.";
+        errorMsg.style.display = "block";
+        return;
+      }
+
+      // ── Show overlay & encode photos ──────────────────────
+      btn.disabled = true;
+      overlayStatus.textContent = "Uploading photos… 📸";
+      overlay.classList.add("visible");
+
+      let photosPayload = [];
+      try {
+        photosPayload = await Promise.all(
+          selectedFiles.map(async file => ({
+            name: file.name,
+            mimeType: file.type,
+            base64: await fileToBase64(file),
+          }))
+        );
+      } catch (_) {
+        overlay.classList.remove("visible");
+        btn.disabled = false;
+        errorMsg.textContent = "One or more photos could not be read. Please try again or remove them.";
+        errorMsg.style.display = "block";
+        return;
+      }
+
+      // ── Build payload & POST ──────────────────────────────
+      overlayStatus.textContent = "Submitting… 🌿";
+
+      const payload = {
+        uploader_name: firstName + " " + lastName,
+        email,
+        event_name: eventName,
+        caption,
+        photos: photosPayload,
+      };
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(payload),
+        });
+
+        overlay.classList.remove("visible");
+        document.getElementById("form-content").style.display = "none";
+        document.getElementById("success-msg").style.display = "block";
+
+      } catch (_) {
+        overlay.classList.remove("visible");
+        btn.disabled = false;
+        errorMsg.textContent =
+          "Something went wrong — please try again or contact mandyvaliquette00@gmail.com.";
+        errorMsg.style.display = "block";
+      }
+    });
+
+  </script>
+
+</body>
+
+</html>
