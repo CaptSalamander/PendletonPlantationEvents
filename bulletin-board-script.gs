@@ -177,7 +177,7 @@ function approvePost(token) {
       "<div class='card'><div style='font-size:3rem;margin-bottom:16px'>✅</div>" +
       "<h1>Post Approved!</h1>" +
       "<p><strong>" + postTitle + "</strong><br><br>" +
-      "This post will now appear on the <a href='bulletin-board.html'>Community Bulletin Board</a>.</p>" +
+      "This post will now appear on the <a href='https://pendletonplantation.com/bulletin-board.html'>Community Bulletin Board</a>.</p>" +
       "</div></body></html>"
     : "<html><head><title>Approval Failed</title>" +
       "<style>body{font-family:sans-serif;background:#fdf8ef;display:flex;align-items:center;" +
