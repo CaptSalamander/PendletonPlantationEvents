@@ -385,6 +385,7 @@
       day: "21", month: "Apr 2025",
       title: "Easter Egg Hunt — Sign-Ups Now Open!",
       body: "We're hosting our first neighborhood Easter egg hunt on March 21st! We're looking for volunteers, candy donations, and plastic egg donations. Fill out the sign-up form to let us know how you'd like to help — or just RSVP to join the fun.",
+      link: "signup-page-easter.html", linkText: "Sign Up Now →",
     },
     {
       day: "01", month: "Mar 2025",
@@ -503,6 +504,7 @@
         <div>
           <div class="announce-title">${a.title}</div>
           <div class="announce-body">${a.body}</div>
+          ${a.link ? `<a href="${a.link}" class="announce-link">${a.linkText || "Learn More →"}</a>` : ""}
         </div>
       </div>`).join("");
     }

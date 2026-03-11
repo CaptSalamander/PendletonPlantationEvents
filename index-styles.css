@@ -944,6 +944,19 @@ section {
   line-height: 1.75;
 }
 
+/* Optional "Sign Up" / "Learn More" link on an announcement row. */
+.announce-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--forest);
+  text-decoration: none;
+  border-bottom: 1px solid var(--forest);
+  transition: opacity 0.2s;
+}
+.announce-link:hover { opacity: 0.7; }
+
 
 /* ── RECOGNITION AWARDS SECTION ───────────────────────────────
    A dark forest-green section showcasing special recognition
