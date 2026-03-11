@@ -1,0 +1,577 @@
+/* ============================================================
+   File:        nominations-styles.css
+   Purpose:     Styles for the Neighbor Nomination form page
+                (nominations.html). Self-contained — does NOT
+                load index-styles.css. Color theme: deep gold
+                and forest green to match the Awards section of
+                the main site.
+   ============================================================ */
+
+
+/* ── COLOR VARIABLES ──────────────────────────────────────────
+   Gold + forest green awards palette. */
+:root {
+  --cream:        #fdf8ef;   /* Warm off-white — page background.         */
+  --gold:         #b8860b;   /* Deep antique gold — primary accent.        */
+  --gold-light:   #f5e199;   /* Pale gold — soft highlights, hover states. */
+  --gold-mid:     #e0b84a;   /* Mid gold — borders, focus rings.           */
+  --forest:       #2d5016;   /* Deep forest green — headings, buttons.     */
+  --forest-mid:   #4a7c2f;   /* Medium green — secondary elements.         */
+  --deep:         #1e1a0e;   /* Very dark warm brown — primary text.       */
+  --soft-text:    #6b5c3a;   /* Medium warm brown — labels, hints.         */
+  --white:        #ffffff;   /* Pure white — card & input backgrounds.     */
+  --error:        #c0392b;   /* Red — error messages.                      */
+}
+
+
+/* ── GLOBAL RESET ─────────────────────────────────────────────
+   Normalize box-sizing, margin, and padding everywhere. */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* ── BODY ─────────────────────────────────────────────────────
+   Page background, font, and overflow guard for the decorative
+   background blobs. */
+body {
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--cream);
+  color: var(--deep);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+
+/* ── DECORATIVE BLOB — TOP RIGHT ──────────────────────────────
+   Soft gold radial gradient in the top-right corner. */
+body::before {
+  content: '';
+  position: fixed;
+  top: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #f5e199 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+
+/* ── DECORATIVE BLOB — BOTTOM LEFT ───────────────────────────
+   Soft forest-green blob in the bottom-left corner. */
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -120px;
+  left: -120px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, #c8dbb8 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+
+/* ── NAVIGATION BAR ───────────────────────────────────────────
+   Fixed top nav — identical structure to the main site nav. */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 32px;
+  background: rgba(253, 248, 239, 0.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(184, 134, 11, 0.2);
+}
+
+.nav-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--forest);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.nav-brand span { color: var(--gold); margin-right: 6px; }
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 24px;
+}
+.nav-links a {
+  color: var(--soft-text);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--forest); }
+
+/* Hamburger — hidden on desktop. */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  z-index: 110;
+}
+.nav-hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--forest);
+  border-radius: 2px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+/* Mobile nav overlay. */
+@media (max-width: 768px) {
+  .nav-hamburger { display: flex; }
+
+  .nav-links {
+    position: fixed;
+    inset: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    background: rgba(253, 248, 239, 0.98);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .nav-links.open { opacity: 1; pointer-events: all; }
+  .nav-links a { font-size: 1.1rem; }
+
+  /* Animate hamburger into an X when open. */
+  .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+  .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+}
+
+
+/* ── PAGE WRAPPER ─────────────────────────────────────────────
+   Centers content with a max-width and adds top padding to
+   clear the fixed nav. */
+.page-wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 110px 20px 60px;
+}
+
+
+/* ── PAGE HEADER ──────────────────────────────────────────────
+   Animated emoji row, headline, and subtitle above the card. */
+.header { text-align: center; margin-bottom: 28px; }
+
+.trophy-row {
+  font-size: 1.8rem;
+  letter-spacing: 10px;
+  margin-bottom: 18px;
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+.header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.7rem, 5vw, 2.4rem);
+  color: var(--forest);
+  line-height: 1.25;
+  margin-bottom: 12px;
+}
+.header h1 em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: var(--soft-text);
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+
+/* ── FORM CARD ────────────────────────────────────────────────
+   White rounded card that contains the entire form. */
+.card {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 40px 36px;
+  box-shadow: 0 8px 40px rgba(45, 80, 22, 0.1), 0 2px 8px rgba(0,0,0,0.06);
+  border: 1px solid rgba(184, 134, 11, 0.15);
+}
+
+@media (max-width: 520px) {
+  .card { padding: 28px 20px; }
+}
+
+
+/* ── SECTION LABEL ────────────────────────────────────────────
+   Gold pill-shaped section heading inside the card. */
+.section-label {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--forest);
+  background: rgba(184, 134, 11, 0.12);
+  border: 1px solid rgba(184, 134, 11, 0.3);
+  border-radius: 20px;
+  padding: 5px 14px;
+  margin-bottom: 20px;
+}
+
+
+/* ── DIVIDER ──────────────────────────────────────────────────
+   Thin gold line between form sections. */
+.divider {
+  border: none;
+  border-top: 1px solid rgba(184, 134, 11, 0.2);
+  margin: 28px 0;
+}
+
+
+/* ── FIELD ────────────────────────────────────────────────────
+   Wrapper for label + input pairs. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--soft-text);
+  letter-spacing: 0.02em;
+}
+
+.req { color: var(--gold); margin-left: 2px; }
+
+/* Hint text below a field (e.g., character limits, notes). */
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--soft-text);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+
+/* ── TWO-COLUMN ROW ───────────────────────────────────────────
+   Side-by-side field layout on wider screens. */
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 480px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* When .field is inside .field-row it should not add bottom margin
+   (the row itself handles spacing). */
+.field-row .field { margin-bottom: 0; }
+
+
+/* ── INPUTS, SELECTS, TEXTAREAS ───────────────────────────────
+   Shared styling for all form controls. */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+select,
+textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  color: var(--deep);
+  background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  appearance: none;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--gold-mid);
+  box-shadow: 0 0 0 3px rgba(224, 184, 74, 0.2);
+}
+
+textarea {
+  min-height: 130px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* Custom dropdown arrow for <select>. */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b5c3a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+}
+
+/* Custom award text input — hidden until "Other" is chosen. */
+#custom-award-wrapper {
+  display: none;
+  margin-top: 10px;
+}
+#custom-award-wrapper.visible { display: block; }
+
+
+/* ── PHOTO UPLOAD AREA ────────────────────────────────────────
+   Dashed drop-zone with a centered prompt. Clicking it
+   triggers the hidden <input type="file">. */
+.upload-zone {
+  border: 2px dashed var(--gold-mid);
+  border-radius: 12px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(245, 225, 153, 0.08);
+  transition: background 0.2s, border-color 0.2s;
+  position: relative;
+}
+.upload-zone:hover,
+.upload-zone.drag-over {
+  background: rgba(245, 225, 153, 0.2);
+  border-color: var(--gold);
+}
+
+.upload-icon   { font-size: 2rem; margin-bottom: 8px; }
+.upload-prompt { font-size: 0.9rem; color: var(--soft-text); line-height: 1.6; }
+.upload-prompt strong { color: var(--forest); }
+
+/* The actual file input is invisible — the zone triggers it. */
+#photo-input { display: none; }
+
+
+/* ── PHOTO PREVIEW GRID ───────────────────────────────────────
+   Shows thumbnail previews of chosen photos below the zone. */
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.photo-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid rgba(184, 134, 11, 0.25);
+}
+.photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Remove button on each thumbnail. */
+.photo-thumb-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 11px;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.photo-thumb-remove:hover { background: var(--error); }
+
+/* Upload limit hint below the zone. */
+.upload-limit {
+  font-size: 0.78rem;
+  color: var(--soft-text);
+  margin-top: 8px;
+}
+
+
+/* ── SUBMIT AREA ──────────────────────────────────────────────
+   Submit button, error box, and fine-print below the form. */
+.submit-area {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 15px 24px;
+  background: linear-gradient(135deg, var(--forest) 0%, var(--forest-mid) 100%);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.submit-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.error-msg {
+  display: none;
+  background: #fdecea;
+  color: var(--error);
+  border: 1px solid #f5b7b1;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  width: 100%;
+  text-align: center;
+}
+
+.fine-print {
+  font-size: 0.78rem;
+  color: var(--soft-text);
+  text-align: center;
+  line-height: 1.6;
+}
+.fine-print a {
+  color: var(--forest);
+  text-decoration: underline;
+}
+
+
+/* ── SUCCESS SCREEN ───────────────────────────────────────────
+   Full-card success state shown after the form submits. */
+.success-msg {
+  display: none;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.big-emoji {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.success-msg h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.7rem;
+  color: var(--forest);
+  margin-bottom: 12px;
+}
+
+.success-msg p {
+  font-size: 0.95rem;
+  color: var(--soft-text);
+  line-height: 1.7;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+
+/* ── SUBMIT OVERLAY ───────────────────────────────────────────
+   Covers the card with a semi-transparent wash and a centered
+   spinning ring while the form is being submitted. Hidden by
+   default; shown by JavaScript during submission. */
+.submit-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;           /* Matches the card's border-radius. */
+  background: rgba(253, 248, 239, 0.88);
+  backdrop-filter: blur(3px);
+  z-index: 10;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.submit-overlay.visible { display: flex; }
+
+/* The card needs position: relative so the overlay is anchored to it. */
+.card { position: relative; }
+
+/* Spinning ring built entirely from CSS border + animation. */
+.spinner {
+  width: 52px;
+  height: 52px;
+  border: 4px solid rgba(45, 80, 22, 0.15);
+  border-top-color: var(--forest);
+  border-radius: 50%;
+  animation: spin 0.85s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Status text below the spinner ("Uploading photos…" / "Submitting…"). */
+.overlay-status {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--forest);
+  letter-spacing: 0.02em;
+}
+
+
+/* ── PAGE FOOTER ──────────────────────────────────────────────
+   Small centered text below the card. */
+.footer {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--soft-text);
+  margin-top: 28px;
+  line-height: 1.6;
+}

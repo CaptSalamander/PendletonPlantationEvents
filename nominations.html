@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ============================================================
+     File:        nominations.html
+     Purpose:     Neighbor Award Nomination form for Pendleton
+                  Plantation residents. Collects nominator info,
+                  nominee info, the award category, reasons, and
+                  optional supporting photos.
+                  Submits as JSON to a Google Apps Script web app
+                  (nominations-script.gs) which saves the record
+                  to Google Sheets and uploads photos to Drive.
+     Script:      nominations-script.gs — deploy separately from
+                  the Easter Egg Hunt script; paste the new URL
+                  into SCRIPT_URL in the <script> block below.
+     Styles:      nominations-styles.css
+     ============================================================ -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nominate a Neighbor — Pendleton Plantation</title>
+
+  <!-- Google Fonts: Playfair Display for headings, DM Sans for body. -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="nominations-styles.css" />
+</head>
+
+<body>
+
+  <!-- ── NAVIGATION ───────────────────────────────────────────
+       Fixed top nav. Same structure as every other page. -->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#awards">Awards</a></li>
+      <li><a href="index.html#events">Events</a></li>
+      <li><a href="index.html#memories">Memories</a></li>
+      <li><a href="index.html#announcements">Announcements</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="signup-page-easter.html">Easter Sign-Up</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+    </ul>
+  </nav>
+
+
+  <!-- ── PAGE WRAPPER ─────────────────────────────────────────
+       Centered layout with padding to clear the fixed nav. -->
+  <div class="page-wrapper">
+
+    <!-- ── PAGE HEADER ──────────────────────────────────────── -->
+    <div class="header">
+      <div class="trophy-row">🏆 ⭐ 🌿 ⭐ 🏆</div>
+      <h1>Nominate a<br /><em>Neighbor for an Award</em></h1>
+      <p class="subtitle">
+        Know someone in Pendleton Plantation who deserves recognition?
+        Fill out the form below and let us know! Nominations are reviewed
+        by the HOA board and winners are announced on the community homepage.
+      </p>
+    </div>
+
+
+    <!-- ── FORM CARD ─────────────────────────────────────────── -->
+    <div class="card">
+
+      <!-- form-content is hidden on success; success-msg is shown instead. -->
+      <div id="form-content">
+        <form id="nomination-form" novalidate>
+
+
+          <!-- ── SECTION 1: ABOUT YOU (THE NOMINATOR) ──────── -->
+          <div class="section-label">👤 About You (The Nominator)</div>
+
+          <!-- First + Last name side by side. -->
+          <div class="field-row">
+            <div class="field">
+              <label for="nom_first">First Name <span class="req">*</span></label>
+              <input type="text" id="nom_first" placeholder="Jane" required />
+            </div>
+            <div class="field">
+              <label for="nom_last">Last Name <span class="req">*</span></label>
+              <input type="text" id="nom_last" placeholder="Smith" required />
+            </div>
+          </div>
+
+          <!-- Email — required so the board can follow up. -->
+          <div class="field">
+            <label for="nom_email">Email Address <span class="req">*</span></label>
+            <input type="email" id="nom_email" placeholder="you@email.com" required />
+          </div>
+
+          <!-- Phone + address side by side. -->
+          <div class="field-row">
+            <div class="field">
+              <label for="nom_phone">Phone (optional)</label>
+              <input type="tel" id="nom_phone" placeholder="(864) 555-0123" />
+            </div>
+            <div class="field">
+              <label for="nom_address">Your Street Address (optional)</label>
+              <input type="text" id="nom_address" placeholder="123 Maple Lane" />
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+
+          <!-- ── SECTION 2: ABOUT THE NOMINEE ──────────────── -->
+          <div class="section-label">🌟 About Your Nominee</div>
+
+          <!-- Nominee first + last name. -->
+          <div class="field-row">
+            <div class="field">
+              <label for="nee_first">Nominee First Name <span class="req">*</span></label>
+              <input type="text" id="nee_first" placeholder="Robert" required />
+            </div>
+            <div class="field">
+              <label for="nee_last">Nominee Last Name <span class="req">*</span></label>
+              <input type="text" id="nee_last" placeholder="Johnson" required />
+            </div>
+          </div>
+
+          <!-- Nominee street address. -->
+          <div class="field">
+            <label for="nee_address">Nominee's Street Address (optional)</label>
+            <input type="text" id="nee_address" placeholder="456 Oak Court" />
+            <span class="field-hint">Helps the board confirm they are a Pendleton Plantation resident.</span>
+          </div>
+
+          <div class="divider"></div>
+
+
+          <!-- ── SECTION 3: THE NOMINATION ─────────────────── -->
+          <div class="section-label">🏅 The Nomination</div>
+
+          <!-- Award category dropdown. -->
+          <div class="field">
+            <label for="award_category">Award Category <span class="req">*</span></label>
+            <select id="award_category" required>
+              <option value="" disabled selected>Choose an award…</option>
+
+              <!-- ── Existing HOA Awards ── -->
+              <optgroup label="Existing HOA Awards">
+                <option value="Yard of the Month">🌿 Yard of the Month</option>
+                <option value="Best Seasonal Decoration">🎄 Best Seasonal Decoration</option>
+                <option value="Neighborhood Hero">🦸 Neighborhood Hero</option>
+                <option value="Above &amp; Beyond">⭐ Above &amp; Beyond</option>
+              </optgroup>
+
+              <!-- ── Community & Involvement Awards ── -->
+              <optgroup label="Community &amp; Involvement Awards">
+                <option value="Community Spirit Award">🤝 Community Spirit Award</option>
+                <option value="Welcome Wagon Award">🏠 Welcome Wagon Award</option>
+                <option value="Good Neighbor Award">💛 Good Neighbor Award</option>
+                <option value="Volunteer of the Year">🙌 Volunteer of the Year</option>
+                <option value="Block Party MVP">🎉 Block Party MVP</option>
+                <option value="Spirit of Giving">🎁 Spirit of Giving</option>
+                <option value="Community Beautification Award">🏡 Community Beautification Award</option>
+                <option value="Youth Spotlight">🌟 Youth Spotlight</option>
+                <option value="Green Thumb Award">🌱 Green Thumb Award</option>
+                <option value="Random Acts of Kindness">🕊️ Random Acts of Kindness</option>
+              </optgroup>
+
+              <!-- ── Custom ── -->
+              <optgroup label="Something Else?">
+                <option value="Other — Suggest My Own">✏️ Other — Suggest My Own</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- Custom award name — shown only when "Other" is selected. -->
+          <div class="field" id="custom-award-wrapper">
+            <label for="custom_award">Your Award Idea <span class="req">*</span></label>
+            <input type="text" id="custom_award" placeholder="e.g., Best Block Connector, Most Helpful Neighbor…" />
+            <span class="field-hint">Give your award a name and the board will consider it!</span>
+          </div>
+
+          <!-- Reasons for the nomination. -->
+          <div class="field">
+            <label for="reasons">Why do they deserve this award? <span class="req">*</span></label>
+            <textarea id="reasons"
+              placeholder="Tell us what makes this neighbor so special! Share a specific story, act of kindness, or ongoing contribution that inspired your nomination…"
+              required></textarea>
+            <span class="field-hint">The more detail you share, the better the board can evaluate the nomination.</span>
+          </div>
+
+          <div class="divider"></div>
+
+
+          <!-- ── SECTION 4: SUPPORTING PHOTOS ──────────────── -->
+          <div class="section-label">📷 Supporting Photos (optional)</div>
+          <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px; line-height:1.65;">
+            A photo can go a long way — share a shot of their beautiful yard, a community event they organized, or any
+            moment that captures why they deserve recognition. Photos are uploaded to a private HOA Drive folder.
+          </p>
+
+          <!-- Drop zone — clicking it opens the file picker. -->
+          <div class="upload-zone" id="upload-zone" role="button" tabindex="0"
+            aria-label="Click or drag photos here to upload">
+            <div class="upload-icon">📸</div>
+            <div class="upload-prompt">
+              <strong>Click to choose photos</strong> or drag &amp; drop them here<br />
+              JPG, PNG, HEIC, WEBP accepted
+            </div>
+            <!-- Hidden file input triggered by clicking the zone. -->
+            <input type="file" id="photo-input" accept="image/*" multiple />
+          </div>
+
+          <!-- Thumbnail previews appear here as files are selected. -->
+          <div class="photo-preview-grid" id="photo-preview-grid"></div>
+
+          <p class="upload-limit" id="upload-limit-hint">Up to 5 photos · 8 MB each</p>
+
+          <div class="divider"></div>
+
+
+          <!-- ── SUBMIT ──────────────────────────────────────── -->
+          <div class="submit-area">
+            <button type="submit" class="submit-btn" id="submit-btn">
+              Submit Nomination ✨
+            </button>
+
+            <div class="error-msg" id="error-msg">
+              Something went wrong — please try again or contact
+              <a href="mailto:mandyvaliquette00@gmail.com">your HOA organizer</a> directly.
+            </div>
+
+            <p class="fine-print">
+              Nominations are kept confidential and reviewed by the HOA board.<br />
+              Questions? Contact <a href="mailto:mandyvaliquette00@gmail.com">mandyvaliquette00@gmail.com</a>.
+            </p>
+          </div>
+
+        </form>
+      </div><!-- end #form-content -->
+
+
+      <!-- ── SUCCESS SCREEN ──────────────────────────────────
+           Shown in place of the form after a successful submit. -->
+      <div class="success-msg" id="success-msg">
+        <div class="big-emoji">🏆</div>
+        <h2>Nomination Submitted!</h2>
+        <p>
+          Thank you for taking the time to recognize a wonderful neighbor.
+          The HOA board will review your nomination and announce winners
+          on the community homepage.<br /><br />
+          <em>It's neighbors like you that make Pendleton Plantation such a special place to call home.</em>
+        </p>
+      </div>
+
+      <!-- ── LOADING OVERLAY ─────────────────────────────────────
+           Shown over the card while photos are encoding and the
+           form is being submitted. Hidden by default. -->
+      <div class="submit-overlay" id="submit-overlay" aria-live="polite" aria-label="Submitting nomination">
+        <div class="spinner"></div>
+        <div class="overlay-status" id="overlay-status">Uploading photos…</div>
+      </div>
+
+    </div><!-- end .card -->
+
+    <div class="footer">
+      Pendleton Plantation HOA &nbsp;·&nbsp; Neighbor Recognition Program
+    </div>
+
+  </div><!-- end .page-wrapper -->
+
+
+  <script>
+
+    // ============================================================
+    //  ✏️  CONFIG — only edit this section when updating the form.
+    // ============================================================
+
+    // ── Google Apps Script Web App URL ────────────────────────
+    // After deploying nominations-script.gs as a Web App, paste
+    // the URL here. Format:
+    //   https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybNrl0_bXnHxWpPkc-9c0egc7UqpwJ5wQyRhqP4qodW6qIGbNKB_XlZsJDMDSQZLc/exec";
+
+    // Maximum number of photos a user can attach.
+    const MAX_PHOTOS = 5;
+
+    // Maximum file size per photo in bytes (8 MB).
+    const MAX_FILE_BYTES = 8 * 1024 * 1024;
+
+    // ============================================================
+    //  End of config — no edits needed below this line.
+    // ============================================================
+
+
+    // ── PHOTO MANAGEMENT ─────────────────────────────────────
+    // selectedFiles holds the File objects chosen by the user.
+    // We manage this manually so we can add / remove individual
+    // photos from the preview grid.
+    let selectedFiles = [];
+
+    const uploadZone = document.getElementById("upload-zone");
+    const photoInput = document.getElementById("photo-input");
+    const previewGrid = document.getElementById("photo-preview-grid");
+    const limitHint = document.getElementById("upload-limit-hint");
+
+    // Open the file picker when the zone or the Enter/Space key is pressed.
+    uploadZone.addEventListener("click", () => photoInput.click());
+    uploadZone.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); photoInput.click(); }
+    });
+
+    // Handle files selected via the file picker.
+    photoInput.addEventListener("change", () => {
+      addFiles(Array.from(photoInput.files));
+      // Reset the input so the same file can be re-added after removal.
+      photoInput.value = "";
+    });
+
+    // Drag-and-drop support.
+    uploadZone.addEventListener("dragover", e => {
+      e.preventDefault();
+      uploadZone.classList.add("drag-over");
+    });
+    uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag-over"));
+    uploadZone.addEventListener("drop", e => {
+      e.preventDefault();
+      uploadZone.classList.remove("drag-over");
+      addFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/")));
+    });
+
+    // Add new files to selectedFiles, enforcing the count and size limits.
+    function addFiles(incoming) {
+      incoming.forEach(file => {
+        if (selectedFiles.length >= MAX_PHOTOS) {
+          alert("You can attach up to " + MAX_PHOTOS + " photos. Remove one to add another.");
+          return;
+        }
+        if (file.size > MAX_FILE_BYTES) {
+          alert(file.name + " is too large (max 8 MB). Please choose a smaller file.");
+          return;
+        }
+        selectedFiles.push(file);
+        addThumb(file, selectedFiles.length - 1);
+      });
+      updateLimitHint();
+    }
+
+    // Render a thumbnail preview for a file.
+    function addThumb(file, index) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const thumb = document.createElement("div");
+        thumb.className = "photo-thumb";
+        thumb.dataset.index = index;
+
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.alt = file.name;
+
+        const btn = document.createElement("button");
+        btn.className = "photo-thumb-remove";
+        btn.type = "button";
+        btn.textContent = "✕";
+        btn.setAttribute("aria-label", "Remove " + file.name);
+        btn.addEventListener("click", () => removeFile(index));
+
+        thumb.appendChild(img);
+        thumb.appendChild(btn);
+        previewGrid.appendChild(thumb);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Remove a file from selectedFiles and re-render all thumbnails.
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      // Re-render all thumbs so their indices stay accurate.
+      previewGrid.innerHTML = "";
+      selectedFiles.forEach((f, i) => addThumb(f, i));
+      updateLimitHint();
+    }
+
+    // Update the hint text below the upload zone.
+    function updateLimitHint() {
+      const remaining = MAX_PHOTOS - selectedFiles.length;
+      limitHint.textContent = selectedFiles.length === 0
+        ? "Up to " + MAX_PHOTOS + " photos · 8 MB each"
+        : selectedFiles.length + " photo" + (selectedFiles.length !== 1 ? "s" : "") +
+        " selected" + (remaining > 0 ? " · " + remaining + " more allowed" : " · limit reached");
+    }
+
+    // Convert a File to a base64 string (without the data-URL prefix).
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+
+    // ── AWARD CATEGORY — show/hide custom award field ─────────
+    const categorySelect = document.getElementById("award_category");
+    const customAwardWrapper = document.getElementById("custom-award-wrapper");
+    const customAwardInput = document.getElementById("custom_award");
+
+    categorySelect.addEventListener("change", () => {
+      const isOther = categorySelect.value === "Other — Suggest My Own";
+      customAwardWrapper.classList.toggle("visible", isOther);
+      customAwardInput.required = isOther;
+    });
+
+
+    // ── HAMBURGER MENU ────────────────────────────────────────
+    const hamburger = document.querySelector(".nav-hamburger");
+    const navLinks = document.querySelector(".nav-links");
+
+    if (hamburger && navLinks) {
+      hamburger.addEventListener("click", () => {
+        const isOpen = navLinks.classList.toggle("open");
+        hamburger.classList.toggle("open", isOpen);
+        hamburger.setAttribute("aria-expanded", isOpen);
+        document.body.style.overflow = isOpen ? "hidden" : "";
+      });
+      navLinks.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", () => {
+          navLinks.classList.remove("open");
+          hamburger.classList.remove("open");
+          hamburger.setAttribute("aria-expanded", "false");
+          document.body.style.overflow = "";
+        });
+      });
+    }
+
+
+    // ── FORM SUBMISSION ──────────────────────────────────────
+    document.getElementById("nomination-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const btn           = document.getElementById("submit-btn");
+      const errorMsg      = document.getElementById("error-msg");
+      const overlay       = document.getElementById("submit-overlay");
+      const overlayStatus = document.getElementById("overlay-status");
+
+      // Hide any previous error.
+      errorMsg.style.display = "none";
+
+      // ── Basic validation ───────────────────────────────────
+      const nomFirst = document.getElementById("nom_first").value.trim();
+      const nomLast = document.getElementById("nom_last").value.trim();
+      const nomEmail = document.getElementById("nom_email").value.trim();
+      const nomPhone = document.getElementById("nom_phone").value.trim();
+      const nomAddress = document.getElementById("nom_address").value.trim();
+      const neeFirst = document.getElementById("nee_first").value.trim();
+      const neeLast = document.getElementById("nee_last").value.trim();
+      const neeAddress = document.getElementById("nee_address").value.trim();
+      const category = document.getElementById("award_category").value;
+      const customAward = document.getElementById("custom_award").value.trim();
+      const reasons = document.getElementById("reasons").value.trim();
+
+      // Check required fields manually (novalidate is set on the form).
+      if (!nomFirst || !nomLast || !nomEmail) {
+        errorMsg.textContent = "Please fill in your name and email address.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      if (!neeFirst || !neeLast) {
+        errorMsg.textContent = "Please enter the nominee's name.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      if (!category) {
+        errorMsg.textContent = "Please choose an award category.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      if (category === "Other — Suggest My Own" && !customAward) {
+        errorMsg.textContent = "Please enter a name for your custom award suggestion.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      if (!reasons) {
+        errorMsg.textContent = "Please share why this neighbor deserves recognition.";
+        errorMsg.style.display = "block";
+        return;
+      }
+
+      // ── Show loading overlay ───────────────────────────────
+      btn.disabled = true;
+      overlayStatus.textContent = selectedFiles.length > 0 ? "Uploading photos… 📸" : "Submitting…";
+      overlay.classList.add("visible");
+
+      // ── Encode photos as base64 ────────────────────────────
+      let photosPayload = [];
+      try {
+        photosPayload = await Promise.all(
+          selectedFiles.map(async file => ({
+            name: file.name,
+            mimeType: file.type,
+            base64: await fileToBase64(file),
+          }))
+        );
+      } catch (photoErr) {
+        overlay.classList.remove("visible");
+        btn.disabled = false;
+        errorMsg.textContent = "One or more photos could not be read. Please try again or remove the photos.";
+        errorMsg.style.display = "block";
+        return;
+      }
+
+      // ── Build JSON payload ─────────────────────────────────
+      const payload = {
+        nominator_name: nomFirst + " " + nomLast,
+        phone: nomPhone,
+        email: nomEmail,
+        nominator_address: nomAddress,
+        nominee_name: neeFirst + " " + neeLast,
+        nominee_address: neeAddress,
+        award_category: category,
+        custom_award: customAward,
+        reasons: reasons,
+        photos: photosPayload,
+      };
+
+      // ── POST to Google Apps Script ─────────────────────────
+      // text/plain is allowed in no-cors mode; Apps Script reads
+      // e.postData.contents and parses it as JSON.
+      overlayStatus.textContent = "Submitting… ✨";
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(payload),
+        });
+
+        // Assume success (no-cors means we cannot read the response body).
+        overlay.classList.remove("visible");
+        document.getElementById("form-content").style.display = "none";
+        document.getElementById("success-msg").style.display = "block";
+
+      } catch (err) {
+        overlay.classList.remove("visible");
+        btn.disabled = false;
+        errorMsg.textContent =
+          "Something went wrong — please try again or contact mandyvaliquette00@gmail.com.";
+        errorMsg.style.display = "block";
+      }
+    });
+
+  </script>
+
+</body>
+
+</html>
