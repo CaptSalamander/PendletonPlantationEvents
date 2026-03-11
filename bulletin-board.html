@@ -127,8 +127,19 @@
         name: "The HOA Team",
         phone: "",
         category: "Community News",
-        title: "Welcome to the Community Bulletin Board!",
-        content: "Neighbors can now post updates, alerts, recommendations, and more right here. Click Post Something above to share something with the community.\n\n" + "All posts are reviewed by the HOA before appearing.",
+        title: "Welcome to the Pendleton Plantation Community Bulletin Board!",
+        content: "We're so excited to introduce the Community Bulletin Board — your new go-to spot for everything neighborhood!\n\n" +
+          "Whether you've spotted a lost pet, found a fantastic local contractor, have something to sell or give away, or just want to share a bit of neighborhood news, this is the place to do it. Our community is only as strong as the connections we make with each other, and we hope this board helps bring us a little closer.\n\n" +
+          "Here's what you can post:\n" +
+          "🚨 Crime & Safety — suspicious activity, package theft, safety tips\n" +
+          "🐾 Lost & Found — missing or found pets and belongings\n" +
+          "🏷️ For Sale & Free — items you're selling or giving away\n" +
+          "⭐ Local Recommendations — contractors, restaurants, services you love\n" +
+          "📰 Community News — HOA updates, events, and neighborhood happenings\n" +
+          "💬 Recommendations & Advice — tips, questions, helpful know-how\n" +
+          "😤 Complaints / Rants — a place to vent (kindly, please!)\n\n" +
+          "All posts are reviewed by the HOA before going live, so everything stays friendly and relevant. Click \"📝 Post Something\" above to share something with your neighbors!\n\n" +
+          "— Mandy & the Pendleton Plantation HOA Team",
         photoIds: [],
       },
       {
@@ -357,7 +368,7 @@
     // Render static fallback immediately so the page isn't blank.
     renderPosts(null);
 
-    if (SCRIPT_URL !== "PASTE_YOUR_BULLETIN_BOARD_SCRIPT_URL_HERE") {
+    if (SCRIPT_URL !== "https://script.google.com/macros/s/AKfycbwHnFBD_MtB3gEvZ5zv0Ll0-zXcvOViXz1PJ1I38rbjAAVY3exHcUSIGyed6omGxZ1G8A/exec") {
       fetch(SCRIPT_URL)
         .then(function (r) { return r.json(); })
         .then(function (data) {
