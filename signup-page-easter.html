@@ -1,26 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- ============================================================
+     File:        signup-page-easter.html
+     Purpose:     Easter Egg Hunt 2025 community sign-up form.
+                  Collects attendance, volunteer role selections,
+                  donation pledges, and potluck items from residents.
+                  Submits data to a Google Apps Script web app which
+                  saves responses to a Google Sheet and sends the
+                  organizer a notification email.
+                  After submission, shows a success screen with an
+                  option to add the event to the user's calendar.
+     Config:      All event-specific text and data is defined in the
+                  EVENT object at the top of the <script> block.
+                  To reuse this form for a different event, only the
+                  EVENT object and donation/volunteer arrays need to
+                  be updated.
+     Styles:      signup-styles.css (self-contained — does NOT use index-styles.css)
+     ============================================================ -->
+
 <head>
+  <!-- Character encoding. -->
   <meta charset="UTF-8" />
+
+  <!-- Responsive viewport. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Browser tab title — overwritten by JavaScript using EVENT.pageTitle. -->
   <title id="page-title">Community Sign-Up — Pendleton Plantation</title>
+
+  <!-- Google Fonts: Playfair Display (bold serif for headings) and DM Sans (body text).
+       These are different from the main site fonts to give the form a warmer, friendlier feel. -->
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
     rel="stylesheet" />
+
+  <!-- Self-contained styles for the sign-up form page.
+       Does NOT load index-styles.css — all styles are in this file. -->
   <link rel="stylesheet" href="signup-styles.css" />
 </head>
 
 <body>
 
-  <!-- NAV -->
+  <!-- ── NAVIGATION BAR ───────────────────────────────────────
+       Fixed top nav shared with the rest of the site. Includes a
+       hamburger button for mobile. JavaScript at the bottom handles
+       the toggle open/close behavior. -->
   <nav>
+    <!-- Site brand — links back to the homepage. -->
     <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <!-- Hamburger button — visible only on mobile.
+         Three <span> elements form the three bar lines of the icon. -->
     <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
       <span></span>
       <span></span>
       <span></span>
     </button>
+
+    <!-- Navigation links — hidden on mobile until hamburger is clicked. -->
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="index.html#awards">Awards</a></li>
@@ -34,22 +72,47 @@
     </ul>
   </nav>
 
+
+  <!-- ── PAGE WRAPPER ─────────────────────────────────────────
+       Centers content and adds padding around the form card. -->
   <div class="page-wrapper">
 
+    <!-- ── PAGE HEADER ──────────────────────────────────────
+         Animated emoji row, page headline, and subtitle.
+         All text is populated from the EVENT config by JavaScript. -->
     <div class="header">
+      <!-- Animated floating emoji row (e.g., "🐰 🥚 🌸 🥚 🐰").
+           Content set by JavaScript from EVENT.emojiRow. -->
       <div class="egg-row" id="emoji-row"></div>
+
+      <!-- Main page headline. Content (with HTML) set from EVENT.headline. -->
       <h1 id="page-heading"></h1>
+
+      <!-- Subtitle paragraph. Content set from EVENT.subtitle. -->
       <p class="subtitle" id="page-subtitle"></p>
     </div>
 
+    <!-- ── EVENT META TAGS ───────────────────────────────────
+         Pill-shaped tags showing date, time, and location.
+         Built and injected by JavaScript from EVENT fields. -->
     <div class="event-meta" id="event-meta"></div>
 
+
+    <!-- ── FORM CARD ─────────────────────────────────────────
+         White rounded card containing the full sign-up form. -->
     <div class="card">
+
+      <!-- #form-content wraps the form. When the user submits successfully,
+           this div is hidden and #success-msg is shown in its place. -->
       <div id="form-content">
         <form id="signup-form">
 
-          <!-- SECTION 1: About You (static — same for every event) -->
+          <!-- ── SECTION 1: ABOUT YOU ──────────────────────
+               Static section — same for every event.
+               Collects name, email, phone, and address. -->
           <div class="section-label">🌷 About You</div>
+
+          <!-- First and last name side by side. -->
           <div class="field-row">
             <div class="field">
               <label>First Name <span class="req">*</span></label>
@@ -60,10 +123,14 @@
               <input type="text" id="last_name" placeholder="Smith" required />
             </div>
           </div>
+
+          <!-- Email address — required for the organizer to follow up. -->
           <div class="field">
             <label>Email Address <span class="req">*</span></label>
             <input type="email" id="email" placeholder="you@email.com" required />
           </div>
+
+          <!-- Phone and street address side by side — both optional. -->
           <div class="field-row">
             <div class="field">
               <label>Phone (optional)</label>
@@ -75,10 +142,17 @@
             </div>
           </div>
 
+          <!-- Decorative divider line between sections. -->
           <div class="divider"></div>
 
-          <!-- SECTION 2: Attending? (static) -->
+
+          <!-- ── SECTION 2: ATTENDING? ─────────────────────
+               Static section. Collects attendance confirmation
+               and headcount broken down by age group.
+               Label is set from EVENT.attendingLabel by JavaScript. -->
           <div class="section-label" id="section-attending"></div>
+
+          <!-- Yes/No attendance dropdown. -->
           <div class="field">
             <label>Will you attend the event? <span class="req">*</span></label>
             <select id="attending" required>
@@ -87,27 +161,35 @@
               <option value="No, but I still want to help">No, but I still want to help</option>
             </select>
           </div>
+
+          <!-- Age bracket headcount — four number inputs side by side. -->
           <div class="field">
             <label>Who's coming?</label>
             <div class="age-bracket-row">
+              <!-- Number of adults attending. -->
               <div class="age-bracket">
                 <span class="age-bracket-label">Adults</span>
                 <input type="number" id="num_adults" min="0" max="50" placeholder="0" />
               </div>
+              <!-- Children in the 0-3 age group. -->
               <div class="age-bracket">
                 <span class="age-bracket-label">Ages 0–3</span>
                 <input type="number" id="children_0_3" min="0" max="20" placeholder="0" />
               </div>
+              <!-- Children in the 4-8 age group. -->
               <div class="age-bracket">
                 <span class="age-bracket-label">Ages 4–8</span>
                 <input type="number" id="children_4_8" min="0" max="20" placeholder="0" />
               </div>
+              <!-- Children age 9 and up. -->
               <div class="age-bracket">
                 <span class="age-bracket-label">Ages 9+</span>
                 <input type="number" id="children_9_plus" min="0" max="20" placeholder="0" />
               </div>
             </div>
           </div>
+
+          <!-- Optional potluck contribution field. -->
           <div class="field">
             <label>Potluck item you plan to bring (optional)</label>
             <input type="text" id="potluck_item" placeholder="e.g., Pasta salad, lemonade, fruit tray…" />
@@ -115,27 +197,46 @@
 
           <div class="divider"></div>
 
-          <!-- SECTION 3: Volunteer roles (populated from EVENT config) -->
+
+          <!-- ── SECTION 3: VOLUNTEER ROLES ───────────────
+               Populated dynamically from EVENT.volunteerRoles.
+               Each role becomes a checkbox card with the role name
+               and a short description of responsibilities.
+               Live sign-up counts are fetched and added by fetchCounts(). -->
           <div class="section-label" id="section-volunteer"></div>
           <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px;">Check everything you'd be willing to
             help with — Teamwork makes the dream work! (That's what I've heard at least. 😆)</p>
+
+          <!-- Volunteer checkbox cards are injected here by JavaScript. -->
           <div class="checkbox-grid" id="volunteer-grid"></div>
           <div class="divider"></div>
 
-          <!-- SECTION 4: Donations (populated from EVENT config) -->
+
+          <!-- ── SECTION 4: DONATIONS ──────────────────────
+               Donation items grouped into collapsible accordion
+               categories. Each category is a clickable header
+               that reveals a list of items with quantity inputs.
+               Live pledged counts are shown below each item.
+               Items rendered dynamically from EVENT.donationItems. -->
           <div class="section-label" id="section-donate"></div>
           <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px;">Select what you're able to
             contribute — every little bit helps!</p>
+
+          <!-- Donation accordion sections are injected here by JavaScript. -->
           <div class="checkbox-grid" id="donate-grid"></div>
+
+          <!-- Free-text field for donations not listed above. -->
           <div class="field">
             <label>Anything else you'd like to donate?</label>
-            <input type="text" id="other_donation" placeholder="e.g., I have a folding table you can
-            borrow…" />
+            <input type="text" id="other_donation" placeholder="e.g., I have a folding table you can borrow…" />
           </div>
 
           <div class="divider"></div>
 
-          <!-- SECTION 5: Notes (static) -->
+
+          <!-- ── SECTION 5: NOTES ──────────────────────────
+               Static section for any additional questions,
+               ideas, or special notes from the resident. -->
           <div class="section-label">💬 Anything Else?</div>
           <div class="field">
             <label>Questions, notes, or ideas</label>
@@ -143,215 +244,248 @@
               placeholder="e.g., My daughter has a nut allergy — will there be safe options?"></textarea>
           </div>
 
+          <!-- ── SUBMIT AREA ───────────────────────────────
+               The submit button, error message box, and fine
+               print privacy note at the very bottom of the form. -->
           <div class="submit-area">
+            <!-- Submit button — text set from EVENT.submitText by JavaScript.
+                 Disabled and shows "Sending… 🌸" while the request is in flight. -->
             <button type="submit" class="submit-btn" id="submit-btn"></button>
+
+            <!-- Error message box — hidden by default, shown if the fetch fails. -->
             <div class="error-msg" id="error-msg">
               Something went wrong — please try again or contact your organizer directly.
             </div>
+
+            <!-- Fine print: privacy note and contact link. -->
             <p class="fine-print">Your info is only used to coordinate this event.<br />
               Questions? Contact <a id="contact-link" href="#"></a>.</p>
           </div>
 
         </form>
-      </div>
+      </div><!-- end #form-content -->
 
+
+      <!-- ── SUCCESS MESSAGE ───────────────────────────────────
+           Shown after a successful form submission in place of
+           the form. Contains a celebration emoji, thank-you
+           headline, custom message, and a calendar download button. -->
       <div class="success-msg" id="success-msg">
+        <!-- Large celebration emoji — set from EVENT.successEmoji by JavaScript. -->
         <div class="big-emoji" id="success-emoji"></div>
+
+        <!-- Fixed thank-you headline. -->
         <h2>You're in — thank you!</h2>
+
+        <!-- Custom success message — set from EVENT.successMessage by JavaScript. -->
         <p id="success-message"></p>
+
+        <!-- Button that triggers an ICS calendar file download
+             so the user can add the event to their calendar app. -->
         <button class="submit-btn" onclick="downloadICS()" style="margin-top:18px;">
           📅 Add to My Calendar
         </button>
       </div>
-    </div>
 
+    </div><!-- end .card -->
+
+    <!-- Page footer — text injected from EVENT.footerText by JavaScript. -->
     <div class="footer" id="page-footer"></div>
 
-  </div>
+  </div><!-- end .page-wrapper -->
+
 
   <script>
 
     // ============================================================
     //  ✏️  EVENT CONFIG — edit everything in this block
     //  when reusing this form for a new event.
+    //  Everything below the config block is auto-generated.
     // ============================================================
     const EVENT = {
 
-      // Browser tab title
+      // The text shown in the browser tab (window title bar).
       pageTitle: "Easter Egg Hunt — Sign Up to Help!",
 
-      // Decorative emoji row in the header
+      // The row of decorative emojis shown in the animated header.
       emojiRow: "🐰 🥚 🌸 🥚 🐰",
 
-      // Main headline — wrap words in <em>…</em> for italics
+      // The main page headline. Wrap words in <em>…</em> for italic styling.
       headline: "Help Make Our<br /><em>Easter Egg Hunt</em> Magical",
 
-      // Subtitle paragraph below the headline
+      // The subtitle paragraph below the headline.
       subtitle: "We're bringing the neighborhood together — and we'd love your help! Sign up to volunteer, donate supplies, or just let us know you're coming.",
 
-      // Event info chips
-      date: "Saturday, March 21, 2025",
-      time: "10:00 AM – 1:00 PM",
+      // Event info chip values shown in the meta tag row.
+      date:     "Saturday, March 21, 2025",
+      time:     "10:00 AM – 1:00 PM",
       location: "HOA Common Green",
 
-      // Section labels (change emoji to match your event theme)
-      attendingLabel: "🐣 Are You Coming?",
-      volunteerLabel: "🙋 Volunteer Roles",
-      donationsLabel: "🎁 Donations",
+      // Labels for the three form section headings.
+      // Change the emoji to match your event theme.
+      attendingLabel:  "🐣 Are You Coming?",
+      volunteerLabel:  "🙋 Volunteer Roles",
+      donationsLabel:  "🎁 Donations",
 
-      // Submit button text
+      // Text displayed on the submit button.
       submitText: "Count Me In! 🐰",
 
-      // Contact email shown in the fine print
+      // The organizer's contact email shown in the fine print and contact link.
       contactEmail: "mandyvaliquette00@gmail.com",
 
-      // Text at the very bottom of the page (HTML allowed)
+      // The text displayed at the very bottom of the page (below the card).
+      // HTML is allowed here.
       footerText: "Organized by <strong>your HOA community</strong> · Easter Egg Hunt 2025",
 
-      // Success screen message
-      successEmoji: "🎉",
+      // The emoji and message shown on the success screen after submission.
+      successEmoji:   "🎉",
       successMessage: "We can't wait to connect with you!<br />We're so grateful for neighbors like you.",
 
-      // ── Google Sheets integration ──────────────────────────────
-      // Paste your Google Apps Script Web App URL here.
-      // It looks like: https://script.google.com/macros/s/ABC.../exec
+      // ── Google Sheets Integration ──────────────────────────
+      // The Google Apps Script Web App URL. POST requests go here
+      // to save form submissions; GET requests go here to fetch
+      // live count data for the volunteer and donation sections.
+      // Format: https://script.google.com/macros/s/ABC.../exec
       scriptUrl: "https://script.google.com/macros/s/AKfycbz794OVtiPSl8jTbfkvX4IHSIeZ2a4acXGWQ2T5lJBScDgcCsKu2RGq3ONr-ScJbdFDBA/exec",
 
-      // Event name stored in the spreadsheet column
+      // Event name stored in the spreadsheet "Event" column.
       eventName: "Easter Egg Hunt 2025",
 
-      // ── Calendar ICS download ──────────────────────────────────
-      // Format: YYYYMMDDTHHmmss (local time, no timezone)
+      // ── Calendar ICS Download ──────────────────────────────
+      // Start and end times in YYYYMMDDTHHmmss format (local time, no timezone).
       icsStart: "20250321T100000",
-      icsEnd: "20250321T130000",
+      icsEnd:   "20250321T130000",
 
-      // ── Volunteer checkboxes ───────────────────────────────────
-      // Add, remove, or reorder as needed.
-      // { label: "Display title", detail: "Short description" }
+      // ── Volunteer Checkboxes ───────────────────────────────
+      // Each object creates one checkbox card in the Volunteer Roles section.
+      //   label:  The role name (must match VOLUNTEER_ROLES in google-apps-script.gs).
+      //   detail: Short description of the responsibilities for this role.
       volunteerRoles: [
-        { label: "Hide the Eggs", detail: "Arrive 45 min early to help set up" },
-        { label: "Check-In Table", detail: "Welcome families & hand out bags" },
+        { label: "Hide the Eggs",    detail: "Arrive 45 min early to help set up" },
+        { label: "Check-In Table",   detail: "Welcome families & hand out bags" },
         { label: "Age Zone Monitor", detail: "Keep the groups organized" },
-        { label: "Craft Station", detail: "Help kids decorate eggs" },
-        { label: "Photo Booth", detail: "Help snap memories" },
-        { label: "Cleanup Crew", detail: "Help tidy up afterward" },
-        { label: "Setup / Decor", detail: "Help set up tables & decorations" },
-        { label: "Snack Table", detail: "Help manage the refreshments" },
+        { label: "Craft Station",    detail: "Help kids decorate eggs" },
+        { label: "Photo Booth",      detail: "Help snap memories" },
+        { label: "Cleanup Crew",     detail: "Help tidy up afterward" },
+        { label: "Setup / Decor",    detail: "Help set up tables & decorations" },
+        { label: "Snack Table",      detail: "Help manage the refreshments" },
       ],
 
-      // ── Donation items ─────────────────────────────────────────
-      // Organized by category. Each category shows a header in the form.
-      // { category: "Category Name", items: [ { label, needed } ] }
-      // needed: target quantity (null = no specific goal, just show pledged count)
+      // ── Donation Items ─────────────────────────────────────
+      // Organized by category. Each category becomes a collapsible accordion section.
+      //   category: Category header label (e.g., "Eggs & Filling").
+      //   items:    Array of donation items in this category.
+      //     label:  Item name (must match DONATION_ITEMS in google-apps-script.gs exactly).
+      //     needed: Target quantity goal (null = no specific goal, just show pledged count).
       donationItems: [
         {
           category: "Eggs & Filling",
           items: [
-            { label: "Plastic Eggs — any color", needed: 450 },
-            { label: "Plastic Eggs — teal (allergy-friendly)", needed: 30 },
-            { label: "Golden Eggs — special prize eggs", needed: 6 },
-            { label: "Candy — individually wrapped, nut-free", needed: 225 },
-            { label: "Bouncy Balls — small", needed: 45 },
-            { label: "Mini Erasers — fun shapes", needed: 45 },
-            { label: "Mini Play-Doh or putty containers", needed: 20 },
-            { label: "Stickers — mini sheets", needed: 45 },
-            { label: "Small Coins (nickels, dimes, quarters)", needed: 45 },
-            { label: "Fake Tattoo / Fun Coupons (DIY)", needed: 20 },
-            { label: "Temporary Tattoos — mini", needed: 45 },
-            { label: "Storage bins to save eggs for next year", needed: 2 },
+            { label: "Plastic Eggs — any color",                    needed: 450 },
+            { label: "Plastic Eggs — teal (allergy-friendly)",      needed: 30  },
+            { label: "Golden Eggs — special prize eggs",            needed: 6   },
+            { label: "Candy — individually wrapped, nut-free",      needed: 225 },
+            { label: "Bouncy Balls — small",                        needed: 45  },
+            { label: "Mini Erasers — fun shapes",                   needed: 45  },
+            { label: "Mini Play-Doh or putty containers",           needed: 20  },
+            { label: "Stickers — mini sheets",                      needed: 45  },
+            { label: "Small Coins (nickels, dimes, quarters)",      needed: 45  },
+            { label: "Fake Tattoo / Fun Coupons (DIY)",             needed: 20  },
+            { label: "Temporary Tattoos — mini",                    needed: 45  },
+            { label: "Storage bins to save eggs for next year",     needed: 2   },
           ],
         },
         {
           category: "Prizes",
           items: [
-            { label: "Golden Egg Prize Baskets — golden egg winners", needed: 6 },
-            { label: "Prizes for Inside Baskets", needed: 30 },
-            { label: "Ribbon for prize baskets", needed: 1 },
+            { label: "Golden Egg Prize Baskets — golden egg winners", needed: 6  },
+            { label: "Prizes for Inside Baskets",                     needed: 30 },
+            { label: "Ribbon for prize baskets",                      needed: 1  },
           ],
         },
         {
           category: "Snack Table & Potluck",
           items: [
-            { label: "Juice boxes for kids", needed: 50 },
-            { label: "Water bottles or water jug + cups", needed: 100 },
-            { label: "Other beverage", needed: 2 },
-            { label: "Main entree", needed: 6 },
-            { label: "Side entree", needed: 6 },
-            { label: "Dessert", needed: 3 },
-            { label: "Easter candy for grown-ups", needed: 2 },
-            { label: "Small plates", needed: 100 },
-            { label: "Large plates", needed: 100 },
-            { label: "Plastic cups", needed: 100 },
-            { label: "Plastic eating utensils", needed: 100 },
-            { label: "Paper towels / napkins", needed: 100 },
+            { label: "Juice boxes for kids",                needed: 50  },
+            { label: "Water bottles or water jug + cups",   needed: 100 },
+            { label: "Other beverage",                      needed: 2   },
+            { label: "Main entree",                         needed: 6   },
+            { label: "Side entree",                         needed: 6   },
+            { label: "Dessert",                             needed: 3   },
+            { label: "Easter candy for grown-ups",          needed: 2   },
+            { label: "Small plates",                        needed: 100 },
+            { label: "Large plates",                        needed: 100 },
+            { label: "Plastic cups",                        needed: 100 },
+            { label: "Plastic eating utensils",             needed: 100 },
+            { label: "Paper towels / napkins",              needed: 100 },
           ],
         },
         {
           category: "Crafts",
           items: [
-            { label: "Sticker sheets for decorating", needed: 30 },
-            { label: "Glitter glue sticks", needed: 15 },
-            { label: "Crayons — boxes", needed: 10 },
-            { label: "Washable markers — sets", needed: 8 },
-            { label: "Drop cloth / disposable tablecloth", needed: 1 },
+            { label: "Sticker sheets for decorating",       needed: 30 },
+            { label: "Glitter glue sticks",                 needed: 15 },
+            { label: "Crayons — boxes",                     needed: 10 },
+            { label: "Washable markers — sets",             needed: 8  },
+            { label: "Drop cloth / disposable tablecloth",  needed: 1  },
           ],
         },
         {
           category: "Decor (including DIY-friendly)",
           items: [
-            { label: "Pastel balloons — latex", needed: 50 },
-            { label: "Pastel streamers", needed: 10 },
-            { label: "Tissue paper pom-poms", needed: 10 },
-            { label: "Paper flower garland (DIY)", needed: 15 },
-            { label: "Easter banner ('Happy Easter!' or custom)", needed: 1 },
-            { label: "Plastic Easter lawn decorations", needed: 5 },
-            { label: "Ribbon / raffia for baskets & decor", needed: 2 },
-            { label: "Easter-themed tablecloth weights/clips", needed: 20 },
-            { label: "Chalkboard or whiteboard + markers", needed: 1 },
-            { label: "Easel to hold signs", needed: 2 },
-            { label: "Balloon pump (hand or electric)", needed: 1 },
-            { label: "Balloon weights", needed: 10 },
+            { label: "Pastel balloons — latex",                     needed: 50 },
+            { label: "Pastel streamers",                            needed: 10 },
+            { label: "Tissue paper pom-poms",                       needed: 10 },
+            { label: "Paper flower garland (DIY)",                  needed: 15 },
+            { label: "Easter banner ('Happy Easter!' or custom)",   needed: 1  },
+            { label: "Plastic Easter lawn decorations",             needed: 5  },
+            { label: "Ribbon / raffia for baskets & decor",        needed: 2  },
+            { label: "Easter-themed tablecloth weights/clips",      needed: 20 },
+            { label: "Chalkboard or whiteboard + markers",          needed: 1  },
+            { label: "Easel to hold signs",                         needed: 2  },
+            { label: "Balloon pump (hand or electric)",             needed: 1  },
+            { label: "Balloon weights",                             needed: 10 },
           ],
         },
         {
           category: "Photo Booth",
           items: [
-            { label: "Photobooth backdrop", needed: 1 },
-            { label: "Photobooth backdrop stand", needed: 1 },
-            { label: "Easter basket prop (real or faux)", needed: 2 },
-            { label: "Printable photo booth props (DIY)", needed: 1 },
-            { label: "Other photo booth props (DIY)", needed: 1 },
-            { label: "Popsicle sticks for props", needed: 20 },
-            { label: "Tripod (for phone)", needed: 1 },
+            { label: "Photobooth backdrop",                 needed: 1  },
+            { label: "Photobooth backdrop stand",           needed: 1  },
+            { label: "Easter basket prop (real or faux)",   needed: 2  },
+            { label: "Printable photo booth props (DIY)",   needed: 1  },
+            { label: "Other photo booth props (DIY)",       needed: 1  },
+            { label: "Popsicle sticks for props",           needed: 20 },
+            { label: "Tripod (for phone)",                  needed: 1  },
           ],
         },
         {
           category: "Hunt Supplies",
           items: [
-            { label: "Baskets / Easter bags for kids", needed: 20 },
-            { label: "Rope, twine, or pennant flags", needed: 50 },
-            { label: "Wooden stakes / dowel rods for signs", needed: 6 },
-            { label: "Zip ties or clips to attach rope", needed: 20 },
+            { label: "Baskets / Easter bags for kids",          needed: 20 },
+            { label: "Rope, twine, or pennant flags",           needed: 50 },
+            { label: "Wooden stakes / dowel rods for signs",    needed: 6  },
+            { label: "Zip ties or clips to attach rope",        needed: 20 },
           ],
         },
         {
           category: "Admin & Logistics",
           items: [
-            { label: "Folding tables — refreshments", needed: 3 },
-            { label: "Folding tables — craft station", needed: 2 },
-            { label: "Folding tables — check-in", needed: 1 },
-            { label: "Folding tables — raffle/prize display", needed: 1 },
-            { label: "Folding chairs", needed: 100 },
-            { label: "Tablecloths — pastel/Easter themed", needed: 7 },
-            { label: "Trash bags — large (39 gal)", needed: 10 },
-            { label: "Recycling bags", needed: 4 },
-            { label: "Hand sanitizer", needed: 4 },
-            { label: "Pens / clipboards for sign-in", needed: 4 },
-            { label: "Portable bluetooth speaker", needed: 1 },
-            { label: "Extension cord (if music/PA)", needed: 2 },
-            { label: "First aid kit", needed: 1 },
-            { label: "Bug spray", needed: 2 },
-            { label: "Sunscreen", needed: 1 },
+            { label: "Folding tables — refreshments",           needed: 3   },
+            { label: "Folding tables — craft station",          needed: 2   },
+            { label: "Folding tables — check-in",              needed: 1   },
+            { label: "Folding tables — raffle/prize display",   needed: 1   },
+            { label: "Folding chairs",                          needed: 100 },
+            { label: "Tablecloths — pastel/Easter themed",      needed: 7   },
+            { label: "Trash bags — large (39 gal)",             needed: 10  },
+            { label: "Recycling bags",                          needed: 4   },
+            { label: "Hand sanitizer",                          needed: 4   },
+            { label: "Pens / clipboards for sign-in",           needed: 4   },
+            { label: "Portable bluetooth speaker",              needed: 1   },
+            { label: "Extension cord (if music/PA)",            needed: 2   },
+            { label: "First aid kit",                           needed: 1   },
+            { label: "Bug spray",                               needed: 2   },
+            { label: "Sunscreen",                              needed: 1   },
           ],
         },
       ],
@@ -362,157 +496,238 @@
     // ============================================================
 
 
-    // ── Populate page from config ──────────────────────────────────
-    document.title = EVENT.pageTitle;
-    document.getElementById("emoji-row").textContent = EVENT.emojiRow;
-    document.getElementById("page-heading").innerHTML = EVENT.headline;
-    document.getElementById("page-subtitle").textContent = EVENT.subtitle;
-    document.getElementById("section-attending").textContent = EVENT.attendingLabel;
-    document.getElementById("section-volunteer").textContent = EVENT.volunteerLabel;
-    document.getElementById("section-donate").textContent = EVENT.donationsLabel;
-    document.getElementById("submit-btn").textContent = EVENT.submitText;
-    document.getElementById("page-footer").innerHTML = EVENT.footerText;
-    document.getElementById("success-emoji").textContent = EVENT.successEmoji;
-    document.getElementById("success-message").innerHTML = EVENT.successMessage;
+    // ── POPULATE PAGE FROM CONFIG ────────────────────────────
+    // Inject all event-specific text into the HTML elements using the EVENT config above.
+    document.title = EVENT.pageTitle;                                                            // Browser tab title.
+    document.getElementById("emoji-row").textContent     = EVENT.emojiRow;                      // Floating emoji row.
+    document.getElementById("page-heading").innerHTML    = EVENT.headline;                       // Main headline (allows HTML like <em>).
+    document.getElementById("page-subtitle").textContent = EVENT.subtitle;                       // Subtitle paragraph.
+    document.getElementById("section-attending").textContent = EVENT.attendingLabel;             // "Are You Coming?" label.
+    document.getElementById("section-volunteer").textContent = EVENT.volunteerLabel;             // "Volunteer Roles" label.
+    document.getElementById("section-donate").textContent   = EVENT.donationsLabel;             // "Donations" label.
+    document.getElementById("submit-btn").textContent    = EVENT.submitText;                     // Submit button text.
+    document.getElementById("page-footer").innerHTML     = EVENT.footerText;                     // Footer HTML.
+    document.getElementById("success-emoji").textContent = EVENT.successEmoji;                   // Success screen emoji.
+    document.getElementById("success-message").innerHTML = EVENT.successMessage;                 // Success screen message.
 
+    // Set the contact link href and text in the fine print.
     const contactLink = document.getElementById("contact-link");
     contactLink.href = "mailto:" + EVENT.contactEmail;
     contactLink.textContent = EVENT.contactEmail;
 
+    // Build and inject the event meta tags (date, time, location chips).
     document.getElementById("event-meta").innerHTML =
       `<div class="meta-tag"><span>📅</span> ${EVENT.date}</div>
        <div class="meta-tag"><span>🕙</span> ${EVENT.time}</div>
        <div class="meta-tag"><span>📍</span> ${EVENT.location}</div>`;
 
+    // ── BUILD VOLUNTEER CHECKBOXES ────────────────────────────
+    // Render a checkbox card for each volunteer role in EVENT.volunteerRoles.
+    // Each card shows the role name (bold) and the short description below.
+    // Live sign-up counts will be appended by fetchCounts() after the page loads.
     document.getElementById("volunteer-grid").innerHTML = EVENT.volunteerRoles.map(r => `
       <label class="checkbox-item">
         <input type="checkbox" name="volunteer" value="${r.label}" />
-        <div class="item-label" data-item="${r.label}"><strong>${r.label}</strong>${r.detail}</div>
+        <div class="item-label" data-item="${r.label}">
+          <strong>${r.label}</strong>${r.detail}
+        </div>
       </label>`).join("");
 
+    // ── BUILD DONATION ACCORDIONS ─────────────────────────────
+    // Render one accordion section per donation category.
+    // Each section has a clickable header and a grid of donation items.
+    // Each item has the item name, a quantity input, and (if a goal exists)
+    // "Total Needed / Pledged / Remaining" stat boxes.
     document.getElementById("donate-grid").innerHTML = EVENT.donationItems.map(cat => `
+      <!-- Accordion header: category name and expand/collapse arrow. -->
       <div class="donate-category accordion-header">
         ${cat.category} <span class="accordion-icon">▼</span>
       </div>
+
+      <!-- Accordion content: hidden by default, revealed when header is clicked. -->
       <div class="donate-qty-list accordion-content">
         ${cat.items.map(d => `
+          <!-- Donation item card with item name and quantity input.
+               data-donate-item stores the label for fetching live counts.
+               data-needed stores the target quantity for the remaining calculation. -->
           <div class="donate-item" data-donate-item="${d.label}" data-needed="${d.needed !== null && d.needed !== undefined ? d.needed : ''}">
             <div class="donate-item-top">
               <div class="donate-item-name">${d.label}</div>
               <div class="donate-item-qty">
                 <span class="qty-label">Qty</span>
+                <!-- data-donate attribute links the input value to the item label for form submission. -->
                 <input type="number" class="qty-input" min="0" max="999" placeholder="0" data-donate="${d.label}" />
               </div>
             </div>
+            <!-- Only show the stats row if a target quantity (needed) was provided. -->
             ${d.needed !== null && d.needed !== undefined ? `
               <div class="item-stats">
+                <!-- Total Needed stat: the target quantity from the config. -->
                 <div class="item-stat"><div class="item-stat-val">${d.needed}</div><div class="item-stat-label">Total Needed</div></div>
+                <!-- Pledged stat: filled in by fetchCounts(). Starts as "–". -->
                 <div class="item-stat"><div class="item-stat-val zero" data-pledged-val>–</div><div class="item-stat-label">Pledged</div></div>
+                <!-- Remaining stat: updated by fetchCounts() when pledged count arrives. -->
                 <div class="item-stat" data-remaining-stat><div class="item-stat-val" data-remaining-val>–</div><div class="item-stat-label">Remaining</div></div>
               </div>` : ''}
           </div>`).join("")}
       </div>
     `).join("");
 
-    // ── Accordion Toggle Logic ──────────────────────────────────────
+
+    // ── ACCORDION TOGGLE LOGIC ────────────────────────────────
+    // Makes each donation category header clickable to expand/collapse
+    // the list of items inside it.
     document.querySelectorAll('.accordion-header').forEach(header => {
       header.addEventListener('click', () => {
-        // Toggle the arrow flip
+        // Toggle the "active" class on the header to rotate the arrow icon.
         header.classList.toggle('active');
-        // Open or close the list right below the header
+
+        // Toggle the "open" class on the content div directly below the header.
         const content = header.nextElementSibling;
         content.classList.toggle('open');
+
+        // Update max-height for a smooth CSS height transition.
+        // When open, set to the actual scroll height; when closing, set to null (0).
         content.style.maxHeight = content.classList.contains('open') ? content.scrollHeight + "px" : null;
       });
     });
 
-    // ── Fetch live sign-up counts and display on each item ─────────
+
+    // ── FETCH LIVE SIGN-UP COUNTS ─────────────────────────────
+    // Calls the Google Apps Script GET endpoint and updates each
+    // volunteer role badge and donation item stat box with live data
+    // from the spreadsheet so users can see how many people have
+    // already signed up for each role or pledged each item.
     async function fetchCounts() {
       try {
+        // Fetch the sign-up summary JSON from the same script URL as the form submission.
         const res = await fetch(EVENT.scriptUrl);
         const data = await res.json();
-        const counts = Object.assign({}, data.volunteerCounts, data.donationCounts);
 
-        // Update volunteer role badges
+        // ── Update volunteer role badges ─────────────────────
+        // For each volunteer checkbox label, find the matching span
+        // and append a count badge showing how many people have signed up.
         document.querySelectorAll(".item-label[data-item]").forEach(el => {
-          const key = el.getAttribute("data-item");
-          const pledged = data.volunteerCounts[key] || 0;
+          const key = el.getAttribute("data-item");     // Role label text.
+          const pledged = data.volunteerCounts[key] || 0;  // Default 0 if no one signed up.
+
+          // Build a count badge element with a friendly label.
           const badge = document.createElement("span");
           badge.className = "item-count" + (pledged === 0 ? " count-zero" : "");
           badge.textContent = pledged === 0 ? "Be the first!" : pledged === 1 ? "1 signed up" : pledged + " signed up";
+
+          // Append the badge inside the item label element.
           el.appendChild(badge);
         });
 
-        // Update donation item stats
+        // ── Update donation item stats ───────────────────────
+        // For each donation item card, update the Pledged and Remaining
+        // stat values with live data from the spreadsheet.
         document.querySelectorAll(".donate-item[data-donate-item]").forEach(el => {
-          const key = el.getAttribute("data-donate-item");
-          const neededAttr = el.getAttribute("data-needed");
-          const pledged = data.donationCounts[key] || 0;
-          const pledgedEl = el.querySelector("[data-pledged-val]");
-          if (!pledgedEl) return;
+          const key       = el.getAttribute("data-donate-item");  // Item label text.
+          const neededAttr = el.getAttribute("data-needed");       // Target quantity (as string).
+          const pledged   = data.donationCounts[key] || 0;         // Total pledged so far.
 
-          const needed = parseInt(neededAttr) || 0;
-          const remaining = Math.max(0, needed - pledged);
-          const remainingVal = el.querySelector("[data-remaining-val]");
+          // Find the pledged value element — it may not exist if the item has no "needed" goal.
+          const pledgedEl = el.querySelector("[data-pledged-val]");
+          if (!pledgedEl) return;   // Skip this item if it has no stats row.
+
+          // Calculate how many more are still needed.
+          const needed        = parseInt(neededAttr) || 0;
+          const remaining     = Math.max(0, needed - pledged);   // Never goes negative.
+          const remainingVal  = el.querySelector("[data-remaining-val]");
           const remainingStat = el.querySelector("[data-remaining-stat]");
 
+          // Update the Pledged stat display.
           pledgedEl.textContent = pledged;
           pledgedEl.className = "item-stat-val" + (pledged === 0 ? " zero" : "");
+
+          // Update the Remaining stat display.
           remainingVal.textContent = remaining;
+          // Add the "met" class when remaining hits zero — changes the text to green.
           remainingStat.className = "item-stat" + (remaining === 0 ? " met" : "");
         });
+
       } catch (_) {
-        // Counts are a nice-to-have; fail silently so the form still works
+        // Counts are a "nice to have" — if the fetch fails, the form still works.
+        // Fail silently so the user can still submit their sign-up.
       }
     }
+    // Call fetchCounts immediately when the page loads.
     fetchCounts();
 
-    // ── Form submission ────────────────────────────────────────────
+
+    // ── FORM SUBMISSION ──────────────────────────────────────
+    // Handles the form submit event. Collects all form values,
+    // builds a URLSearchParams payload, and POSTs it to the
+    // Google Apps Script web app. Shows the success screen on
+    // success, or the error message on failure.
     document.getElementById("signup-form").addEventListener("submit", async function (e) {
+      // Prevent the default form submission (which would reload the page).
       e.preventDefault();
 
+      // Get references to the submit button and error message elements.
       const btn = document.getElementById("submit-btn");
       const errorMsg = document.getElementById("error-msg");
+
+      // Hide any previously shown error message before trying again.
       errorMsg.style.display = "none";
 
+      // ── Collect volunteer role selections ─────────────────
+      // Find all checked volunteer checkboxes and get their values.
       const volunteerChecked = Array.from(
         document.querySelectorAll('input[name="volunteer"]:checked')
       ).map(cb => cb.value);
 
+      // ── Collect donation quantities ───────────────────────
+      // Find all quantity inputs with a value greater than 0 and
+      // build a "Label: qty" string for each.
       const donateEntries = [];
       document.querySelectorAll(".qty-input[data-donate]").forEach(input => {
         const qty = parseInt(input.value) || 0;
         if (qty > 0) donateEntries.push(input.getAttribute("data-donate") + ": " + qty);
       });
 
-      const children_0_3 = parseInt(document.getElementById("children_0_3").value) || 0;
-      const children_4_8 = parseInt(document.getElementById("children_4_8").value) || 0;
+      // ── Parse age bracket counts ──────────────────────────
+      // Read the three age group inputs and default to 0 if empty.
+      const children_0_3    = parseInt(document.getElementById("children_0_3").value)    || 0;
+      const children_4_8    = parseInt(document.getElementById("children_4_8").value)    || 0;
       const children_9_plus = parseInt(document.getElementById("children_9_plus").value) || 0;
 
+      // ── Build the form payload ────────────────────────────
+      // URLSearchParams encodes the data in the format expected by the
+      // Google Apps Script doPost() function (application/x-www-form-urlencoded).
       const payload = new URLSearchParams({
-        first_name: document.getElementById("first_name").value.trim(),
-        last_name: document.getElementById("last_name").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        phone: document.getElementById("phone").value.trim(),
-        address: document.getElementById("address").value.trim(),
-        attending: document.getElementById("attending").value,
-        num_adults: document.getElementById("num_adults").value,
-        num_children: children_0_3 + children_4_8 + children_9_plus,
-        children_0_3: children_0_3,
-        children_4_8: children_4_8,
+        first_name:      document.getElementById("first_name").value.trim(),
+        last_name:       document.getElementById("last_name").value.trim(),
+        email:           document.getElementById("email").value.trim(),
+        phone:           document.getElementById("phone").value.trim(),
+        address:         document.getElementById("address").value.trim(),
+        attending:       document.getElementById("attending").value,
+        num_adults:      document.getElementById("num_adults").value,
+        num_children:    children_0_3 + children_4_8 + children_9_plus,  // Total children across all age groups.
+        children_0_3:    children_0_3,
+        children_4_8:    children_4_8,
         children_9_plus: children_9_plus,
-        potluck_item: document.getElementById("potluck_item").value.trim(),
+        potluck_item:    document.getElementById("potluck_item").value.trim(),
+        // Join selected roles into a comma-separated string, or "None selected" if none.
         volunteer_roles: volunteerChecked.length ? volunteerChecked.join(", ") : "None selected",
-        donation_items: donateEntries.length ? donateEntries.join(", ") : "None selected",
-        other_donation: document.getElementById("other_donation").value.trim(),
-        notes: document.getElementById("notes").value.trim(),
-        event: EVENT.eventName,
+        // Join donation entries into a comma-separated string, or "None selected" if none.
+        donation_items:  donateEntries.length ? donateEntries.join(", ") : "None selected",
+        other_donation:  document.getElementById("other_donation").value.trim(),
+        notes:           document.getElementById("notes").value.trim(),
+        event:           EVENT.eventName,
       });
 
+      // Disable the button and update the label to show the form is submitting.
       btn.textContent = "Sending… 🌸";
       btn.disabled = true;
 
       try {
+        // POST the payload to the Google Apps Script web app.
+        // "no-cors" mode is required because the script is on a different domain.
+        // In no-cors mode we cannot read the response body, but that's OK —
+        // the data is saved to the sheet regardless, and errors are uncommon.
         await fetch(EVENT.scriptUrl, {
           method: "POST",
           mode: "no-cors",
@@ -520,66 +735,89 @@
           body: payload.toString(),
         });
 
+        // Submission succeeded — hide the form and show the success screen.
         document.getElementById("form-content").style.display = "none";
         document.getElementById("success-msg").style.display = "block";
 
       } catch (err) {
+        // Something went wrong — restore the button and show the error message.
         btn.textContent = EVENT.submitText;
         btn.disabled = false;
         errorMsg.style.display = "block";
       }
     });
 
-    // ── ICS calendar download ──────────────────────────────────────
+
+    // ── ICS CALENDAR DOWNLOAD ────────────────────────────────
+    // Generates an iCalendar (.ics) file from the event config
+    // and triggers a download so the user can add the event
+    // to their phone's or computer's calendar application.
     function downloadICS() {
+      // Generate a unique ID for this calendar event using the current timestamp.
       const uid = Date.now() + "@pendletonplantation.com";
+
+      // Build the ICS file content string following the iCalendar format (RFC 5545).
       const ics = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//Pendleton Plantation//EN",
         "BEGIN:VEVENT",
         "UID:" + uid,
-        "DTSTART:" + EVENT.icsStart,
-        "DTEND:" + EVENT.icsEnd,
+        "DTSTART:" + EVENT.icsStart,    // Event start time (YYYYMMDDTHHmmss format).
+        "DTEND:" + EVENT.icsEnd,        // Event end time.
         "SUMMARY:" + EVENT.eventName,
         "LOCATION:" + EVENT.location,
+        // Escape commas in the description as required by the ICS format.
         "DESCRIPTION:" + EVENT.subtitle.replace(/,/g, "\\,"),
         "END:VEVENT",
         "END:VCALENDAR"
-      ].join("\r\n");
+      ].join("\r\n");   // ICS lines must be separated by CRLF (\r\n).
 
+      // Create a Blob from the ICS string and generate a temporary download URL.
       const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
+
+      // Set the download filename using the event name with spaces replaced by dashes.
       a.download = EVENT.eventName.replace(/\s+/g, "-") + ".ics";
+
+      // Trigger the download by programmatically clicking the anchor element.
       a.click();
+
+      // Revoke the object URL to free up browser memory.
       URL.revokeObjectURL(a.href);
     }
 
-    // ── Hamburger Menu Logic ───────────────────────────────────────
+
+    // ── HAMBURGER MENU LOGIC ─────────────────────────────────
+    // Handles the mobile navigation overlay open/close behavior.
+    // Same logic as index.html — waits for DOM to be ready before querying elements.
     document.addEventListener("DOMContentLoaded", () => {
       const hamburger = document.querySelector('.nav-hamburger');
-      const navLinks = document.querySelector('.nav-links');
+      const navLinks  = document.querySelector('.nav-links');
 
       if (hamburger && navLinks) {
+        // Toggle the mobile menu open/closed when the hamburger button is clicked.
         hamburger.addEventListener('click', () => {
-          const isOpen = navLinks.classList.toggle('open');
-          hamburger.classList.toggle('open', isOpen);
-          hamburger.setAttribute('aria-expanded', isOpen);
-          document.body.style.overflow = isOpen ? 'hidden' : '';
+          const isOpen = navLinks.classList.toggle('open');  // Returns true if now open.
+          hamburger.classList.toggle('open', isOpen);         // Animate bars into an X.
+          hamburger.setAttribute('aria-expanded', isOpen);    // Update ARIA for accessibility.
+          document.body.style.overflow = isOpen ? 'hidden' : '';  // Lock scroll when open.
         });
 
-        // Close menu when a link is clicked
+        // Close the mobile menu when any nav link is clicked
+        // so the overlay dismisses after navigation.
         navLinks.querySelectorAll('a').forEach(link => {
           link.addEventListener('click', () => {
             navLinks.classList.remove('open');
             hamburger.classList.remove('open');
             hamburger.setAttribute('aria-expanded', 'false');
-            document.body.style.overflow = '';
+            document.body.style.overflow = '';   // Restore page scrolling.
           });
         });
       }
     });
+
   </script>
 </body>
 

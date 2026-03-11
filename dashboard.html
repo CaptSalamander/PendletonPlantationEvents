@@ -1,10 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- ============================================================
+     File:        dashboard.html
+     Purpose:     The Easter Egg Hunt 2025 sign-up dashboard.
+                  Fetches live data from the Google Apps Script
+                  web app and renders:
+                    - Summary stats (total sign-ups, attendees, adults, children)
+                    - Coverage pills (volunteer roles covered, donation items covered)
+                    - Volunteer role cards (with per-role sign-up counts)
+                    - Donation item cards (with needed / pledged / remaining stats)
+                    - Potluck item tags
+                  Data refreshes automatically on page load and
+                  manually when the Refresh button is clicked.
+     Styles:      index-styles.css (global), dashboard-styles.css (page-specific)
+     ============================================================ -->
+
 <head>
+  <!-- Character encoding declaration — must be first in <head>. -->
   <meta charset="UTF-8" />
+
+  <!-- Responsive viewport meta tag — ensures the page scales correctly on mobile devices. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Open Graph meta tags for social media link previews (Facebook, iMessage, etc.). -->
   <meta property="og:title" content="Pendleton Plantation Neighborhood">
   <meta property="og:description"
     content="Community website for Pendleton Plantation. Find announcements, HOA docs, and event sign-ups!">
@@ -12,20 +31,31 @@
   <meta property="og:url" content="https://pendletonplantation.com">
   <meta property="og:type" content="website">
 
-
+  <!-- Browser tab / window title. -->
   <title>Event Dashboard — Pendleton Plantation</title>
+
+  <!-- Google Fonts: Cormorant Garamond (serif headlines) and Jost (body text). -->
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
     rel="stylesheet" />
+
+  <!-- Global site styles (nav, footer, color variables, etc.). -->
   <link rel="stylesheet" href="index-styles.css" />
+
+  <!-- Dashboard-specific styles (hero, stat cards, volunteer grid, donation items). -->
   <link rel="stylesheet" href="dashboard-styles.css" />
 </head>
 
 <body>
 
-  <!-- NAV -->
+  <!-- ── NAVIGATION BAR ───────────────────────────────────────
+       Fixed top nav bar with the site brand and links to all
+       main pages. Shared across all pages. -->
   <nav>
+    <!-- Site brand / logo — links back to the homepage. -->
     <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <!-- Navigation links list. -->
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="index.html#awards">Awards</a></li>
@@ -39,28 +69,51 @@
     </ul>
   </nav>
 
-  <!-- PAGE HEADER -->
+  <!-- ── PAGE HEADER (HERO) ───────────────────────────────────
+       Shows the event name, page title ("Sign-Up Dashboard"),
+       the last-refreshed timestamp, and the manual Refresh button. -->
   <div class="dash-hero">
+    <!-- Event eyebrow label with decorative stars. -->
     <p class="section-eyebrow">✦ &nbsp; Easter Egg Hunt 2025 &nbsp; ✦</p>
+
+    <!-- Page title with italic styling on "Dashboard". -->
     <h1 class="section-title">Sign-Up <em>Dashboard</em></h1>
+
+    <!-- Decorative gold horizontal rule beneath the title. -->
     <div class="section-rule"></div>
+
+    <!-- Meta bar: timestamp and refresh button side by side. -->
     <div class="dash-meta">
+      <!-- Timestamp — updated by loadDashboard() after each successful fetch. -->
       <span class="last-updated" id="last-updated">Loading…</span>
+
+      <!-- Refresh button — calls loadDashboard() when clicked to re-fetch data. -->
       <button class="refresh-btn" id="refresh-btn" onclick="loadDashboard()">↻ Refresh</button>
     </div>
   </div>
 
-  <!-- DASHBOARD CONTENT -->
+  <!-- ── DASHBOARD CONTENT ────────────────────────────────────
+       The main body of the dashboard. Initially shows a loading
+       indicator. The inner #dash-body div is replaced with rendered
+       HTML by the renderDashboard() JavaScript function. -->
   <div class="dash-content">
     <div id="dash-body">
+      <!-- Default loading state shown before the first data fetch completes. -->
       <div class="dash-loading">Loading sign-up data…</div>
     </div>
   </div>
 
-  <!-- FOOTER -->
+  <!-- ── FOOTER ───────────────────────────────────────────────
+       Site-wide footer with the neighborhood name, city, and
+       a contact email link. -->
   <footer>
+    <!-- Large site name at the top of the footer. -->
     <div class="footer-brand">Pendleton Plantation</div>
+
+    <!-- Location and site tagline. -->
     <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
+
+    <!-- Organizer credit and contact link. -->
     <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp;
       <a href="mailto:mandyvaliquette00@gmail.com" style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact
         Us</a>
@@ -71,10 +124,16 @@
 
     // ============================================================
     //  ✏️  CONFIG — update these to match your event & form
+    //  when reusing this dashboard for a different event.
     // ============================================================
+
+    // The deployed Google Apps Script web app URL.
+    // This endpoint returns sign-up data as JSON when called with GET.
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzV33epavb-pFgJ7CjP2uQh49LWSw1XG1f19R_USPI5DP5iEskWIsRb1b9dHrQQ-zrYlA/exec";
 
-    // Volunteer roles — must match exactly what's in signup-page-easter.html
+    // List of volunteer roles shown on the dashboard.
+    // Must match the volunteer role labels in signup-page-easter.html exactly
+    // so the counts pulled from the spreadsheet match up correctly.
     const VOLUNTEER_ROLES = [
       "Hide the Eggs",
       "Check-In Table",
@@ -86,8 +145,10 @@
       "Snack Table",
     ];
 
-    // Donation categories — must match signup-page-easter.html
-    // needed: target quantity (null = no specific goal set)
+    // Donation categories and items shown on the dashboard.
+    // Must match the item labels in signup-page-easter.html exactly.
+    // "needed" is the target quantity (null = no specific goal set,
+    // so only the pledged count is shown without a remaining count).
     const DONATION_CATEGORIES = [
       {
         category: "Eggs & Filling",
@@ -204,55 +265,86 @@
       },
     ];
     // ============================================================
-    //  End of config
+    //  End of config — no edits needed below this line
     // ============================================================
 
 
-    // ── Fetch & render ─────────────────────────────────────────────
+    // ── LOAD DASHBOARD ──────────────────────────────────────────
+    // Fetches live sign-up data from the Google Apps Script endpoint,
+    // then passes the result to renderDashboard() to build the HTML.
+    // Called automatically on page load and when the Refresh button is clicked.
     async function loadDashboard() {
+      // Get references to the dashboard body, refresh button, and timestamp elements.
       const body = document.getElementById("dash-body");
       const btn = document.getElementById("refresh-btn");
       const ts = document.getElementById("last-updated");
 
+      // Disable the Refresh button while loading to prevent duplicate requests.
       btn.disabled = true;
+
+      // Show the loading spinner inside the dashboard body while fetching data.
       body.innerHTML = '<div class="dash-loading">Loading sign-up data…</div>';
 
       try {
+        // Fetch the sign-up summary JSON from the Google Apps Script web app.
         const res = await fetch(SCRIPT_URL);
         const data = await res.json();
 
+        // If the script returned an error field, throw it so the catch block handles it.
         if (data.error) throw new Error(data.error);
 
+        // Render the full dashboard HTML from the fetched data object.
         renderDashboard(data);
+
+        // Update the "Last refreshed" timestamp with the current local time.
         const d = new Date(data.lastUpdated);
         ts.textContent = "Last refreshed: " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
       } catch (err) {
+        // If the fetch or JSON parse failed, show an error message with the reason.
         body.innerHTML = `<div class="dash-error">
           Could not load data. Make sure the script is deployed and try refreshing.<br />
           <small style="opacity:0.6;">${err.message}</small>
         </div>`;
+
+        // Show a dash in the timestamp since we have no data.
         ts.textContent = "—";
+
       } finally {
+        // Always re-enable the Refresh button, whether the fetch succeeded or failed.
         btn.disabled = false;
       }
     }
 
+
+    // ── RENDER DASHBOARD ────────────────────────────────────────
+    // Takes the JSON data object returned by the Google Apps Script
+    // and builds the full dashboard HTML, then inserts it into #dash-body.
     function renderDashboard(data) {
       const body = document.getElementById("dash-body");
 
-      // Coverage counts
-      const volTotal = VOLUNTEER_ROLES.length;
+      // ── Calculate coverage counts ──────────────────────────
+      // Count how many volunteer roles have at least one person signed up.
+      const volTotal   = VOLUNTEER_ROLES.length;
       const volCovered = VOLUNTEER_ROLES.filter(r => (data.volunteerCounts[r] || 0) > 0).length;
-      const allItems = DONATION_CATEGORIES.flatMap(c => c.items);
-      const donTotal = allItems.length;
+
+      // Flatten all donation items from all categories into a single array.
+      const allItems   = DONATION_CATEGORIES.flatMap(c => c.items);
+      const donTotal   = allItems.length;
+
+      // Count how many donation items have at least one pledge.
       const donCovered = allItems.filter(i => (data.donationCounts[i.label] || 0) > 0).length;
+
+      // Calculate percentage covered for the progress bars in the coverage pills.
       const volPct = volTotal ? Math.round(volCovered / volTotal * 100) : 0;
       const donPct = donTotal ? Math.round(donCovered / donTotal * 100) : 0;
 
+      // ── Build the dashboard HTML ──────────────────────────
+      // All sections are generated as template literal strings and
+      // inserted into #dash-body in one operation.
       body.innerHTML = `
 
-        <!-- Summary stats -->
+        <!-- Summary stats: total sign-ups, attending count, adults, children. -->
         <div class="stat-grid">
           ${stat(data.totalSignups, "Total Sign-Ups")}
           ${stat(data.attendingCount, "Attending")}
@@ -260,13 +352,13 @@
           ${stat(data.totalChildren, "Children")}
         </div>
 
-        <!-- Coverage pills -->
+        <!-- Coverage pills: show fraction of volunteer roles and donation items covered. -->
         <div class="coverage-bar">
           ${coveragePill("🙋", "Volunteer Roles", volCovered, volTotal, volPct)}
           ${coveragePill("🎁", "Donation Items", donCovered, donTotal, donPct)}
         </div>
 
-        <!-- Volunteer roles -->
+        <!-- Volunteer roles section: one card per role showing sign-up count. -->
         <div class="dash-section">
           <div class="dash-section-header">
             <span class="dash-section-title">Volunteer Roles</span>
@@ -274,8 +366,9 @@
           </div>
           <div class="vol-grid">
             ${VOLUNTEER_ROLES.map(role => {
+        // Look up how many people signed up for this role (default 0 if none).
         const count = data.volunteerCounts[role] || 0;
-        const covered = count > 0;
+        const covered = count > 0;   // True if at least one volunteer.
         return `<div class="vol-card ${covered ? "covered" : "uncovered"}">
                 <div class="vol-badge">${covered ? count : "–"}</div>
                 <div class="vol-info">
@@ -287,7 +380,7 @@
           </div>
         </div>
 
-        <!-- Donation items -->
+        <!-- Donations section: one card per item showing pledged vs. needed. -->
         <div class="dash-section">
           <div class="dash-section-header">
             <span class="dash-section-title">Donations &amp; Supplies</span>
@@ -295,20 +388,28 @@
           </div>
           ${DONATION_CATEGORIES.map(cat => `
             <div class="don-category">
+              <!-- Category label, e.g., "EGGS & FILLING". -->
               <div class="don-category-label">${cat.category}</div>
               <div class="don-item-grid">
                 ${cat.items.map(item => {
+        // Get how many of this item have been pledged so far.
         const pledged = data.donationCounts[item.label] || 0;
-        const covered = pledged > 0;
+        const covered = pledged > 0;   // True if at least one pledged.
+
+        // Calculate remaining need (only when a target quantity was set).
         const remaining = item.needed !== null ? Math.max(0, item.needed - pledged) : null;
+
         return `<div class="don-item ${covered ? "covered" : "uncovered"}">
                     <div class="don-item-top">
                       <div class="don-dot"></div>
                       <div class="don-label">${item.label}</div>
                     </div>
                     <div class="don-stats">
+                      <!-- Show "Total Needed" stat only if a target was provided. -->
                       ${item.needed !== null ? `<div class="don-stat"><div class="don-stat-val">${item.needed}</div><div class="don-stat-label">Total Needed</div></div>` : ""}
+                      <!-- Always show the pledged count. -->
                       <div class="don-stat"><div class="don-stat-val ${pledged === 0 ? "zero" : ""}">${pledged}</div><div class="don-stat-label">Pledged</div></div>
+                      <!-- Show "Remaining" stat only when a target was provided. -->
                       ${remaining !== null ? `<div class="don-stat ${remaining === 0 ? "met" : ""}"><div class="don-stat-val">${remaining}</div><div class="don-stat-label">Remaining</div></div>` : ""}
                     </div>
                   </div>`;
@@ -317,16 +418,18 @@
             </div>`).join("")}
         </div>
 
-        <!-- Potluck items -->
+        <!-- Potluck items section: shows all food/dish items people plan to bring. -->
         <div class="dash-section">
           <div class="dash-section-header">
             <span class="dash-section-title">Potluck Items</span>
             <div class="dash-section-rule"></div>
           </div>
           ${data.potluckItems.length
+          // If there are potluck items, render them as pill tags.
           ? `<div class="potluck-grid">
                 ${data.potluckItems.map(p => `<span class="potluck-tag">${p}</span>`).join("")}
                </div>`
+          // If no potluck items yet, show a placeholder message.
           : `<p class="potluck-empty">No potluck items signed up yet.</p>`
         }
         </div>
@@ -334,6 +437,11 @@
       `;
     }
 
+
+    // ── STAT CARD HELPER ────────────────────────────────────────
+    // Returns the HTML for a single summary stat card.
+    // value: the number to display (e.g., 42)
+    // label: the label below the number (e.g., "Total Sign-Ups")
     function stat(value, label) {
       return `<div class="stat-card">
         <div class="stat-number">${value}</div>
@@ -341,20 +449,33 @@
       </div>`;
     }
 
+
+    // ── COVERAGE PILL HELPER ─────────────────────────────────────
+    // Returns the HTML for a single coverage pill card.
+    // icon:    emoji icon (e.g., "🙋")
+    // label:   description text (e.g., "Volunteer Roles")
+    // covered: number of covered items
+    // total:   total number of items
+    // pct:     percentage covered (0–100), used for the progress bar width
     function coveragePill(icon, label, covered, total, pct) {
       return `<div class="coverage-pill">
         <div class="coverage-pill-icon">${icon}</div>
         <div class="coverage-pill-text">
+          <!-- Fraction display, e.g., "5 / 8". -->
           <div class="coverage-pill-fraction">${covered} / ${total}</div>
+          <!-- Label below the fraction, e.g., "VOLUNTEER ROLES COVERED". -->
           <div class="coverage-pill-label">${label} covered</div>
         </div>
         <div class="coverage-track">
+          <!-- The filled bar width is set inline as a percentage. -->
           <div class="coverage-fill" style="width:${pct}%"></div>
         </div>
       </div>`;
     }
 
-    // Load on page open
+
+    // ── AUTO-LOAD ON PAGE OPEN ───────────────────────────────────
+    // Automatically fetch and render dashboard data when the page first loads.
     loadDashboard();
 
   </script>

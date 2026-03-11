@@ -1,163 +1,234 @@
+/* ============================================================
+   File:        memories-styles.css
+   Purpose:     Styles for the Neighborhood Memories gallery page
+                (memories.html). Loaded alongside index-styles.css,
+                which provides global variables, nav, footer, and
+                base resets. This file adds the photo grid and the
+                full-screen lightbox overlay.
+   ============================================================ */
+
+
+/* ── PAGE HERO ────────────────────────────────────────────────
+   The top banner of the memories page. Shows the page title
+   and a decorative gold rule. Uses extra top padding to clear
+   the fixed nav bar and a soft green radial gradient at the top. */
 .memories-hero {
-  padding: 160px 48px 72px;
+  padding: 160px 48px 72px;   /* More top padding than other pages for a taller hero feel. */
   text-align: center;
   background:
+    /* Subtle green elliptical gradient fading down from the top center. */
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74,103,65,0.12) 0%, transparent 70%),
     var(--warm-white);
 }
 
+/* Make the memories page title larger than the default section title. */
 .memories-hero .section-title {
   font-size: clamp(2.5rem, 5vw, 4rem);
 }
 
+/* Give the gold decorative rule space below the title. */
 .memories-hero .section-rule {
   margin-top: 24px;
 }
 
+
+/* ── MEMORIES PHOTO GRID ──────────────────────────────────────
+   The responsive grid that displays all the neighborhood photo
+   thumbnails. Uses auto-fill so the number of columns adjusts
+   based on the available screen width. */
 .memories-grid {
   display: grid;
+  /* Each column is at least 300px wide. Extra space is distributed evenly. */
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 14px;
-  max-width: 1200px;
-  margin: 0 auto;
+  gap: 14px;           /* Space between photo tiles. */
+  max-width: 1200px;   /* Cap width on very wide monitors. */
+  margin: 0 auto;      /* Center the grid horizontally. */
   padding: 60px 48px 100px;
 }
 
+/* Responsive adjustments for smaller screens. */
 @media (max-width: 768px) {
+  /* Reduce padding and switch to slightly smaller minimum column width. */
   .memories-hero { padding: 120px 24px 56px; }
   .memories-grid { padding: 40px 24px 80px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 }
 
+
+/* ── INDIVIDUAL MEMORY ITEM ───────────────────────────────────
+   Each photo tile. Maintains a fixed 4:3 aspect ratio to keep
+   the grid uniform regardless of the original image dimensions.
+   The tile is clickable and opens the full-size image in the
+   lightbox overlay. */
 .memory-item {
-  position: relative;
-  overflow: hidden;
+  position: relative;        /* Allows the overlay to be positioned on top of the image. */
+  overflow: hidden;          /* Clip the image zoom effect to the tile boundaries. */
   border-radius: 4px;
-  cursor: pointer;
-  aspect-ratio: 4 / 3;
-  background: var(--parchment);
-  border: 1px solid rgba(201,168,76,0.15);
+  cursor: pointer;           /* Show a pointer cursor to indicate the tile is clickable. */
+  aspect-ratio: 4 / 3;      /* Lock the tile to a 4:3 ratio regardless of content size. */
+  background: var(--parchment);        /* Fallback color shown while the image loads. */
+  border: 1px solid rgba(201,168,76,0.15);  /* Faint gold border. */
 }
 
+/* The photo inside each tile. Fills the entire tile and crops to cover it. */
 .memory-item img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover;         /* Scale and crop the image to fill the tile without distortion. */
   display: block;
-  transition: transform 0.45s ease;
+  transition: transform 0.45s ease;   /* Slow, smooth zoom-in effect on hover. */
 }
 
+/* On hover: scale the image up slightly to create a subtle zoom-in effect. */
 .memory-item:hover img {
   transform: scale(1.05);
 }
 
+
+/* ── MEMORY OVERLAY ───────────────────────────────────────────
+   A semi-transparent dark overlay that fades in on tile hover.
+   It covers the image and reveals the caption text at the bottom. */
 .memory-overlay {
   position: absolute;
-  inset: 0;
-  background: rgba(30,38,32,0);
-  transition: background 0.3s;
+  inset: 0;                           /* Stretch to all four edges of the tile. */
+  background: rgba(30,38,32,0);       /* Fully transparent by default. */
+  transition: background 0.3s;        /* Smooth fade to semi-opaque on hover. */
   display: flex;
-  align-items: flex-end;
+  align-items: flex-end;             /* Push the caption to the bottom of the tile. */
   padding: 20px;
 }
 
+/* On tile hover: fade the overlay in to a semi-transparent dark green. */
 .memory-item:hover .memory-overlay {
   background: rgba(30,38,32,0.4);
 }
 
+/* ── MEMORY CAPTION ───────────────────────────────────────────
+   The event name text shown at the bottom of a tile when hovered.
+   Hidden by default; slides up and fades in on hover. */
 .memory-caption {
   color: var(--cream);
   font-size: 0.82rem;
   font-weight: 300;
   letter-spacing: 0.05em;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.3s, transform 0.3s;
+  opacity: 0;                          /* Hidden by default. */
+  transform: translateY(8px);          /* Starts 8px below final position. */
+  transition: opacity 0.3s, transform 0.3s;   /* Fade in and slide up. */
 }
 
+/* On tile hover: reveal and slide the caption up to its natural position. */
 .memory-item:hover .memory-caption {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* ── LIGHTBOX ── */
+
+/* ── LIGHTBOX ─────────────────────────────────────────────────
+   A full-screen overlay that displays the selected photo at
+   a larger size. Hidden by default (display: none) and activated
+   by adding the "active" class via JavaScript when a tile is clicked. */
 .lightbox {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.93);
-  z-index: 200;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 80px;
+  display: none;             /* Hidden until a photo is clicked. */
+  position: fixed;           /* Fixed to the viewport — covers the entire screen. */
+  inset: 0;                  /* Stretch to all four edges of the viewport. */
+  background: rgba(0,0,0,0.93);  /* Very dark semi-transparent backdrop. */
+  z-index: 200;              /* Above all other page content. */
+  align-items: center;       /* Vertically center the photo. */
+  justify-content: center;   /* Horizontally center the photo. */
+  padding: 60px 80px;        /* Space around the photo so it doesn't touch the edges. */
 }
 
+/* Show the lightbox as a flex container when the "active" class is present. */
 .lightbox.active {
   display: flex;
 }
 
+/* The photo displayed inside the lightbox. Constrained to fit within the viewport. */
 .lightbox img {
   max-width: 100%;
-  max-height: 85vh;
-  object-fit: contain;
+  max-height: 85vh;          /* Never taller than 85% of the viewport height. */
+  object-fit: contain;       /* Scale down to fit without cropping. */
   border-radius: 2px;
 }
 
+/* ── LIGHTBOX CLOSE BUTTON ────────────────────────────────────
+   The "×" button in the top-right corner of the lightbox.
+   Clicking it dismisses the lightbox and re-enables page scrolling. */
 .lb-close {
   position: absolute;
   top: 20px;
   right: 28px;
-  color: rgba(245,240,232,0.5);
+  color: rgba(245,240,232,0.5);   /* Semi-transparent cream by default. */
   font-size: 2.4rem;
   font-weight: 300;
   line-height: 1;
   cursor: pointer;
   transition: color 0.2s;
-  user-select: none;
+  user-select: none;    /* Prevent text selection when clicking rapidly. */
 }
 
+/* On hover: brighten the close button to full cream. */
 .lb-close:hover { color: var(--cream); }
 
+/* ── LIGHTBOX NAV ARROWS ──────────────────────────────────────
+   The previous (‹) and next (›) navigation arrows on the left
+   and right sides of the lightbox. Clicking them cycles through
+   the photos array. */
 .lb-prev, .lb-next {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
-  color: rgba(245,240,232,0.4);
+  transform: translateY(-50%);     /* Vertically center the arrows. */
+  color: rgba(245,240,232,0.4);    /* Subtle by default; brightens on hover. */
   font-size: 3rem;
   font-weight: 300;
   line-height: 1;
   cursor: pointer;
   padding: 16px 20px;
   transition: color 0.2s;
-  user-select: none;
+  user-select: none;   /* Prevent text selection when clicking rapidly. */
 }
 
+/* On hover: make the arrows fully opaque. */
 .lb-prev:hover, .lb-next:hover { color: var(--cream); }
+
+/* Position the previous arrow on the left side. */
 .lb-prev { left: 8px; }
+
+/* Position the next arrow on the right side. */
 .lb-next { right: 8px; }
 
+/* ── LIGHTBOX CAPTION ─────────────────────────────────────────
+   Shows the event name (or alt text) below the photo at the
+   bottom-center of the lightbox. */
 .lb-caption {
   position: absolute;
   bottom: 24px;
   left: 50%;
-  transform: translateX(-50%);
-  color: rgba(245,240,232,0.4);
+  transform: translateX(-50%);   /* Center horizontally relative to the viewport. */
+  color: rgba(245,240,232,0.4);  /* Muted caption text. */
   font-size: 0.78rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  white-space: nowrap;
+  white-space: nowrap;           /* Prevent the caption from wrapping to two lines. */
 }
 
+/* ── LIGHTBOX COUNTER ─────────────────────────────────────────
+   A "1 / 7" style photo counter displayed in the top-left corner
+   of the lightbox so the user knows their position in the gallery. */
 .lb-counter {
   position: absolute;
   top: 28px;
   left: 32px;
-  color: rgba(245,240,232,0.3);
+  color: rgba(245,240,232,0.3);  /* Very subtle — not the main focus of the lightbox. */
   font-size: 0.75rem;
   letter-spacing: 0.12em;
 }
 
+
+/* ── MOBILE LIGHTBOX ADJUSTMENTS ─────────────────────────────
+   On small screens, reduce padding and move the nav arrows
+   to the very edges of the screen to maximize photo display area. */
 @media (max-width: 600px) {
-  .lightbox { padding: 60px 16px; }
-  .lb-prev { left: 0; }
-  .lb-next { right: 0; }
+  .lightbox { padding: 60px 16px; }   /* Much less side padding on narrow screens. */
+  .lb-prev { left: 0; }               /* Move prev arrow flush with the left edge. */
+  .lb-next { right: 0; }              /* Move next arrow flush with the right edge. */
 }

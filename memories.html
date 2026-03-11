@@ -1,22 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- ============================================================
+     File:        memories.html
+     Purpose:     Neighborhood Memories gallery page. Displays a
+                  responsive photo grid of community event photos.
+                  Clicking any photo opens it in a full-screen
+                  lightbox overlay with previous/next navigation
+                  and keyboard arrow key support.
+     Photos:      Add new photos to the "photos" array in the
+                  <script> block below — each entry needs a src
+                  path, alt text, and event name.
+     Styles:      index-styles.css (global), memories-styles.css
+                  (grid and lightbox specific styles)
+     ============================================================ -->
+
 <head>
+  <!-- Character encoding declaration. -->
   <meta charset="UTF-8" />
+
+  <!-- Responsive viewport — prevents mobile zoom-out. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Browser tab title. -->
   <title>Neighborhood Memories — Pendleton Plantation</title>
+
+  <!-- Google Fonts: Cormorant Garamond and Jost. -->
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
     rel="stylesheet" />
+
+  <!-- Global site styles (nav, footer, color variables, etc.). -->
   <link rel="stylesheet" href="index-styles.css" />
+
+  <!-- Memories-specific styles (photo grid, lightbox overlay). -->
   <link rel="stylesheet" href="memories-styles.css" />
 </head>
 
 <body>
 
-  <!-- NAV -->
+  <!-- ── NAVIGATION BAR ───────────────────────────────────────
+       Fixed top nav bar shared across all site pages. -->
   <nav>
+    <!-- Site brand / logo link. -->
     <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <!-- Navigation links. -->
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="index.html#awards">Awards</a></li>
@@ -30,27 +59,55 @@
     </ul>
   </nav>
 
-  <!-- HEADER -->
+  <!-- ── PAGE HEADER ──────────────────────────────────────────
+       Hero banner showing the gallery page title and a decorative
+       gold rule. No subtitle on this page — the photos speak for themselves. -->
   <div class="memories-hero">
+    <!-- Eyebrow label. -->
     <p class="section-eyebrow">✦ &nbsp; Community Gallery &nbsp; ✦</p>
+
+    <!-- Page title — "Memories" is italicized. -->
     <h1 class="section-title">Neighborhood <em>Memories</em></h1>
+
+    <!-- Decorative gold rule. -->
     <div class="section-rule"></div>
   </div>
 
-  <!-- GALLERY -->
+  <!-- ── PHOTO GALLERY GRID ───────────────────────────────────
+       An empty container populated by the JavaScript below.
+       Each photo in the "photos" array is rendered as a clickable
+       .memory-item tile inside this grid. -->
   <div class="memories-grid" id="memories-grid"></div>
 
-  <!-- LIGHTBOX -->
+  <!-- ── LIGHTBOX OVERLAY ─────────────────────────────────────
+       Full-screen photo viewer shown when a gallery tile is clicked.
+       Hidden by default (display: none via CSS); activated by
+       adding the "active" class with JavaScript.
+       Contains: close button, photo counter, prev/next arrows,
+       the full-size image, and a caption. -->
   <div class="lightbox" id="lightbox">
+    <!-- Close button — clicking dismisses the lightbox. -->
     <span class="lb-close" id="lb-close">×</span>
+
+    <!-- Photo counter, e.g., "2 / 7" — updated by the update() function. -->
     <span class="lb-counter" id="lb-counter"></span>
+
+    <!-- Previous photo arrow — clicking goes to the previous image. -->
     <span class="lb-prev" id="lb-prev">‹</span>
+
+    <!-- The full-size photo displayed in the center of the lightbox.
+         src and alt are set dynamically by the update() function. -->
     <img id="lb-img" src="" alt="" />
+
+    <!-- Next photo arrow — clicking goes to the next image. -->
     <span class="lb-next" id="lb-next">›</span>
+
+    <!-- Caption shown at the bottom — displays the event name or alt text. -->
     <div class="lb-caption" id="lb-caption"></div>
   </div>
 
-  <!-- FOOTER -->
+  <!-- ── FOOTER ───────────────────────────────────────────────
+       Shared site footer. -->
   <footer>
     <div class="footer-brand">Pendleton Plantation</div>
     <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
@@ -61,9 +118,18 @@
   </footer>
 
   <script>
+
     // ============================================================
     //  ✏️  ADD YOUR PHOTOS HERE
-    //  { src: "images/photo.jpg", alt: "Description", event: "Event Name" }
+    //  Each object in the array represents one photo in the gallery.
+    //  Fields:
+    //    src:   Path to the image file, relative to this HTML file.
+    //           Example: "images/EasterHunt-1.jpg"
+    //    alt:   Short description of the photo (for screen readers
+    //           and accessibility). Shown as caption in the lightbox
+    //           if no "event" field is provided.
+    //    event: Name of the event (shown as the lightbox caption).
+    //           Example: "Halloween Trunk or Treat 2025"
     // ============================================================
     const photos = [
       { src: "images/Halloween2025-1.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
@@ -75,66 +141,127 @@
       { src: "images/Halloween2025-7.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat", event: "Halloween Trunk or Treat 2025" },
     ];
 
-    // ── Render grid ──────────────────────────────────────────────
+
+    // ── RENDER GALLERY GRID ──────────────────────────────────
+    // Build the photo grid HTML from the photos array and insert it
+    // into the #memories-grid container.
     const grid = document.getElementById("memories-grid");
     grid.innerHTML = photos.map((p, i) => `
+      <!-- Each tile stores its index in a data-index attribute so the
+           click handler knows which photo to open in the lightbox. -->
       <div class="memory-item" data-index="${i}">
+        <!-- The photo image. loading="lazy" defers loading until the tile
+             is near the viewport, improving initial page load speed. -->
         <img src="${p.src}" alt="${p.alt}" loading="lazy" />
+
+        <!-- Dark overlay revealed on hover, containing the caption text. -->
         <div class="memory-overlay">
+          <!-- Caption shows the event name if available, or the alt text as a fallback. -->
           <div class="memory-caption">${p.event || p.alt}</div>
         </div>
       </div>`).join("");
 
-    // ── Lightbox ─────────────────────────────────────────────────
+
+    // ── LIGHTBOX STATE ───────────────────────────────────────
+    // Track which photo is currently shown in the lightbox.
     let current = 0;
-    const lightbox = document.getElementById("lightbox");
-    const lbImg = document.getElementById("lb-img");
+
+    // Cache DOM references to avoid repeated getElementById calls.
+    const lightbox  = document.getElementById("lightbox");
+    const lbImg     = document.getElementById("lb-img");
     const lbCaption = document.getElementById("lb-caption");
     const lbCounter = document.getElementById("lb-counter");
 
+
+    // ── UPDATE LIGHTBOX ──────────────────────────────────────
+    // Updates the lightbox image, alt text, caption, and counter
+    // to reflect the photo at the current index.
     function update() {
       const p = photos[current];
-      lbImg.src = p.src;
-      lbImg.alt = p.alt;
-      lbCaption.textContent = p.event || p.alt;
-      lbCounter.textContent = `${current + 1} / ${photos.length}`;
+      lbImg.src           = p.src;
+      lbImg.alt           = p.alt;
+      lbCaption.textContent = p.event || p.alt;    // Show event name, or alt text fallback.
+      lbCounter.textContent = `${current + 1} / ${photos.length}`;  // e.g., "2 / 7"
     }
 
+
+    // ── OPEN LIGHTBOX ────────────────────────────────────────
+    // Opens the lightbox showing the photo at the given index.
+    // Disables body scrolling so the page doesn't scroll behind the overlay.
     function open(index) {
       current = index;
       update();
-      lightbox.classList.add("active");
-      document.body.style.overflow = "hidden";
+      lightbox.classList.add("active");        // CSS shows the lightbox when "active" is present.
+      document.body.style.overflow = "hidden"; // Lock page scroll while lightbox is open.
     }
 
+
+    // ── CLOSE LIGHTBOX ───────────────────────────────────────
+    // Dismisses the lightbox and re-enables page scrolling.
     function close() {
       lightbox.classList.remove("active");
-      document.body.style.overflow = "";
+      document.body.style.overflow = "";       // Restore normal page scrolling.
     }
 
+
+    // ── CLICK ON GALLERY TILE ────────────────────────────────
+    // Uses event delegation — listens on the whole grid so one
+    // handler covers all tiles even if photos are added later.
     grid.addEventListener("click", e => {
+      // Walk up the DOM from the click target to find the nearest .memory-item.
       const item = e.target.closest(".memory-item");
-      if (item) open(parseInt(item.dataset.index));
+      if (item) open(parseInt(item.dataset.index));  // Open lightbox at the clicked tile's index.
     });
 
+
+    // ── CLOSE BUTTON ─────────────────────────────────────────
+    // Close the lightbox when the "×" button is clicked.
     document.getElementById("lb-close").addEventListener("click", close);
+
+
+    // ── PREVIOUS BUTTON ──────────────────────────────────────
+    // Navigate to the previous photo. Wraps around to the last
+    // photo if already at index 0 (circular navigation).
     document.getElementById("lb-prev").addEventListener("click", e => {
-      e.stopPropagation();
-      current = (current - 1 + photos.length) % photos.length;
+      e.stopPropagation();   // Prevent the click from also closing the lightbox.
+      current = (current - 1 + photos.length) % photos.length;  // Wrap around.
       update();
     });
+
+
+    // ── NEXT BUTTON ──────────────────────────────────────────
+    // Navigate to the next photo. Wraps around to the first
+    // photo after the last (circular navigation).
     document.getElementById("lb-next").addEventListener("click", e => {
-      e.stopPropagation();
-      current = (current + 1) % photos.length;
+      e.stopPropagation();   // Prevent the click from closing the lightbox.
+      current = (current + 1) % photos.length;  // Wrap around.
       update();
     });
-    lightbox.addEventListener("click", e => { if (e.target === lightbox) close(); });
+
+
+    // ── CLICK ON LIGHTBOX BACKDROP ───────────────────────────
+    // Close the lightbox when the user clicks on the dark backdrop
+    // area (outside the photo itself).
+    lightbox.addEventListener("click", e => {
+      if (e.target === lightbox) close();   // Only close if the backdrop itself was clicked.
+    });
+
+
+    // ── KEYBOARD NAVIGATION ──────────────────────────────────
+    // Allow keyboard users to navigate and close the lightbox.
     document.addEventListener("keydown", e => {
+      // Ignore keyboard events if the lightbox is not currently open.
       if (!lightbox.classList.contains("active")) return;
-      if (e.key === "Escape") close();
+
+      if (e.key === "Escape") close();   // Escape key closes the lightbox.
+
+      // Right arrow: advance to the next photo (with wrap-around).
       if (e.key === "ArrowRight") { current = (current + 1) % photos.length; update(); }
+
+      // Left arrow: go back to the previous photo (with wrap-around).
       if (e.key === "ArrowLeft") { current = (current - 1 + photos.length) % photos.length; update(); }
     });
+
   </script>
 
 </body>

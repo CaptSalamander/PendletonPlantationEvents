@@ -1,137 +1,192 @@
-/* ── PAGE HERO ── */
+/* ============================================================
+   File:        dashboard-styles.css
+   Purpose:     Styles for the Easter Egg Hunt sign-up dashboard
+                page. This file builds on top of index-styles.css
+                (which must be loaded first) and adds layout and
+                component styles that are specific to dashboard.html.
+   ============================================================ */
+
+
+/* ── PAGE HERO ────────────────────────────────────────────────
+   The top banner section of the dashboard page that shows the
+   event name, page title, last-refreshed timestamp, and the
+   manual Refresh button. Uses a soft radial gradient at the top
+   to give a gentle green glow above the content. */
 .dash-hero {
-  padding: 140px 48px 56px;
+  padding: 140px 48px 56px;   /* Top padding accounts for the fixed nav bar height. */
   text-align: center;
   background:
+    /* Soft green elliptical gradient fading from the top-center. */
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74,103,65,0.12) 0%, transparent 70%),
-    var(--warm-white);
+    var(--warm-white);         /* Falls back to the global warm-white background color. */
 }
 
+/* Scale the hero headline up slightly larger than the default section title. */
 .dash-hero .section-title { font-size: clamp(2.2rem, 4vw, 3.6rem); }
+
+/* Push the decorative gold rule down a bit from the title. */
 .dash-hero .section-rule  { margin-top: 20px; }
 
+/* ── DASHBOARD META BAR ───────────────────────────────────────
+   The small row below the page title that shows the
+   "Last refreshed" timestamp and the Refresh button side by side. */
 .dash-meta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
+  display: flex;              /* Lay out timestamp and button in a horizontal row. */
+  align-items: center;        /* Vertically center both items. */
+  justify-content: center;    /* Center the whole group horizontally on the page. */
+  gap: 20px;                  /* Space between the timestamp text and the button. */
   margin-top: 20px;
-  flex-wrap: wrap;
+  flex-wrap: wrap;            /* Allow items to wrap to a new line on very narrow screens. */
 }
 
+/* ── LAST UPDATED TIMESTAMP ───────────────────────────────────
+   Small muted text showing when the dashboard data was last
+   fetched from the Google Sheet. Updated by loadDashboard(). */
 .last-updated {
   font-size: 0.72rem;
   font-weight: 400;
   letter-spacing: 0.08em;
-  color: var(--muted);
+  color: var(--muted);        /* Uses the global muted (warm gray) color variable. */
 }
 
+/* ── REFRESH BUTTON ───────────────────────────────────────────
+   A small outlined button that manually re-fetches dashboard
+   data from the Google Apps Script endpoint. */
 .refresh-btn {
   font-family: 'Jost', sans-serif;
   font-size: 0.72rem;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--moss);
-  background: transparent;
-  border: 1px solid rgba(74,103,65,0.3);
+  color: var(--moss);              /* Green text to match the site's nature palette. */
+  background: transparent;         /* No fill by default — outline-only style. */
+  border: 1px solid rgba(74,103,65,0.3);  /* Semi-transparent moss-green border. */
   border-radius: 2px;
   padding: 6px 16px;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.2s, border-color 0.2s;  /* Smooth hover transition. */
 }
 
+/* On hover: add a very light green tint and darken the border. */
 .refresh-btn:hover {
   background: rgba(74,103,65,0.06);
   border-color: var(--moss);
 }
 
+/* While loading: dim the button and change the cursor to indicate it is busy. */
 .refresh-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* ── CONTENT WRAPPER ── */
+
+/* ── CONTENT WRAPPER ──────────────────────────────────────────
+   The main content area below the hero. Constrains max width and
+   adds generous padding on the sides so content never stretches
+   edge-to-edge on wide monitors. */
 .dash-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 48px 48px 100px;
+  max-width: 1200px;          /* Cap the readable width on large screens. */
+  margin: 0 auto;             /* Center the content block horizontally. */
+  padding: 48px 48px 100px;   /* Top, sides, and generous bottom padding. */
 }
 
+/* On mobile screens, reduce horizontal padding to avoid cramped text. */
 @media (max-width: 768px) {
-  .dash-hero    { padding: 110px 24px 48px; }
-  .dash-content { padding: 32px 24px 80px; }
+  .dash-hero    { padding: 110px 24px 48px; }   /* Tighter vertical spacing on small screens. */
+  .dash-content { padding: 32px 24px 80px; }    /* Reduced side and bottom padding. */
 }
 
-/* ── LOADING / ERROR STATES ── */
+
+/* ── LOADING / ERROR STATES ───────────────────────────────────
+   Placeholder UI shown inside #dash-body while data is being
+   fetched from the Google Sheet, or if the fetch fails. */
 .dash-loading, .dash-error {
   text-align: center;
-  padding: 80px 24px;
+  padding: 80px 24px;         /* Generous padding so the message feels centered vertically. */
   color: var(--muted);
   font-size: 0.9rem;
   letter-spacing: 0.05em;
 }
 
+/* Add a spinning gold ring above the "Loading…" text using a CSS pseudo-element. */
 .dash-loading::before {
   content: '';
   display: block;
   width: 32px;
   height: 32px;
+  /* Semi-transparent gold ring that spins to indicate activity. */
   border: 2px solid rgba(201,168,76,0.2);
-  border-top-color: var(--gold);
+  border-top-color: var(--gold);   /* Only the top arc is fully opaque — creates the spin effect. */
   border-radius: 50%;
   margin: 0 auto 20px;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.8s linear infinite;  /* Reference the keyframe defined below. */
 }
 
+/* Keyframe: rotate the element one full turn continuously. */
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Error state: use a muted red instead of the default gray to draw attention. */
 .dash-error { color: #a04040; }
 
-/* ── SUMMARY STATS ── */
+
+/* ── SUMMARY STATS GRID ───────────────────────────────────────
+   A row of small cards at the top of the dashboard showing
+   totals such as "Total Sign-Ups", "Attending", "Adults", and
+   "Children". Uses CSS Grid with auto-fill so it collapses
+   naturally from 4 columns down to 1 column as the screen narrows. */
 .stat-grid {
   display: grid;
+  /* Each card is at least 180px wide; extra space is distributed evenly. */
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
-  margin-bottom: 56px;
+  margin-bottom: 56px;  /* Space between the stats row and the next section. */
 }
 
+/* Individual stat card: cream background with a subtle gold border. */
 .stat-card {
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.2);
+  border: 1px solid rgba(201,168,76,0.2);  /* Faint gold border. */
   border-radius: 4px;
   padding: 24px 20px;
   text-align: center;
 }
 
+/* The large number displayed in each stat card (e.g., "42"). */
 .stat-number {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Cormorant Garamond', serif;  /* Elegant serif font for the big numeral. */
   font-size: 3rem;
-  font-weight: 300;
+  font-weight: 300;   /* Light weight gives an airy, refined look. */
   color: var(--forest);
   line-height: 1;
   margin-bottom: 8px;
 }
 
+/* The small uppercase label below the number (e.g., "TOTAL SIGN-UPS"). */
 .stat-label {
   font-size: 0.68rem;
   font-weight: 500;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.2em;  /* Wide tracking makes the all-caps label readable at small size. */
   text-transform: uppercase;
   color: var(--muted);
 }
 
-/* ── COVERAGE SUMMARY BAR ── */
+
+/* ── COVERAGE SUMMARY BAR ─────────────────────────────────────
+   A row of "pill" cards showing how many volunteer roles and
+   donation categories have at least one sign-up so far.
+   Each pill has an icon, a fraction (e.g., "5 / 8"), a label,
+   and a thin progress bar. */
 .coverage-bar {
   display: flex;
   gap: 16px;
-  flex-wrap: wrap;
+  flex-wrap: wrap;        /* Wrap to a second row on narrow screens. */
   margin-bottom: 56px;
 }
 
+/* Each individual coverage pill — dark forest-green background. */
 .coverage-pill {
-  flex: 1;
-  min-width: 220px;
+  flex: 1;                /* Allow pills to grow and share available width equally. */
+  min-width: 220px;       /* Prevent pills from collapsing too narrow before wrapping. */
   background: var(--forest);
   border-radius: 4px;
   padding: 18px 24px;
@@ -140,96 +195,120 @@
   gap: 16px;
 }
 
+/* The emoji icon on the left of each pill (e.g., 🙋 or 🎁). */
 .coverage-pill-icon { font-size: 1.4rem; }
 
-.coverage-pill-text { flex: 1; }
+/* Text area between the icon and the progress track. */
+.coverage-pill-text { flex: 1; }  /* Takes up remaining horizontal space. */
 
+/* The large fraction number, e.g., "5 / 8". */
 .coverage-pill-fraction {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.5rem;
   font-weight: 300;
-  color: var(--cream);
+  color: var(--cream);    /* Light cream text on the dark green background. */
   line-height: 1;
 }
 
+/* The small text below the fraction, e.g., "VOLUNTEER ROLES COVERED". */
 .coverage-pill-label {
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(245,240,232,0.5);
+  color: rgba(245,240,232,0.5);  /* Semi-transparent cream for a secondary look. */
   margin-top: 3px;
 }
 
+/* The thin horizontal track on the far right of the pill that
+   shows the percentage covered as a filled gold bar. */
 .coverage-track {
   width: 80px;
   height: 4px;
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.15);  /* Faint white track background. */
   border-radius: 2px;
-  overflow: hidden;
-  flex-shrink: 0;
+  overflow: hidden;        /* Ensures the fill bar does not overflow the rounded track. */
+  flex-shrink: 0;          /* Prevents the track from shrinking when space is tight. */
 }
 
+/* The filled portion of the progress track. Width is set inline via JS. */
 .coverage-fill {
   height: 100%;
-  background: var(--gold);
+  background: var(--gold);          /* Gold fill color. */
   border-radius: 2px;
-  transition: width 0.6s ease;
+  transition: width 0.6s ease;      /* Smooth animation when the width value changes. */
 }
 
-/* ── SECTION HEADER ── */
+
+/* ── DASHBOARD SECTION ────────────────────────────────────────
+   A reusable section wrapper used for the Volunteer Roles,
+   Donations & Supplies, and Potluck Items sections of the dashboard. */
 .dash-section {
-  margin-bottom: 56px;
+  margin-bottom: 56px;   /* Space between each major dashboard section. */
 }
 
+/* The header row for each dashboard section, containing the
+   section title and a decorative horizontal rule. */
 .dash-section-header {
   display: flex;
-  align-items: center;
+  align-items: center;   /* Vertically center the title and rule. */
   gap: 16px;
   margin-bottom: 24px;
 }
 
+/* The small uppercase section title text (e.g., "VOLUNTEER ROLES"). */
 .dash-section-title {
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: var(--gold);
-  white-space: nowrap;
+  color: var(--gold);          /* Gold color to match the decorative accent palette. */
+  white-space: nowrap;         /* Prevent the title from breaking to a second line. */
 }
 
+/* The horizontal rule that stretches to fill the remaining width beside the title. */
 .dash-section-rule {
-  flex: 1;
+  flex: 1;               /* Grows to fill all available space to the right of the title. */
   height: 1px;
-  background: rgba(201,168,76,0.2);
+  background: rgba(201,168,76,0.2);   /* Faint gold line. */
 }
 
-/* ── VOLUNTEER GRID ── */
+
+/* ── VOLUNTEER GRID ───────────────────────────────────────────
+   A responsive grid of volunteer role cards. Each card shows
+   the role name, the number of people signed up, and a colored
+   badge. Cards marked "covered" have at least one volunteer. */
 .vol-grid {
   display: grid;
+  /* Cards are at least 200px wide; they expand equally to fill the row. */
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
 }
 
+/* Individual volunteer role card. */
 .vol-card {
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.18);
+  border: 1px solid rgba(201,168,76,0.18);  /* Default faint gold border. */
   border-radius: 4px;
   padding: 18px 20px;
   display: flex;
   align-items: center;
   gap: 14px;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s;    /* Smooth border color change when state changes. */
 }
 
+/* A card that has at least one volunteer signed up gets a stronger green border. */
 .vol-card.covered  { border-color: rgba(74,103,65,0.35); }
+
+/* A card with no volunteers is dimmed to show it still needs help. */
 .vol-card.uncovered { opacity: 0.55; }
 
+/* The circular badge on the left that shows the volunteer count (or "–" if none). */
 .vol-badge {
-  flex-shrink: 0;
+  flex-shrink: 0;   /* Prevent the badge from compressing when the card is narrow. */
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: 50%;    /* Makes it a perfect circle. */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -237,15 +316,20 @@
   font-weight: 600;
 }
 
+/* Covered badge: filled moss-green with cream text. */
 .vol-card.covered   .vol-badge { background: var(--moss); color: var(--cream); }
+
+/* Uncovered badge: light gray with muted text. */
 .vol-card.uncovered .vol-badge { background: rgba(0,0,0,0.06); color: var(--muted); }
 
+/* The text column to the right of the badge. */
 .vol-info {
   display: flex;
-  flex-direction: column;
+  flex-direction: column;  /* Stack the role name above the count label. */
   gap: 3px;
 }
 
+/* The role name text, e.g., "Hide the Eggs". */
 .vol-name {
   font-size: 0.88rem;
   font-weight: 400;
@@ -253,37 +337,47 @@
   line-height: 1.3;
 }
 
+/* The count label below the name, e.g., "3 volunteers" or "No sign-ups yet". */
 .vol-count {
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.08em;
-  color: var(--moss);
+  color: var(--moss);    /* Moss green for a positive, active appearance. */
 }
 
+/* Uncovered card text overrides: switch both name and count to muted gray. */
 .vol-card.uncovered .vol-name  { color: var(--muted); }
 .vol-card.uncovered .vol-count { color: var(--muted); }
 
-/* ── DONATION CATEGORIES ── */
+
+/* ── DONATION CATEGORIES ──────────────────────────────────────
+   Each donation category (e.g., "Eggs & Filling", "Crafts") is
+   wrapped in a .don-category container with a blush-colored
+   label header and a grid of individual donation items below. */
 .don-category { margin-bottom: 36px; }
 
+/* The small category label above each item group (e.g., "EGGS & FILLING"). */
 .don-category-label {
   font-size: 0.65rem;
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--blush);
+  color: var(--blush);    /* Soft blush/tan color to distinguish category headers. */
   margin-bottom: 12px;
 }
 
+/* A responsive grid of individual donation item cards within a category. */
 .don-item-grid {
   display: grid;
+  /* Each item card is at least 260px wide. */
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 10px;
 }
 
+/* Individual donation item card. Stacks the item name on top of the stats row. */
 .don-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: column;  /* Name row on top, stats row below. */
   gap: 10px;
   background: var(--cream);
   border: 1px solid rgba(201,168,76,0.15);
@@ -291,25 +385,34 @@
   padding: 14px 16px;
 }
 
+/* A covered item (at least one pledge) gets a stronger green border. */
 .don-item.covered   { border-color: rgba(74,103,65,0.3); }
+
+/* An uncovered item (zero pledges) is dimmed. */
 .don-item.uncovered { opacity: 0.5; }
 
+/* The top row of each item card: colored dot + item label side by side. */
 .don-item-top {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* The small colored dot on the left of the item name row. */
 .don-dot {
   flex-shrink: 0;
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: 50%;   /* Makes it a circle. */
 }
 
+/* Covered dot: solid moss green. */
 .don-item.covered   .don-dot { background: var(--moss); }
+
+/* Uncovered dot: light gray. */
 .don-item.uncovered .don-dot { background: #ccc; }
 
+/* The item name text, e.g., "Plastic Eggs — standard mixed colors". */
 .don-label {
   flex: 1;
   font-size: 0.84rem;
@@ -318,21 +421,25 @@
   line-height: 1.3;
 }
 
+/* Uncovered item label: switch to muted gray. */
 .don-item.uncovered .don-label { color: var(--muted); }
 
+/* The row of stat figures below the item name (Needed / Pledged / Remaining). */
 .don-stats {
   display: flex;
   gap: 16px;
-  padding-left: 18px;
+  padding-left: 18px;   /* Indent to align under the item name (past the dot). */
 }
 
+/* A single stat column (e.g., "Total Needed"). */
 .don-stat {
   display: flex;
-  flex-direction: column;
+  flex-direction: column;  /* Number on top, label below. */
   gap: 2px;
   min-width: 52px;
 }
 
+/* The numeric value in each stat column (e.g., "450"). */
 .don-stat-val {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.15rem;
@@ -341,10 +448,13 @@
   line-height: 1;
 }
 
+/* Zero value: switch to muted gray to indicate nothing pledged yet. */
 .don-stat-val.zero { color: var(--muted); }
 
+/* When the remaining count reaches zero, color the stat green to show it's met. */
 .don-stat.met .don-stat-val { color: var(--moss); }
 
+/* The small uppercase label below each stat value (e.g., "PLEDGED"). */
 .don-stat-label {
   font-size: 0.6rem;
   font-weight: 500;
@@ -353,26 +463,32 @@
   color: var(--muted);
 }
 
+/* For uncovered items, further mute the stat values and labels. */
 .don-item.uncovered .don-stat-val   { color: var(--muted); }
 .don-item.uncovered .don-stat-label { opacity: 0.6; }
 
-/* ── POTLUCK LIST ── */
+
+/* ── POTLUCK LIST ─────────────────────────────────────────────
+   The potluck section shows what food/drink attendees plan to
+   bring as a collection of pill-shaped tags. */
 .potluck-grid {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: wrap;   /* Allow tags to flow onto multiple lines naturally. */
   gap: 10px;
 }
 
+/* Each potluck item tag: a rounded pill with a faint gold border. */
 .potluck-tag {
   background: var(--cream);
   border: 1px solid rgba(201,168,76,0.25);
-  border-radius: 100px;
+  border-radius: 100px;   /* Fully rounded pill shape. */
   padding: 7px 18px;
   font-size: 0.84rem;
   font-weight: 300;
   color: var(--forest);
 }
 
+/* Shown when no potluck items have been submitted yet. */
 .potluck-empty {
   font-size: 0.88rem;
   color: var(--muted);

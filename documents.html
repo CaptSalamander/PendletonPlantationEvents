@@ -1,150 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- ============================================================
+     File:        documents.html
+     Purpose:     HOA Documents page. Displays a list of official
+                  Pendleton Plantation community documents that
+                  residents can click to open or download (PDFs,
+                  portal links, financial statements, etc.).
+                  Documents are organized into categories and
+                  rendered as clickable rows by the JavaScript
+                  at the bottom of this file.
+     Styles:      index-styles.css (global), links-styles.css (card layout)
+     Note:        This page reuses the links-styles.css layout
+                  (link-card grid) but renders document rows via a
+                  separate data structure.
+     ============================================================ -->
+
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Community Links — Pendleton Plantation</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
-        rel="stylesheet" />
-    <link rel="stylesheet" href="index-styles.css" />
-    <link rel="stylesheet" href="links-styles.css" />
+  <!-- Character encoding — must appear first. -->
+  <meta charset="UTF-8" />
+
+  <!-- Responsive viewport — prevents mobile browsers from zooming out by default. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Browser tab title. -->
+  <title>Community Links — Pendleton Plantation</title>
+
+  <!-- Google Fonts: Cormorant Garamond (serif) and Jost (sans-serif). -->
+  <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+      rel="stylesheet" />
+
+  <!-- Global site styles (nav, footer, color variables, buttons, etc.). -->
+  <link rel="stylesheet" href="index-styles.css" />
+
+  <!-- Links/documents card layout styles (link-category, link-card, link-grid). -->
+  <link rel="stylesheet" href="links-styles.css" />
 </head>
 
 <body>
 
-    <!-- NAV -->
-    <nav>
-        <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
-        <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="index.html#awards">Awards</a></li>
-            <li><a href="index.html#events">Events</a></li>
-            <li><a href="index.html#memories">Memories</a></li>
-            <li><a href="index.html#announcements">Announcements</a></li>
-            <li><a href="index.html#contact">Contact</a></li>
-            <li><a href="signup-page-easter.html">Sign Up</a></li>
-            <li><a href="links.html">Links</a></li>
-            <li><a href="documents.html">Documents</a></li>
-        </ul>
-    </nav>
+  <!-- ── NAVIGATION BAR ───────────────────────────────────────
+       Fixed nav bar shared across all site pages. No hamburger
+       button on this page (desktop-only nav shown). -->
+  <nav>
+    <!-- Site brand — links back to the homepage. -->
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
 
-    <!-- PAGE HEADER -->
-    <div class="links-hero">
-        <p class="section-eyebrow">✦ &nbsp; Helpful Resources &nbsp; ✦</p>
-        <h1 class="section-title">Community <em>Documents</em></h1>
-        <div class="section-rule"></div>
-        <p class="hero-sub">Access important community documents and forms.</p>
-    </div>
+    <!-- Navigation link list. -->
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#awards">Awards</a></li>
+      <li><a href="index.html#events">Events</a></li>
+      <li><a href="index.html#memories">Memories</a></li>
+      <li><a href="index.html#announcements">Announcements</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="signup-page-easter.html">Sign Up</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+    </ul>
+  </nav>
 
-    <!-- LINKS -->
-    <div class="links-content" id="links-content"></div>
+  <!-- ── PAGE HEADER ──────────────────────────────────────────
+       Hero-style banner at the top of the page showing the page
+       title and a short description of what residents will find here. -->
+  <div class="links-hero">
+    <!-- Decorative eyebrow label. -->
+    <p class="section-eyebrow">✦ &nbsp; Helpful Resources &nbsp; ✦</p>
 
-    <!-- FOOTER -->
-    <footer>
-        <div class="footer-brand">Pendleton Plantation</div>
-        <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
-        <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp;
-            <a href="mailto:mandyvaliquette00@gmail.com"
-                style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact Us</a>
-        </p>
-    </footer>
+    <!-- Page title — "Documents" is italicized for emphasis. -->
+    <h1 class="section-title">Community <em>Documents</em></h1>
 
-    <script>
+    <!-- Decorative gold rule. -->
+    <div class="section-rule"></div>
 
+    <!-- Short description below the title. -->
+    <p class="hero-sub">Access important community documents and forms.</p>
+  </div>
 
-        // ============================================================
-        //  ✏️  EDIT YOUR LINKS HERE
-        //  Each category has a label and an array of links.
-        //  Each link: { icon, title, desc, url, urlLabel }
-        //    - icon:     emoji shown on the card
-        //    - title:    bold card heading
-        //    - desc:     one-line description
-        //    - url:      the full URL the card links to
-        //    - urlLabel: short display text shown at the bottom of the card
-        // ============================================================
+  <!-- ── LINKS / DOCUMENTS CONTENT ───────────────────────────
+       The #links-content div is empty here — it is populated
+       entirely by the JavaScript below using the categories array. -->
+  <div class="links-content" id="links-content"></div>
 
-        const categories = [
-            {
-                label: "Neighborhood Documents — Click to Download",
-                links: [
-                    {
-                        icon: "📝",
-                        title: "Annual Meeting Proxy Form",
-                        desc: "Pendleton Plantation Homeowners Association Annual Meeting Proxy Form — Please complete and submit this form if you are unable to attend the annual HOA meeting but would like to designate another resident to vote on your behalf.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/PND%20Proxy%20-%202024%20Annual%20Meeting.pdf",
-                    },
-                    {
-                        icon: "🛠️",
-                        title: "Architectural Review Committee Request Form (Physical Copy)",
-                        desc: "Use this form to submit a physical copy of an ARC request if you prefer not to submit through the online portal.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/ARC%20Request%20Form.pdf",
+  <!-- ── FOOTER ───────────────────────────────────────────────
+       Shared site footer with neighborhood name and contact link. -->
+  <footer>
+    <div class="footer-brand">Pendleton Plantation</div>
+    <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
+    <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp;
+      <a href="mailto:mandyvaliquette00@gmail.com"
+        style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact Us</a>
+    </p>
+  </footer>
 
-                    },
-                    {
-                        icon: "⚖️",
-                        title: "Pendleton Plantation Bylaws",
-                        desc: "Bylaws of the Pendleton Plantation Homeowners Association, outlining the rules and regulations governing our community.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20-Bylaws.pdf",
+  <script>
 
-                    },
-                    {
-                        icon: "⚠️",
-                        title: "Declaration of Covenants, Conditions, and Restrictions",
-                        desc: "This document details the covenants, conditions, and restrictions that apply to all properties within Pendleton Plantation.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20-%20Declaration%20of%20Covenants.pdf",
+    // ============================================================
+    //  ✏️  EDIT YOUR LINKS HERE
+    //  Each category has a label and an array of document links.
+    //  Each link object supports these fields:
+    //    icon:     Emoji displayed on the left of the card.
+    //    title:    Bold heading shown on the card.
+    //    desc:     One or two sentence description of the document.
+    //    url:      The full URL — opens in a new browser tab when clicked.
+    //    urlLabel: (Optional) Short display text shown at the bottom of the card.
+    // ============================================================
 
-                    },
-                    {
-                        icon: "📝",
-                        title: "ARC Guidelines Updates (Effective February 2020)",
-                        desc: "Updated guidelines from the Architectural Review Committee outlining the standards and procedures for submitting architectural requests in Pendleton Plantation.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20-%20ARC%20Guidelines%202020.02.pdf",
+    const categories = [
+      {
+        // Category label shown as a section header above the document list.
+        label: "Neighborhood Documents — Click to Download",
+        links: [
+          {
+            icon: "📝",
+            title: "Annual Meeting Proxy Form",
+            desc: "Pendleton Plantation Homeowners Association Annual Meeting Proxy Form — Please complete and submit this form if you are unable to attend the annual HOA meeting but would like to designate another resident to vote on your behalf.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/PND%20Proxy%20-%202024%20Annual%20Meeting.pdf",
+          },
+          {
+            icon: "🛠️",
+            title: "Architectural Review Committee Request Form (Physical Copy)",
+            desc: "Use this form to submit a physical copy of an ARC request if you prefer not to submit through the online portal.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/ARC%20Request%20Form.pdf",
+          },
+          {
+            icon: "⚖️",
+            title: "Pendleton Plantation Bylaws",
+            desc: "Bylaws of the Pendleton Plantation Homeowners Association, outlining the rules and regulations governing our community.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20-Bylaws.pdf",
+          },
+          {
+            icon: "⚠️",
+            title: "Declaration of Covenants, Conditions, and Restrictions",
+            desc: "This document details the covenants, conditions, and restrictions that apply to all properties within Pendleton Plantation.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20-%20Declaration%20of%20Covenants.pdf",
+          },
+          {
+            icon: "📝",
+            title: "ARC Guidelines Updates (Effective February 2020)",
+            desc: "Updated guidelines from the Architectural Review Committee outlining the standards and procedures for submitting architectural requests in Pendleton Plantation.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20-%20ARC%20Guidelines%202020.02.pdf",
+          },
+          {
+            icon: "📄",
+            title: "First Bylaws Amendment (Effective July 2003)",
+            desc: "This document contains the amendments made to the original bylaws of Pendleton Plantation as of July 2003.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20Amendment%20deed%20book%20page%2000085.pdf",
+          },
+          {
+            icon: "📄",
+            title: "Second Bylaws Amendment (Effective July 2003)",
+            desc: "This document contains the amendments made to the original bylaws of Pendleton Plantation as of July 2003.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20Amendment%20deed%20book%20page%2000103.pdf",
+          },
+          {
+            icon: "📄",
+            title: "Pool Rules (Effective 2024)",
+            desc: "This document outlines the rules and regulations for the use of the Pendleton Plantation pool.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PND%202024%20POOL%20RULES.pdf",
+            urlLabel: "",
+          },
+          {
+            icon: "📄",
+            title: "Pendleton Plantation Financial Statements",
+            desc: "This webpage links to the financial statements for Pendleton Plantation, including budgets, income statements, and balance sheets.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/dyndocuments.php?group=230231",
+          },
+        ],
+      },
+    ];
 
-                    },
-                    {
-                        icon: "📄",
-                        title: "First Bylaws Amendment (Effective July 2003)",
-                        desc: "This document contains the amendments made to the original bylaws of Pendleton Plantation as of July 2003.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20Amendment%20deed%20book%20page%2000085.pdf",
+    // ============================================================
+    //  Rendering — no edits needed below this line
+    //  This block reads the categories array above and builds the
+    //  link card HTML, then injects it into #links-content.
+    // ============================================================
 
-                    },
-                    {
-                        icon: "📄",
-                        title: "Second Bylaws Amendment (Effective July 2003)",
-                        desc: "This document contains the amendments made to the original bylaws of Pendleton Plantation as of July 2003.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PDT%20Amendment%20deed%20book%20page%2000103.pdf",
+    // Get a reference to the container div where the links will be inserted.
+    const container = document.getElementById("links-content");
 
-                    },
-                    {
-                        icon: "📄",
-                        title: "Pool Rules (Effective 2024)",
-                        desc: "This document outlines the rules and regulations for the use of the Pendleton Plantation pool.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/files/5479/dyn197526/PND%202024%20POOL%20RULES.pdf",
-                        urlLabel: "",
-                    },
-                    {
-                        icon: "📄",
-                        title: "Pendleton Plantation Financial Statements",
-                        desc: "This webpage links to the financial statements for Pendleton Plantation, including budgets, income statements, and balance sheets.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/dyndocuments.php?group=230231",
-                    },
-                ],
-            },
-        ];
-
-        // ============================================================
-        //  Rendering — no edits needed below this line
-        // ============================================================
-        const container = document.getElementById("links-content");
-        container.innerHTML = categories.map(cat => `
+    // Build the HTML by mapping over categories and their links, then set it.
+    container.innerHTML = categories.map(cat => `
       <div class="link-category">
+        <!-- Category section header label. -->
         <div class="category-label">${cat.label}</div>
+
+        <!-- Grid of link cards for this category. -->
         <div class="link-grid">
           ${cat.links.map(link => `
+            <!-- Each link opens in a new tab with noopener for security. -->
             <a href="${link.url}" class="link-card" target="_blank" rel="noopener noreferrer">
+              <!-- Emoji icon on the left of the card. -->
               <div class="link-card-icon">${link.icon}</div>
+
+              <!-- Text body: title and description. -->
               <div class="link-card-body">
                 <div class="link-card-title">${link.title}</div>
                 <div class="link-card-desc">${link.desc}</div>
@@ -153,7 +203,7 @@
         </div>
       </div>`).join("");
 
-    </script>
+  </script>
 
 </body>
 

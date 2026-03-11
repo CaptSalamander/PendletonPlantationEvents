@@ -1,112 +1,163 @@
-/* ── PAGE HERO ── */
+/* ============================================================
+   File:        links-styles.css
+   Purpose:     Styles for the Community Links page (links.html)
+                and also loaded by documents.html since both pages
+                share the same card-based layout. Must be loaded
+                after index-styles.css so it can inherit the
+                global CSS custom properties (color variables, nav,
+                footer, body resets, etc.).
+   ============================================================ */
+
+
+/* ── PAGE HERO ────────────────────────────────────────────────
+   The top banner that displays the page title ("Community Links"
+   or "Community Documents") and a short descriptive subtitle.
+   Uses the same radial green gradient used throughout the site
+   to keep visual consistency. */
 .links-hero {
-  padding: 140px 48px 64px;
+  padding: 140px 48px 64px;   /* Extra top padding clears the fixed navigation bar. */
   text-align: center;
   background:
+    /* Soft green elliptical glow fading down from the top center. */
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74, 103, 65, 0.12) 0%, transparent 70%),
     var(--warm-white);
 }
 
+/* Increase the hero title size above the default section-title value. */
 .links-hero .section-title {
   font-size: clamp(2.5rem, 5vw, 4rem);
 }
 
+/* Give the decorative gold rule a little breathing room below the title. */
 .links-hero .section-rule {
   margin-top: 24px;
 }
 
+/* The subtitle paragraph below the page title.
+   Set opacity to 1 and disable the homepage's fade-up animation
+   so the text appears immediately on page load. */
 .links-hero .hero-sub {
-  opacity: 1;
+  opacity: 1;          /* Always visible — no entrance animation on inner pages. */
   margin: 20px auto 0;
   text-align: center;
-  animation: none;
+  animation: none;     /* Override the fadeUp keyframe from index-styles.css. */
 }
 
-/* ── MAIN CONTENT ── */
+
+/* ── MAIN CONTENT AREA ────────────────────────────────────────
+   The container that holds all link categories and cards.
+   Constrains the maximum width and centers the block. */
 .links-content {
-  max-width: 1100px;
-  margin: 0 auto;
+  max-width: 1100px;   /* Slightly wider than the documents page to fit a card grid. */
+  margin: 0 auto;      /* Center the content horizontally. */
   padding: 0px 48px 100px;
-  /* top padding halved to reduce gap under hero */
+  /* Top padding is intentionally 0 here to reduce the gap
+     between the hero section and the first link category. */
 }
 
+/* On smaller screens, tighten up the padding on all sides. */
 @media (max-width: 768px) {
   .links-hero {
-    padding: 110px 24px 48px;
+    padding: 110px 24px 48px;   /* Reduce vertical spacing on mobile. */
   }
 
   .links-content {
-    padding: 40px 24px 80px;
+    padding: 40px 24px 80px;    /* Add back some top padding on mobile. */
   }
 }
 
-/* ── CATEGORY ── */
+
+/* ── LINK CATEGORY ────────────────────────────────────────────
+   A group of related link cards under a shared heading.
+   For example, "Account & Payments" or "Community Portal". */
 .link-category {
-  margin-bottom: 64px;
+  margin-bottom: 64px;   /* Space between each category group. */
 }
 
+/* Remove the bottom margin from the very last category to avoid
+   extra blank space before the footer. */
 .link-category:last-child {
   margin-bottom: 0;
 }
 
+/* ── CATEGORY LABEL ───────────────────────────────────────────
+   The small all-caps gold section heading above each group of
+   link cards. A thin gold horizontal rule extends to the right
+   of the label text using a CSS pseudo-element. */
 .category-label {
   font-size: 0.68rem;
   font-weight: 500;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.28em;    /* Wide tracking for elegant all-caps styling. */
   text-transform: uppercase;
   color: var(--gold);
   margin-bottom: 20px;
-  display: flex;
+  display: flex;             /* Lay the label and rule in a horizontal row. */
   align-items: center;
   gap: 16px;
 }
 
+/* The thin line that stretches from the label text to the edge of the container. */
 .category-label::after {
   content: '';
-  flex: 1;
+  flex: 1;                  /* Fill all remaining horizontal space. */
   height: 1px;
-  background: rgba(201, 168, 76, 0.2);
+  background: rgba(201, 168, 76, 0.2);   /* Faint gold line. */
 }
 
-/* ── LINK CARD GRID ── */
+
+/* ── LINK CARD GRID ───────────────────────────────────────────
+   A responsive CSS Grid layout that arranges link cards
+   in columns. Cards are at least 300px wide; any extra space
+   is distributed evenly so the grid fills the container. */
 .link-grid {
   display: grid;
+  /* auto-fill packs as many 300px-wide columns as the container allows. */
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  gap: 16px;   /* Space between cards. */
 }
 
-/* ── LINK CARD ── */
+
+/* ── LINK CARD ────────────────────────────────────────────────
+   An individual resource link card. Contains an emoji icon,
+   a title, a description paragraph, and an optional URL label.
+   The entire card is a clickable anchor that opens in a new tab. */
 .link-card {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-start;   /* Align icon to the top of the text column. */
   gap: 18px;
   background: var(--cream);
-  border: 1px solid rgba(201, 168, 76, 0.18);
+  border: 1px solid rgba(201, 168, 76, 0.18);   /* Faint gold border. */
   border-radius: 4px;
   padding: 22px 24px;
-  text-decoration: none;
-  color: inherit;
+  text-decoration: none;     /* Remove the default underline from anchor elements. */
+  color: inherit;            /* Inherit body text color to prevent blue link text. */
   transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
 }
 
+/* On hover: lift the card slightly, add a soft shadow, and brighten the border. */
 .link-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 32px rgba(44, 61, 46, 0.1);
   border-color: rgba(201, 168, 76, 0.4);
 }
 
+/* The emoji icon on the left side of each link card.
+   Prevented from shrinking so it always displays at full size. */
 .link-card-icon {
   font-size: 1.6rem;
-  flex-shrink: 0;
+  flex-shrink: 0;   /* Never compress the icon. */
   line-height: 1;
-  margin-top: 2px;
+  margin-top: 2px;  /* Slight top offset so the icon aligns visually with the title text. */
 }
 
+/* The text column to the right of the icon (title + description + URL label). */
 .link-card-body {
-  flex: 1;
-  min-width: 0;
+  flex: 1;          /* Grow to fill remaining horizontal space. */
+  min-width: 0;     /* Allow long text to wrap or truncate instead of overflowing. */
 }
 
+/* The card title, e.g., "HOA Portal Login".
+   Uses Cormorant Garamond for an elegant serif appearance. */
 .link-card-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.15rem;
@@ -116,6 +167,7 @@
   margin-bottom: 5px;
 }
 
+/* The one-line description below the card title. */
 .link-card-desc {
   font-size: 0.82rem;
   font-weight: 300;
@@ -124,22 +176,28 @@
   margin-bottom: 10px;
 }
 
+/* ── URL LABEL ────────────────────────────────────────────────
+   A small "visit link →" indicator at the bottom of each card
+   that shows the domain or a short call-to-action. The arrow
+   slides right on hover to signal the link is clickable. */
 .link-card-url {
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.08em;
-  color: var(--moss);
+  color: var(--moss);        /* Moss green for a positive, forward-facing look. */
   text-transform: uppercase;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
+/* Append a right-pointing arrow after the URL label text using a pseudo-element. */
 .link-card-url::after {
   content: '→';
-  transition: transform 0.2s;
+  transition: transform 0.2s;   /* Animate the arrow movement on hover. */
 }
 
+/* On card hover: slide the arrow 4px to the right for a subtle interactive cue. */
 .link-card:hover .link-card-url::after {
   transform: translateX(4px);
 }

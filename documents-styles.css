@@ -1,111 +1,159 @@
-/* ── PAGE HERO ── */
+/* ============================================================
+   File:        documents-styles.css
+   Purpose:     Styles for the HOA documents page (documents.html).
+                Loaded alongside index-styles.css, which must be
+                included first to provide the CSS custom properties
+                (color variables, nav, footer, etc.).
+   ============================================================ */
+
+
+/* ── PAGE HERO ────────────────────────────────────────────────
+   The top banner of the documents page. Displays the page title
+   and a short subtitle describing the page's purpose. Uses a
+   radial green gradient at the top edge for visual consistency
+   with the rest of the site. */
 .docs-hero {
-  padding: 140px 48px 64px;
+  padding: 140px 48px 64px;   /* Top padding clears the fixed nav bar. */
   text-align: center;
   background:
+    /* Soft elliptical green gradient fading in from the top center. */
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74, 103, 65, 0.12) 0%, transparent 70%),
     var(--warm-white);
 }
 
+/* Make the page title slightly larger than the default section title size. */
 .docs-hero .section-title {
   font-size: clamp(2.5rem, 5vw, 4rem);
 }
 
+/* Push the gold decorative rule down from the title. */
 .docs-hero .section-rule {
   margin-top: 24px;
 }
 
+/* The subtitle paragraph below the page title.
+   Override the default hero-sub animation so it shows immediately
+   without the fade-up effect used on the homepage hero. */
 .docs-hero .hero-sub {
-  opacity: 1;
+  opacity: 1;            /* Show the text immediately — no animation needed here. */
   margin: 20px auto 10px;
-  /* center with small bottom margin */
-  animation: none;
+  animation: none;       /* Disable the fadeUp animation from index-styles.css. */
 }
 
-/* ── MAIN CONTENT ── */
+
+/* ── MAIN CONTENT AREA ────────────────────────────────────────
+   Constrains the document list to a comfortable reading width
+   and adds padding below the hero section. */
 .docs-content {
-  max-width: 960px;
-  margin: 0 auto;
+  max-width: 960px;      /* Narrower than the full-width layout — documents read better narrow. */
+  margin: 0 auto;        /* Center the content block on the page. */
   padding: 30px 48px 100px;
-  /* reduce top padding for tighter layout */
+  /* Slightly reduced top padding to bring the first document category
+     closer to the hero section for a tighter, cleaner layout. */
 }
 
+/* On smaller screens, reduce horizontal padding to prevent text from
+   being too close to the viewport edges. */
 @media (max-width: 768px) {
   .docs-hero {
-    padding: 110px 24px 48px;
+    padding: 110px 24px 48px;   /* Less vertical space needed on mobile. */
   }
 
   .docs-content {
-    padding: 40px 24px 80px;
+    padding: 40px 24px 80px;    /* Narrower side padding for mobile. */
   }
 }
 
-/* ── CATEGORY ── */
+
+/* ── DOCUMENT CATEGORY ────────────────────────────────────────
+   Groups a set of related documents under a single labeled
+   heading. For example, all "HOA Governance" documents would
+   be one category. */
 .doc-category {
-  margin-bottom: 56px;
+  margin-bottom: 56px;   /* Space between categories. */
 }
 
+/* Remove bottom margin from the very last category so the page
+   doesn't end with extra blank space before the footer. */
 .doc-category:last-child {
   margin-bottom: 0;
 }
 
+/* ── CATEGORY LABEL ───────────────────────────────────────────
+   The small all-caps gold heading above each group of documents.
+   A decorative horizontal line extends to the right of the label
+   using a CSS pseudo-element to visually separate the group from
+   other content. */
 .category-label {
   font-size: 0.68rem;
   font-weight: 500;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.28em;    /* Wide letter-spacing for an elegant uppercase look. */
   text-transform: uppercase;
   color: var(--gold);
   margin-bottom: 20px;
-  display: flex;
+  display: flex;              /* Lay out label text and line in a horizontal row. */
   align-items: center;
   gap: 16px;
 }
 
+/* The horizontal rule that stretches to fill remaining space beside the label text. */
 .category-label::after {
   content: '';
-  flex: 1;
+  flex: 1;                   /* Grow to fill all remaining width. */
   height: 1px;
-  background: rgba(201, 168, 76, 0.2);
+  background: rgba(201, 168, 76, 0.2);  /* Faint gold line. */
 }
 
-/* ── DOCUMENT LIST ── */
+
+/* ── DOCUMENT LIST ────────────────────────────────────────────
+   A vertical stack of document rows within each category. */
 .doc-list {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-direction: column;   /* Stack document rows vertically. */
+  gap: 12px;                /* Space between each document row. */
 }
 
-/* ── DOCUMENT ROW ── */
+
+/* ── DOCUMENT ROW ─────────────────────────────────────────────
+   A single clickable document entry. Displays a file icon on the
+   left, the document title and description in the center, an
+   optional type badge, and a right-pointing arrow on the far right.
+   Clicking the row opens the document in a new browser tab. */
 .doc-row {
   display: flex;
-  align-items: center;
+  align-items: center;       /* Vertically center all elements in the row. */
   gap: 20px;
-  background: var(--cream);
-  border: 1px solid rgba(201, 168, 76, 0.18);
+  background: var(--cream);  /* Light cream card background. */
+  border: 1px solid rgba(201, 168, 76, 0.18);  /* Faint gold border. */
   border-radius: 4px;
   padding: 20px 24px;
-  text-decoration: none;
-  color: inherit;
+  text-decoration: none;     /* Remove underline since this is an anchor element. */
+  color: inherit;            /* Inherit text color so children don't turn link-blue. */
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
+/* On hover: slide the card slightly to the right, add a shadow,
+   and brighten the border to give a sense of lift. */
 .doc-row:hover {
   transform: translateX(4px);
   box-shadow: 0 6px 24px rgba(44, 61, 46, 0.09);
   border-color: rgba(201, 168, 76, 0.4);
 }
 
+/* The large emoji or icon on the left side of each document row. */
 .doc-icon {
   font-size: 1.6rem;
-  flex-shrink: 0;
+  flex-shrink: 0;   /* Prevent the icon from shrinking when the card is narrow. */
   line-height: 1;
 }
 
+/* The middle text column containing the document title and description. */
 .doc-body {
-  flex: 1;
-  min-width: 0;
+  flex: 1;          /* Grow to fill all space between the icon and the badge/arrow. */
+  min-width: 0;     /* Allow text to truncate correctly in flex containers. */
 }
 
+/* The document title, displayed in the elegant Cormorant Garamond serif font. */
 .doc-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.1rem;
@@ -115,6 +163,7 @@
   margin-bottom: 3px;
 }
 
+/* The shorter description text below the document title. */
 .doc-desc {
   font-size: 0.82rem;
   font-weight: 300;
@@ -122,40 +171,56 @@
   line-height: 1.5;
 }
 
+/* ── DOCUMENT BADGE ───────────────────────────────────────────
+   A small pill-shaped label on the right side of the row that
+   indicates the document's type, such as "PDF" or "PORTAL".
+   Different badge variants use different background tints. */
 .doc-badge {
-  flex-shrink: 0;
+  flex-shrink: 0;            /* Prevent the badge from being compressed. */
   font-size: 0.62rem;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 4px 10px;
   border-radius: 2px;
-  background: rgba(44, 61, 46, 0.08);
+  background: rgba(44, 61, 46, 0.08);   /* Default: subtle green-tinted background. */
   color: var(--forest);
 }
 
+/* Portal badge variant: gold tint to distinguish portal links from downloadable PDFs. */
 .doc-badge.badge-portal {
   background: rgba(201, 168, 76, 0.12);
   color: var(--gold);
 }
 
+/* ── DOCUMENT ARROW ───────────────────────────────────────────
+   The right-pointing arrow at the far end of each document row.
+   On hover it slides further right to suggest the link is clickable. */
 .doc-arrow {
   flex-shrink: 0;
   font-size: 1rem;
-  color: var(--blush);
+  color: var(--blush);       /* Soft blush/tan by default. */
   transition: transform 0.2s, color 0.2s;
 }
 
+/* On row hover: move the arrow right and brighten it to moss green. */
 .doc-row:hover .doc-arrow {
   transform: translateX(4px);
   color: var(--moss);
 }
 
+
+/* ── MOBILE: BADGE VISIBILITY ─────────────────────────────────
+   On very narrow screens, the row may not have enough room for
+   both the description text and the badge. Hide the badge to
+   keep the layout clean and readable. */
 @media (max-width: 560px) {
+  /* Allow the row to wrap its children onto multiple lines if needed. */
   .doc-row {
     flex-wrap: wrap;
   }
 
+  /* Hide the type badge — the document title alone is sufficient on mobile. */
   .doc-badge {
     display: none;
   }

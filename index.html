@@ -1,27 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- ============================================================
+     File:        index.html
+     Purpose:     Main homepage for the Pendleton Plantation
+                  community website. Contains all of the site's
+                  primary sections:
+                    - Navigation bar (with mobile hamburger menu)
+                    - Hero section (headline, subtitle, CTA buttons)
+                    - Special Recognition Awards
+                    - Upcoming Neighborhood Events
+                    - Community Memories photo preview grid
+                    - HOA Announcements
+                    - Contact section
+                    - Footer
+                  All section content (awards, events, photos,
+                  announcements) is defined in the <script> block
+                  at the bottom and rendered dynamically so it is
+                  easy to update without touching the HTML structure.
+     Styles:      index-styles.css (all styles for this page)
+     ============================================================ -->
+
 <head>
+  <!-- Character encoding — must be the first tag in <head>. -->
   <meta charset="UTF-8" />
+
+  <!-- Responsive viewport — prevents mobile browsers from scaling down. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Browser tab / window title. -->
   <title>Pendleton Plantation — Community Hub</title>
+
+  <!-- Google Fonts:
+       Cormorant Garamond — elegant serif used for headlines, section titles, and names.
+       Jost — clean sans-serif used for body text, labels, and nav links.
+       display=swap ensures text is visible while the fonts load. -->
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
     rel="stylesheet" />
+
+  <!-- Global stylesheet — defines all colors, layout, and component styles. -->
   <link rel="stylesheet" href="index-styles.css" />
+
+  <!-- Font Awesome icon library — loaded for potential icon use.
+       NOTE: The free kit URL below may expire; replace with your own kit URL if needed. -->
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
 
-  <!-- NAV -->
+  <!-- ── NAVIGATION BAR ───────────────────────────────────────
+       A fixed top nav bar that stays visible as the user scrolls.
+       On desktop: shows all links in a horizontal row.
+       On mobile: shows only the brand name and a hamburger button;
+       clicking the hamburger reveals a full-screen overlay menu.
+       JavaScript at the bottom handles the hamburger toggle logic. -->
   <nav>
+    <!-- Site brand / logo — always visible, links back to the top of the homepage. -->
     <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <!-- Hamburger menu button — visible only on mobile (hidden via CSS on desktop).
+         aria-label provides an accessible text description for screen readers.
+         The three <span> elements form the three horizontal bars of the icon. -->
     <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
       <span></span>
       <span></span>
       <span></span>
     </button>
+
+    <!-- Navigation links list.
+         On desktop: displayed as a horizontal flex row.
+         On mobile: hidden by default; shown as a full-screen overlay when "open" class is added. -->
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="index.html#awards">Awards</a></li>
@@ -35,104 +84,167 @@
     </ul>
   </nav>
 
-  <!-- HERO -->
+
+  <!-- ── HERO SECTION ─────────────────────────────────────────
+       Full-viewport landing section with animated headline,
+       decorative rule, subtitle, and two CTA buttons.
+       Also includes a scroll indicator at the bottom. -->
   <section class="hero">
+    <!-- Decorative eyebrow label above the main headline. -->
     <p class="hero-eyebrow">✦ &nbsp; Easley, South Carolina &nbsp; ✦</p>
+
+    <!-- Main site headline — "Plantation" is on the second line and italicized. -->
     <h1>Pendleton<br /><em>Plantation</em></h1>
+
+    <!-- Short gold horizontal decorative rule between headline and subtitle. -->
     <div class="hero-rule"></div>
+
+    <!-- Subtitle text below the headline. Line break forces a specific wrapping. -->
     <p class="hero-sub">Bringing neighbors together — <br>
       one event, one memory, one community at a time.</p>
+
+    <!-- Call-to-action buttons: primary (filled) and outline (transparent). -->
     <div class="hero-actions">
+      <!-- Primary CTA: scrolls the page down to the Events section. -->
       <a href="#events" class="btn-primary">View Upcoming Events</a>
+
+      <!-- Secondary CTA: scrolls to the Announcements section. -->
       <a href="#announcements" class="btn-outline">Announcements</a>
     </div>
+
+    <!-- Scroll indicator: a small "Scroll" label and an animated sliding dot.
+         Hidden on mobile via CSS since touch users naturally scroll. -->
     <div class="scroll-hint">
       <span>Scroll</span>
+      <!-- The animated dot travels down this thin vertical line continuously. -->
       <div class="scroll-line">
       </div>
     </div>
   </section>
 
-  <!-- RECOGNITION AWARDS -->
+
+  <!-- ── RECOGNITION AWARDS SECTION ───────────────────────────
+       Showcases special recognition awards for residents,
+       such as Yard of the Month and Neighborhood Hero.
+       Award cards are rendered from the "awards" array in the
+       script block below. -->
   <section class="awards-section" id="awards">
+    <!-- Section header: eyebrow label, title, and gold rule. -->
     <div class="section-header">
       <p class="section-eyebrow">✦ &nbsp; Celebrating Our Neighbors &nbsp; ✦</p>
       <h2 class="section-title">Special <em>Recognition</em> Awards</h2>
       <div class="section-rule"></div>
     </div>
 
+    <!-- Award cards are injected here by JavaScript. -->
     <div class="awards-grid" id="awards-grid"></div>
   </section>
 
 
-  <!-- EVENTS -->
+  <!-- ── EVENTS SECTION ───────────────────────────────────────
+       Displays a grid of upcoming (and past) neighborhood events
+       as clickable cards. Each card links to the event's sign-up
+       page or a "details coming soon" anchor.
+       Event cards are rendered from the "events" array in the script. -->
   <section class="events-section" id="events">
+    <!-- Section header. -->
     <div class="section-header">
       <p class="section-eyebrow">✦ &nbsp; What's Coming Up &nbsp; ✦</p>
       <h2 class="section-title">Neighborhood <em>Events</em></h2>
       <div class="section-rule"></div>
     </div>
 
+    <!-- Event cards are injected here by JavaScript. -->
     <div class="events-grid" id="events-grid"></div>
   </section>
 
-  <!-- MEMORIES -->
+
+  <!-- ── MEMORIES SECTION ─────────────────────────────────────
+       Shows a teaser grid of community event photos on the
+       homepage. Clicking a photo tile links to the full
+       memories gallery page (memories.html).
+       Photo tiles are rendered from the "photos" array in the script. -->
   <section class="memories-section" id="memories">
+    <!-- Section header. -->
     <div class="section-header">
       <p class="section-eyebrow">✦ &nbsp; Community Gallery &nbsp; ✦</p>
       <h2 class="section-title">Neighborhood <em>Memories</em></h2>
       <div class="section-rule"></div>
     </div>
 
+    <!-- Photo grid tiles are injected here by JavaScript. -->
     <div class="photo-grid" id="photo-grid"></div>
 
+    <!-- Note below the photo grid inviting residents to submit photos. -->
     <p class="photo-upload-note">
       Have photos from a neighborhood event? <a href="mailto:mandyvaliquette00@gmail.com">Send them to the organizer</a>
-      to be
-      featured here.
+      to be featured here.
     </p>
   </section>
 
-  <!-- ANNOUNCEMENTS -->
+
+  <!-- ── ANNOUNCEMENTS SECTION ────────────────────────────────
+       A dated list of HOA announcements on a parchment background.
+       Each announcement shows the date, title, and body text.
+       Announcements are rendered from the "announcements" array in the script. -->
   <section class="announcements-section" id="announcements">
+    <!-- Section header. -->
     <div class="section-header">
       <p class="section-eyebrow">✦ &nbsp; Stay in the Loop &nbsp; ✦</p>
       <h2 class="section-title">HOA <em>Announcements</em></h2>
       <div class="section-rule"></div>
     </div>
 
+    <!-- Announcement rows are injected here by JavaScript. -->
     <div class="announce-list" id="announce-list"></div>
   </section>
 
-  <!-- CONTACT -->
+
+  <!-- ── CONTACT SECTION ──────────────────────────────────────
+       Provides multiple ways for residents to get in touch:
+       email the organizer, sign up for events, join Nextdoor,
+       and join the Facebook group. Ends with a prominent
+       "Sign Up for the Easter Egg Hunt" button. -->
   <section class="contact-section" id="contact">
     <div class="contact-inner">
+      <!-- Section header. -->
       <div class="section-header">
         <p class="section-eyebrow">✦ &nbsp; Get in Touch &nbsp; ✦</p>
         <h2 class="section-title">We'd Love to <em>Hear From You</em></h2>
         <div class="section-rule"></div>
       </div>
+
+      <!-- Short paragraph inviting residents to reach out. -->
       <p>Have an idea for a neighborhood event? A question about the HOA? Want to get more involved? Reach out — this
         neighborhood runs on people like you.</p>
 
+      <!-- Grid of four contact cards. -->
       <div class="contact-grid">
-        <!-- ✏️ Update href values with your real email/links -->
+        <!-- ✏️ Update href values with your real email/links if they change. -->
+
+        <!-- Card 1: Email the organizer directly. -->
         <a href="mailto:mandyvaliquette00@gmail.com" class="contact-card">
           <div class="cc-icon">✉️</div>
           <div class="cc-title">Email the Organizer</div>
           <div class="cc-sub">mandyvaliquette00@gmail.com</div>
         </a>
+
+        <!-- Card 2: Link to the Easter Egg Hunt sign-up page. -->
         <a href="signup-page-easter.html" class="contact-card">
           <div class="cc-icon">📋</div>
           <div class="cc-title">Event Sign-Ups</div>
           <div class="cc-sub">Volunteer &amp; donate</div>
         </a>
+
+        <!-- Card 3: Link to the neighborhood's Nextdoor group. -->
         <a href="https://nextdoor.com/neighborhood/pendletonplantation--easley--sc?utm_source=share&utm_campaign=1772908448814&share_action_id=77243e7b-09bd-46d6-b2c6-cedc7b637661"
           class="contact-card">
           <div class="cc-icon">💬</div>
           <div class="cc-title">Nextdoor</div>
           <div class="cc-sub">Join the neighborhood group</div>
         </a>
+
+        <!-- Card 4: Link to the neighborhood's Facebook group. -->
         <a href="https://www.facebook.com/groups/pendletonplantation" class="contact-card">
           <div class="cc-icon">📘</div>
           <div class="cc-title">Facebook Group</div>
@@ -140,11 +252,15 @@
         </a>
       </div>
 
+      <!-- Prominent Easter Egg Hunt sign-up CTA button at the bottom of the contact section. -->
       <a href="signup-page-easter.html" class="btn-primary">Sign Up for the Easter Egg Hunt →</a>
     </div>
   </section>
 
-  <!-- FOOTER -->
+
+  <!-- ── FOOTER ───────────────────────────────────────────────
+       Site-wide footer with the neighborhood name, location,
+       event tagline, and a contact email link. -->
   <footer>
     <div class="footer-brand">Pendleton Plantation</div>
     <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
@@ -159,20 +275,44 @@
 
   // ============================================================
   //  ✏️  EDIT YOUR CONTENT HERE
+  //  All site content is defined in the arrays below.
+  //  No HTML structure needs to be changed — just update the
+  //  data in these arrays and the page rebuilds automatically.
   // ============================================================
 
-  // --- SPECIAL RECOGNITION AWARDS ---
-  // To name a winner: replace "Coming Soon" with their name and remove "award-empty" class by setting empty: false
+
+  // ── SPECIAL RECOGNITION AWARDS ──────────────────────────────
+  // Each object represents one award card.
+  //   icon:     Emoji displayed at the top of the card.
+  //   category: The award category name (e.g., "Yard of the Month").
+  //   winner:   The winner's name. Set to "Coming Soon" if no winner yet.
+  //   period:   The time period for this award (e.g., "April 2025").
+  //   empty:    Set to true when no winner has been named yet.
+  //             This dims and italicizes the winner text on the card.
   const awards = [
-    { icon: "🌿", category: "Yard of the Month", winner: "Coming Soon", period: "April 2025", empty: true },
+    { icon: "🌿", category: "Yard of the Month",       winner: "Coming Soon", period: "April 2025",  empty: true },
     { icon: "🎄", category: "Best Seasonal Decoration", winner: "Coming Soon", period: "Spring 2025", empty: true },
-    { icon: "🦸", category: "Neighborhood Hero", winner: "Coming Soon", period: "Q1 2025", empty: true },
-    { icon: "⭐", category: "Above & Beyond", winner: "Coming Soon", period: "Q1 2025", empty: true },
+    { icon: "🦸", category: "Neighborhood Hero",        winner: "Coming Soon", period: "Q1 2025",     empty: true },
+    { icon: "⭐", category: "Above & Beyond",           winner: "Coming Soon", period: "Q1 2025",     empty: true },
   ];
 
-  // --- NEIGHBORHOOD EVENTS ---
-  // statusClass options: "status-open" | "status-soon" | "status-closed" | "status-photos"
-  // colorClass options:  "card-color-1" through "card-color-6"
+
+  // ── NEIGHBORHOOD EVENTS ───────────────────────────────────────
+  // Each object defines one event card displayed in the Events section.
+  //   emoji:       Large emoji shown in the colored top banner.
+  //   colorClass:  CSS class for the top banner gradient (card-color-1 through card-color-6).
+  //   statusLabel: Text shown in the status badge (e.g., "Sign-Ups Open", "Coming Soon").
+  //   statusClass: CSS class for the badge color:
+  //                  "status-open"     — dark green (sign-ups active)
+  //                  "status-soon"     — gold (event not open yet)
+  //                  "status-closed"   — gray (event has passed)
+  //                  "status-memories" — moss green (past event with photos)
+  //   date:        Event date string displayed on the card.
+  //   time:        Event time string (leave blank "" if not yet confirmed).
+  //   name:        The event name displayed as the card heading.
+  //   desc:        A short description of the event.
+  //   link:        URL the card links to when clicked.
+  //   linkText:    The text of the "see more" link at the bottom of the card.
   const events = [
     {
       emoji: "🥚", colorClass: "card-color-1",
@@ -218,9 +358,12 @@
     },
   ];
 
-  // --- NEIGHBORHOOD MEMORIES (PHOTOS) ---
-  // For a real photo: { src: "photos/my-photo.jpg", alt: "Description of photo" }
-  // For a placeholder slot: { src: null }
+
+  // ── NEIGHBORHOOD MEMORIES (PHOTOS) ────────────────────────────
+  // Each object defines one photo tile in the homepage memories teaser grid.
+  //   src:  Path to the image file. Set to null to show a placeholder "Add Photo" tile.
+  //   alt:  Accessible description of the photo.
+  // Photos here link to the full memories.html gallery page when clicked.
   const photos = [
     { src: "images/Halloween2025-1.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat" },
     { src: "images/Halloween2025-2.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat" },
@@ -230,7 +373,13 @@
     { src: "images/Halloween2025-6.jpg", alt: "Kids in costumes at the Halloween Trunk or Treat" },
   ];
 
-  // --- HOA ANNOUNCEMENTS ---
+
+  // ── HOA ANNOUNCEMENTS ─────────────────────────────────────────
+  // Each object is one announcement row in the Announcements section.
+  //   day:   Day of month as a string (e.g., "21"). Displayed large on the left.
+  //   month: Month abbreviation + year (e.g., "Apr 2025"). Shown below the day.
+  //   title: Bold announcement title.
+  //   body:  Full announcement body text.
   const announcements = [
     {
       day: "21", month: "Apr 2025",
@@ -249,76 +398,108 @@
     },
   ];
 
+
   // ============================================================
   //  Rendering — no edits needed below this line
+  //  The code below reads the arrays above and builds all
+  //  the HTML for the dynamic page sections.
   // ============================================================
   document.addEventListener("DOMContentLoaded", () => {
 
-    // Hamburger menu toggle
+    // ── HAMBURGER MENU TOGGLE ────────────────────────────────
+    // Handles the mobile navigation overlay open/close behavior.
     const hamburger = document.querySelector('.nav-hamburger');
-    const navLinks = document.querySelector('.nav-links');
+    const navLinks  = document.querySelector('.nav-links');
+
     if (hamburger && navLinks) {
+      // Toggle the overlay open or closed when the hamburger is clicked.
       hamburger.addEventListener('click', () => {
-        const isOpen = navLinks.classList.toggle('open');
-        hamburger.classList.toggle('open', isOpen);
-        hamburger.setAttribute('aria-expanded', isOpen);
-        document.body.style.overflow = isOpen ? 'hidden' : '';
+        const isOpen = navLinks.classList.toggle('open');  // Returns true if now open.
+        hamburger.classList.toggle('open', isOpen);         // Animate bars into an X.
+        hamburger.setAttribute('aria-expanded', isOpen);    // Update ARIA for accessibility.
+        document.body.style.overflow = isOpen ? 'hidden' : '';  // Lock scroll when open.
       });
+
+      // Close the mobile menu when any nav link is clicked.
+      // This ensures the overlay closes after the user taps a link.
       navLinks.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => {
           navLinks.classList.remove('open');
           hamburger.classList.remove('open');
           hamburger.setAttribute('aria-expanded', 'false');
-          document.body.style.overflow = '';
+          document.body.style.overflow = '';   // Re-enable page scrolling.
         });
       });
     }
 
-    // Awards
+
+    // ── RENDER AWARDS ────────────────────────────────────────
+    // Build HTML for each award card and inject into #awards-grid.
     const awardsGrid = document.getElementById("awards-grid");
     if (awardsGrid) {
       awardsGrid.innerHTML = awards.map(a => `
       <div class="award-card${a.empty ? " award-empty" : ""}">
+        <!-- Large emoji icon at the top of the card. -->
         <div class="award-icon">${a.icon}</div>
+        <!-- Award category label, e.g., "YARD OF THE MONTH". -->
         <div class="award-category">${a.category}</div>
+        <!-- Winner's name, or "Coming Soon" if no winner yet. -->
         <div class="award-winner">${a.winner}</div>
+        <!-- Time period for this award, e.g., "April 2025". -->
         <div class="award-period">${a.period}</div>
       </div>`).join("");
     }
 
-    // Events
+
+    // ── RENDER EVENTS ────────────────────────────────────────
+    // Build HTML for each event card and inject into #events-grid.
     const eventsGrid = document.getElementById("events-grid");
     if (eventsGrid) {
       eventsGrid.innerHTML = events.map(e => `
+      <!-- The entire card is a clickable anchor linking to the event page or anchor. -->
       <a href="${e.link}" class="event-card">
+        <!-- Colored top banner with the emoji and status badge. -->
         <div class="event-card-top ${e.colorClass}">
           ${e.emoji}
           <span class="event-status ${e.statusClass}">${e.statusLabel}</span>
         </div>
+        <!-- Card body: date, time, name, description, and "see more" link. -->
         <div class="event-card-body">
+          <!-- Date and optional time, e.g., "March 21, 2025 · 10:00 AM – 1:00 PM". -->
           <div class="event-date">${e.date}${e.time ? `<span class="event-time"> · ${e.time}</span>` : ""}</div>
           <div class="event-name">${e.name}</div>
           <div class="event-desc">${e.desc}</div>
+          <!-- Link text at the bottom of the card, e.g., "Sign Up Now →". -->
           <div class="event-link">${e.linkText}</div>
         </div>
       </a>`).join("");
     }
 
-    // Photos
+
+    // ── RENDER PHOTOS ────────────────────────────────────────
+    // Build HTML for the homepage photo grid teaser and inject
+    // into #photo-grid. Real photos link to memories.html;
+    // null src entries render as placeholder "Add Photo" tiles.
     const photoGrid = document.getElementById("photo-grid");
     if (photoGrid) {
       photoGrid.innerHTML = photos.map(p => p.src
+        // Real photo: wrap in an anchor linking to the full gallery page.
         ? `<a href="memories.html" class="photo-slot"><img src="${p.src}" alt="${p.alt || ""}" /></a>`
+        // Placeholder slot: show a camera icon and "Add Photo" label.
         : `<div class="photo-slot"><div class="slot-icon">📷</div><div class="slot-label">Add Photo</div></div>`
       ).join("");
     }
 
-    // Announcements
+
+    // ── RENDER ANNOUNCEMENTS ─────────────────────────────────
+    // Build HTML for the announcements list and inject into #announce-list.
     const announceList = document.getElementById("announce-list");
     if (announceList) {
       announceList.innerHTML = announcements.map(a => `
       <div class="announce-item">
+        <!-- Left column: large day number with month below. -->
         <div class="announce-date">${a.day}<span>${a.month}</span></div>
+        <!-- Right column: announcement title and body text. -->
         <div>
           <div class="announce-title">${a.title}</div>
           <div class="announce-body">${a.body}</div>

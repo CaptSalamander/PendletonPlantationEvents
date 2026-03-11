@@ -1,240 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- ============================================================
+     File:        links.html
+     Purpose:     Community Links page. Displays a grid of clickable
+                  cards linking to the Pendleton Plantation HOA portal,
+                  payment portal, community feed, forms, and more.
+                  Links are organized into categories (Account & Payments,
+                  Community Portal, Forms & Requests) and rendered
+                  dynamically by the JavaScript at the bottom of this file.
+     Styles:      index-styles.css (global), links-styles.css (card layout)
+     ============================================================ -->
+
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Community Links — Pendleton Plantation</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
-        rel="stylesheet" />
-    <link rel="stylesheet" href="index-styles.css" />
-    <link rel="stylesheet" href="links-styles.css" />
+  <!-- Character encoding — must appear first. -->
+  <meta charset="UTF-8" />
+
+  <!-- Responsive viewport meta tag. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Browser tab title. -->
+  <title>Community Links — Pendleton Plantation</title>
+
+  <!-- Google Fonts: Cormorant Garamond and Jost. -->
+  <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+      rel="stylesheet" />
+
+  <!-- Global site styles (nav, footer, color variables, etc.). -->
+  <link rel="stylesheet" href="index-styles.css" />
+
+  <!-- Link card grid layout styles (category headers, cards, hover effects). -->
+  <link rel="stylesheet" href="links-styles.css" />
 </head>
 
 <body>
 
-    <!-- NAV -->
-    <nav>
-        <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
-        <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="index.html#awards">Awards</a></li>
-            <li><a href="index.html#events">Events</a></li>
-            <li><a href="index.html#memories">Memories</a></li>
-            <li><a href="index.html#announcements">Announcements</a></li>
-            <li><a href="index.html#contact">Contact</a></li>
-            <li><a href="signup-page-easter.html">Sign Up</a></li>
-            <li><a href="links.html">Links</a></li>
-            <li><a href="documents.html">Documents</a></li>
-        </ul>
-    </nav>
+  <!-- ── NAVIGATION BAR ───────────────────────────────────────
+       Fixed top nav bar. No hamburger button on this page
+       (same as documents.html — desktop-only nav). -->
+  <nav>
+    <!-- Site brand — links back to the homepage. -->
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
 
-    <!-- PAGE HEADER -->
-    <div class="links-hero">
-        <p class="section-eyebrow">✦ &nbsp; Helpful Resources &nbsp; ✦</p>
-        <h1 class="section-title">Community <em>Links</em></h1>
-        <div class="section-rule"></div>
-        <p class="hero-sub">Everything you need — your HOA portal, dues payments, community forms, and more.</p>
-    </div>
+    <!-- Navigation link list. -->
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#awards">Awards</a></li>
+      <li><a href="index.html#events">Events</a></li>
+      <li><a href="index.html#memories">Memories</a></li>
+      <li><a href="index.html#announcements">Announcements</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="signup-page-easter.html">Sign Up</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+    </ul>
+  </nav>
 
-    <!-- LINKS -->
-    <div class="links-content" id="links-content"></div>
+  <!-- ── PAGE HEADER ──────────────────────────────────────────
+       Hero-style banner showing the page title and a short
+       description of what resources can be found here. -->
+  <div class="links-hero">
+    <!-- Decorative eyebrow label. -->
+    <p class="section-eyebrow">✦ &nbsp; Helpful Resources &nbsp; ✦</p>
 
-    <!-- FOOTER -->
-    <footer>
-        <div class="footer-brand">Pendleton Plantation</div>
-        <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
-        <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp;
-            <a href="mailto:mandyvaliquette00@gmail.com"
-                style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact Us</a>
-        </p>
-    </footer>
+    <!-- Page title — "Links" is italicized for styling. -->
+    <h1 class="section-title">Community <em>Links</em></h1>
 
-    <script>
+    <!-- Decorative gold rule below the title. -->
+    <div class="section-rule"></div>
 
-        // ============================================================
-        //  ✏️  EDIT YOUR LINKS HERE
-        //  Each category has a label and an array of links.
-        //  Each link: { icon, title, desc, url, urlLabel }
-        //    - icon:     emoji shown on the card
-        //    - title:    bold card heading
-        //    - desc:     one-line description
-        //    - url:      the full URL the card links to
-        //    - urlLabel: short display text shown at the bottom of the card
-        // ============================================================
+    <!-- Short description below the title. -->
+    <p class="hero-sub">Everything you need — your HOA portal, dues payments, community forms, and more.</p>
+  </div>
 
-        const categories = [
-            {
-                label: "Account & Payments",
-                links: [
-                    {
-                        icon: "🔐",
-                        title: "HOA Portal Login",
-                        desc: "Sign in to your Enumerate resident account to manage your HOA profile and settings.",
-                        url: "https://engage.goenumerate.com/connect_login.php",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "💳",
-                        title: "Pay HOA Dues",
-                        desc: "Make a one-time or recurring payment for your HOA dues through ClickPay.",
-                        url: "https://www.clickpay.com/custom/nhe/login.html",
-                        urlLabel: "clickpay.com",
-                    },
-                ],
-            },
-            {
-                label: "Community Portal",
-                links: [
-                    {
-                        icon: "🏡",
-                        title: "HOA Home",
-                        desc: "Your Pendleton Plantation HOA dashboard — news, updates, and quick access to everything.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/home.php",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "💬",
-                        title: "Community Feed",
-                        desc: "See what neighbors are posting and stay up to date with community conversations.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/communityfeed.php",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "📅",
-                        title: "HOA Calendar",
-                        desc: "View upcoming HOA meetings, community events, and important dates.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/myhoacalendar.php",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "📰",
-                        title: "News & Newsletters",
-                        desc: "Catch up on the latest HOA news, board updates, and community newsletters.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/news.php",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "🛍️",
-                        title: "Classifieds",
-                        desc: "Buy, sell, or give away items with fellow Pendleton Plantation neighbors.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/classifieds.php",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "👥",
-                        title: "Member Directory",
-                        desc: "Look up contact information for residents in the neighborhood.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/memberdirectory.php",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "🤝",
-                        title: "Groups",
-                        desc: "Join or browse neighborhood interest groups and committees.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/groups.php",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "🖼️",
-                        title: "HOA Gallery",
-                        desc: "Browse photo galleries uploaded through the official HOA portal.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/galleries.php",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "🏢",
-                        title: "Sponsors",
-                        desc: "View local businesses and partners who support our community.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/sponsors.php",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "✉️",
-                        title: "Contact the HOA",
-                        desc: "Send a message directly to the HOA board through the resident portal.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/hoapage.php?page=contact_5479",
-                        urlLabel: "goenumerate.com",
-                    },
-                ],
-            },
-            {
-                label: "Forms & Requests",
-                links: [
-                    // ✏️ Update the title and desc for each form below.
-                    // The URL IDs match the portal form numbers.
-                    {
-                        icon: "📋",
-                        title: "Pendleton Plantation ARC Form — Structural Application ",
-                        desc: "Please complete this form to submit a structural architectural application.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118080",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "📋",
-                        title: "Pendleton Plantation ARC Form — Driveway Modifications Only",
-                        desc: "Please use this form to submit a request for any driveway modification you would like to pursue at your home.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118081",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "📋",
-                        title: "Pendleton Plantation ARC Form — Fencing Modifications Only",
-                        desc: "Please complete this form to submit an architectural application if you are wanting to install a fence.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118082",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "📋",
-                        title: "Pendleton Plantation ARC Form — Solar Panel Request",
-                        desc: "Please complete this form to submit a request for solar panel installation.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118100",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "📋",
-                        title: "Pendleton Plantation ARC Form — Play Structures and Basketball Goals",
-                        desc: "Please complete this form to submit a request for play structures or basketball goals.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118101",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "📋",
-                        title: "Pendleton Plantation ARC Form — Landscaping and Trees ",
-                        desc: "Please complete this form to submit an architectural application if you are wanting to install landscaping improvements or add/remove trees.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118102",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "📋",
-                        title: "Amenity Fob: Information/Request Form",
-                        desc: "Please complete this form to submit a request for an amenity fob. Pool Fobs for Pendleton Plantation are $50 each. There is a limit of 1 fob per household.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118274",
-                        urlLabel: "goenumerate.com",
-                    },
-                    {
-                        icon: "📋",
-                        title: " Playground Survey — We Want Your Feedback!",
-                        desc: "The Board is currently exploring potential updates to the children's play area and would appreciate your input.",
-                        url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118275",
-                        urlLabel: "goenumerate.com",
-                    },
-                ],
-            },
-        ];
+  <!-- ── LINKS CONTENT ────────────────────────────────────────
+       Empty container populated by the JavaScript below.
+       The categories array is rendered into link cards and
+       injected here on page load. -->
+  <div class="links-content" id="links-content"></div>
 
-        // ============================================================
-        //  Rendering — no edits needed below this line
-        // ============================================================
-        const container = document.getElementById("links-content");
-        container.innerHTML = categories.map(cat => `
+  <!-- ── FOOTER ───────────────────────────────────────────────
+       Shared site footer. -->
+  <footer>
+    <div class="footer-brand">Pendleton Plantation</div>
+    <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
+    <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp;
+      <a href="mailto:mandyvaliquette00@gmail.com"
+        style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact Us</a>
+    </p>
+  </footer>
+
+  <script>
+
+    // ============================================================
+    //  ✏️  EDIT YOUR LINKS HERE
+    //  Add, remove, or reorder items freely.
+    //
+    //  Each category has:
+    //    label:    Section header text shown above the card group.
+    //    links:    Array of link card objects.
+    //
+    //  Each link card object:
+    //    icon:     Emoji shown on the left of the card.
+    //    title:    Bold card heading.
+    //    desc:     Short description sentence or two.
+    //    url:      The full URL the card links to (opens in a new tab).
+    //    urlLabel: Short display text shown at the bottom of the card
+    //              (e.g., "goenumerate.com"). Can be omitted.
+    // ============================================================
+
+    const categories = [
+      {
+        // Account & Payments — links to log in and pay HOA dues.
+        label: "Account & Payments",
+        links: [
+          {
+            icon: "🔐",
+            title: "HOA Portal Login",
+            desc: "Sign in to your Enumerate resident account to manage your HOA profile and settings.",
+            url: "https://engage.goenumerate.com/connect_login.php",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "💳",
+            title: "Pay HOA Dues",
+            desc: "Make a one-time or recurring payment for your HOA dues through ClickPay.",
+            url: "https://www.clickpay.com/custom/nhe/login.html",
+            urlLabel: "clickpay.com",
+          },
+        ],
+      },
+      {
+        // Community Portal — links to various sections of the HOA portal.
+        label: "Community Portal",
+        links: [
+          {
+            icon: "🏡",
+            title: "HOA Home",
+            desc: "Your Pendleton Plantation HOA dashboard — news, updates, and quick access to everything.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/home.php",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "💬",
+            title: "Community Feed",
+            desc: "See what neighbors are posting and stay up to date with community conversations.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/communityfeed.php",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "📅",
+            title: "HOA Calendar",
+            desc: "View upcoming HOA meetings, community events, and important dates.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/myhoacalendar.php",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "📰",
+            title: "News & Newsletters",
+            desc: "Catch up on the latest HOA news, board updates, and community newsletters.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/news.php",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "🛍️",
+            title: "Classifieds",
+            desc: "Buy, sell, or give away items with fellow Pendleton Plantation neighbors.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/classifieds.php",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "👥",
+            title: "Member Directory",
+            desc: "Look up contact information for residents in the neighborhood.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/memberdirectory.php",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "🤝",
+            title: "Groups",
+            desc: "Join or browse neighborhood interest groups and committees.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/groups.php",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "🖼️",
+            title: "HOA Gallery",
+            desc: "Browse photo galleries uploaded through the official HOA portal.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/galleries.php",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "🏢",
+            title: "Sponsors",
+            desc: "View local businesses and partners who support our community.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/sponsors.php",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "✉️",
+            title: "Contact the HOA",
+            desc: "Send a message directly to the HOA board through the resident portal.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/hoapage.php?page=contact_5479",
+            urlLabel: "goenumerate.com",
+          },
+        ],
+      },
+      {
+        // Forms & Requests — links to official ARC and HOA forms on the portal.
+        label: "Forms & Requests",
+        links: [
+          // ✏️ Update the title and desc for each form below as needed.
+          // The URL IDs (qid=XXXXXX) match the portal form numbers — do not change them.
+          {
+            icon: "📋",
+            title: "Pendleton Plantation ARC Form — Structural Application",
+            desc: "Please complete this form to submit a structural architectural application.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118080",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "📋",
+            title: "Pendleton Plantation ARC Form — Driveway Modifications Only",
+            desc: "Please use this form to submit a request for any driveway modification you would like to pursue at your home.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118081",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "📋",
+            title: "Pendleton Plantation ARC Form — Fencing Modifications Only",
+            desc: "Please complete this form to submit an architectural application if you are wanting to install a fence.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118082",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "📋",
+            title: "Pendleton Plantation ARC Form — Solar Panel Request",
+            desc: "Please complete this form to submit a request for solar panel installation.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118100",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "📋",
+            title: "Pendleton Plantation ARC Form — Play Structures and Basketball Goals",
+            desc: "Please complete this form to submit a request for play structures or basketball goals.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118101",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "📋",
+            title: "Pendleton Plantation ARC Form — Landscaping and Trees",
+            desc: "Please complete this form to submit an architectural application if you are wanting to install landscaping improvements or add/remove trees.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118102",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "📋",
+            title: "Amenity Fob: Information/Request Form",
+            desc: "Please complete this form to submit a request for an amenity fob. Pool Fobs for Pendleton Plantation are $50 each. There is a limit of 1 fob per household.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118274",
+            urlLabel: "goenumerate.com",
+          },
+          {
+            icon: "📋",
+            title: "Playground Survey — We Want Your Feedback!",
+            desc: "The Board is currently exploring potential updates to the children's play area and would appreciate your input.",
+            url: "https://engage.goenumerate.com/s/pendletonplantation/dynform.php?qid=118275",
+            urlLabel: "goenumerate.com",
+          },
+        ],
+      },
+    ];
+
+    // ============================================================
+    //  Rendering — no edits needed below this line
+    //  Reads the categories array above and generates the full
+    //  HTML for the link cards, then inserts it into #links-content.
+    // ============================================================
+
+    // Get the container element where the rendered cards will be placed.
+    const container = document.getElementById("links-content");
+
+    // Build the HTML for each category and its links, then set it all at once.
+    container.innerHTML = categories.map(cat => `
       <div class="link-category">
+        <!-- Category section label (e.g., "Account & Payments"). -->
         <div class="category-label">${cat.label}</div>
+
+        <!-- Responsive grid of link cards for this category. -->
         <div class="link-grid">
           ${cat.links.map(link => `
+            <!-- Each card is an anchor that opens the URL in a new tab.
+                 rel="noopener noreferrer" is a security best practice
+                 that prevents the new tab from accessing this page's window object. -->
             <a href="${link.url}" class="link-card" target="_blank" rel="noopener noreferrer">
+              <!-- Emoji icon on the left side. -->
               <div class="link-card-icon">${link.icon}</div>
+
+              <!-- Text column: title, description, and domain label. -->
               <div class="link-card-body">
                 <div class="link-card-title">${link.title}</div>
                 <div class="link-card-desc">${link.desc}</div>
@@ -244,7 +308,7 @@
         </div>
       </div>`).join("");
 
-    </script>
+  </script>
 
 </body>
 
