@@ -3,178 +3,157 @@
 
 <!-- ============================================================
      File:        dashboard.html
-     Purpose:     The Easter Egg Hunt 2025 sign-up dashboard.
-                  Fetches live data from the Google Apps Script
-                  web app and renders:
-                    - Summary stats (total sign-ups, attendees, adults, children)
-                    - Coverage pills (volunteer roles covered, donation items covered)
-                    - Volunteer role cards (with per-role sign-up counts)
-                    - Donation item cards (with needed / pledged / remaining stats)
-                    - Potluck item tags
-                  Data refreshes automatically on page load and
-                  manually when the Refresh button is clicked.
-     Styles:      index-styles.css (global), dashboard-styles.css (page-specific)
+     Purpose:     Easter Egg Hunt sign-up dashboard — tab-based
+                  view of live Google Sheet data.
+     Tabs:        Overview | Volunteers | Supplies | Potluck
+     Styles:      index-styles.css (global), dashboard-styles.css
      ============================================================ -->
 
 <head>
-  <!-- Character encoding declaration — must be first in <head>. -->
   <meta charset="UTF-8" />
-
-  <!-- Responsive viewport meta tag — ensures the page scales correctly on mobile devices. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Open Graph meta tags for social media link previews (Facebook, iMessage, etc.). -->
   <meta property="og:title" content="Pendleton Plantation Neighborhood">
   <meta property="og:description"
     content="Community website for Pendleton Plantation. Find announcements, HOA docs, and event sign-ups!">
   <meta property="og:image" content="images\website-preview.png">
   <meta property="og:url" content="https://pendletonplantation.com">
   <meta property="og:type" content="website">
-
-  <!-- Browser tab / window title. -->
   <title>Event Dashboard — Pendleton Plantation</title>
-
-  <!-- Google Fonts: Cormorant Garamond (serif headlines) and Jost (body text). -->
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
     rel="stylesheet" />
-
-  <!-- Global site styles (nav, footer, color variables, etc.). -->
   <link rel="stylesheet" href="index-styles.css" />
-
-  <!-- Dashboard-specific styles (hero, stat cards, volunteer grid, donation items). -->
   <link rel="stylesheet" href="dashboard-styles.css" />
 </head>
 
 <body>
 
-  <!-- ── NAVIGATION BAR ───────────────────────────────────────
-       Fixed top nav bar with the site brand and links to all
-       main pages. Shared across all pages. -->
+  <!-- ── NAVIGATION BAR ──────────────────────────────────────── -->
   <nav>
-    <!-- Site brand / logo — links back to the homepage. -->
     <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
-
-    <!-- Navigation links list. -->
+    <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
     <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="index.html#awards">Awards</a></li>
-      <li><a href="index.html#events">Events</a></li>
-      <li><a href="index.html#memories">Memories</a></li>
-      <li><a href="index.html#announcements">Announcements</a></li>
-      <li><a href="index.html#contact">Contact</a></li>
-      <li><a href="signup-page-easter.html">Sign Up</a></li>
-      <li><a href="nominations.html">Nominate a Neighbor</a></li>
+      <li class="nav-has-dropdown">
+        <a href="index.html">Home <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="index.html#awards">Awards</a></li>
+          <li><a href="index.html#events">Events</a></li>
+          <li><a href="index.html#memories">Memories</a></li>
+          <li><a href="index.html#announcements">Announcements</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </li>
+      <li><a href="awards.html">Awards</a></li>
+      <li class="nav-has-dropdown">
+        <a href="events.html">Events <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="events.html#Easter">🐣 Easter Egg Hunt</a></li>
+          <li><a href="events.html#IceCreamSocial">🍦 Ice Cream Social</a></li>
+          <li><a href="events.html#July4th">🎆 4th of July</a></li>
+          <li><a href="events.html#ShrimpBoil">🦐 Shrimp Boil</a></li>
+          <li><a href="events.html#TrunkOrTreat">🎃 Trunk or Treat</a></li>
+          <li><a href="events.html#HolidayLights">✨ Holiday Lights</a></li>
+        </ul>
+      </li>
+      <li><a href="memories.html">Memories</a></li>
       <li><a href="bulletin-board.html">Bulletin Board</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
     </ul>
   </nav>
 
-  <!-- ── PAGE HEADER (HERO) ───────────────────────────────────
-       Shows the event name, page title ("Sign-Up Dashboard"),
-       the last-refreshed timestamp, and the manual Refresh button. -->
+  <!-- ── PAGE HERO ──────────────────────────────────────────── -->
   <div class="dash-hero">
-    <!-- Event eyebrow label with decorative stars. -->
     <p class="section-eyebrow">✦ &nbsp; Easter Egg Hunt 2025 &nbsp; ✦</p>
-
-    <!-- Page title with italic styling on "Dashboard". -->
     <h1 class="section-title">Sign-Up <em>Dashboard</em></h1>
-
-    <!-- Decorative gold horizontal rule beneath the title. -->
     <div class="section-rule"></div>
-
-    <!-- Meta bar: timestamp and refresh button side by side. -->
     <div class="dash-meta">
-      <!-- Timestamp — updated by loadDashboard() after each successful fetch. -->
       <span class="last-updated" id="last-updated">Loading…</span>
-
-      <!-- Refresh button — calls loadDashboard() when clicked to re-fetch data. -->
       <button class="refresh-btn" id="refresh-btn" onclick="loadDashboard()">↻ Refresh</button>
     </div>
   </div>
 
-  <!-- ── DASHBOARD CONTENT ────────────────────────────────────
-       The main body of the dashboard. Initially shows a loading
-       indicator. The inner #dash-body div is replaced with rendered
-       HTML by the renderDashboard() JavaScript function. -->
+  <!-- ── TAB BAR ────────────────────────────────────────────── -->
+  <div class="dash-tabs-bar">
+    <div class="dash-tabs">
+      <button class="dash-tab active" data-tab="overview" onclick="setTab('overview')">Overview</button>
+      <button class="dash-tab" data-tab="volunteers" onclick="setTab('volunteers')">Volunteers</button>
+      <button class="dash-tab" data-tab="supplies" onclick="setTab('supplies')">Supplies</button>
+      <button class="dash-tab" data-tab="potluck" onclick="setTab('potluck')">Potluck</button>
+      <button class="dash-tab" data-tab="lookup" onclick="setTab('lookup')">My Sign-Up</button>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD CONTENT ─────────────────────────────────── -->
   <div class="dash-content">
     <div id="dash-body">
-      <!-- Default loading state shown before the first data fetch completes. -->
       <div class="dash-loading">Loading sign-up data…</div>
     </div>
   </div>
 
-  <!-- ── FOOTER ───────────────────────────────────────────────
-       Site-wide footer with the neighborhood name, city, and
-       a contact email link. -->
+  <!-- ── FOOTER ─────────────────────────────────────────────── -->
   <footer>
-    <!-- Large site name at the top of the footer. -->
     <div class="footer-brand">Pendleton Plantation</div>
-
-    <!-- Location and site tagline. -->
     <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
-
-    <!-- Organizer credit and contact link. -->
     <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp;
       <a href="mailto:mandyvaliquette00@gmail.com" style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact
         Us</a>
     </p>
   </footer>
 
+
   <script>
-
     // ============================================================
-    //  ✏️  CONFIG — update these to match your event & form
-    //  when reusing this dashboard for a different event.
+    //  ✏️  CONFIG — update these when reusing for a different event
     // ============================================================
 
-    // The deployed Google Apps Script web app URL.
-    // This endpoint returns sign-up data as JSON when called with GET.
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzV33epavb-pFgJ7CjP2uQh49LWSw1XG1f19R_USPI5DP5iEskWIsRb1b9dHrQQ-zrYlA/exec";
+    // Google Apps Script web app URL (same endpoint for POST and GET).
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylyN2ypYEab79HD_I1V8k1gNZp3nME5DolD_UrTkzzCBo3pezvUWxzjSTytWeqc_pYHg/exec";
 
-    // List of volunteer roles shown on the dashboard.
-    // Must match the volunteer role labels in signup-page-easter.html exactly
-    // so the counts pulled from the spreadsheet match up correctly.
+    // Expected attendance for the "Estimated vs Actual" section.
+    const ESTIMATED_ADULTS = 40;
+    const ESTIMATED_CHILDREN = 50;
+
+    // Volunteer roles with target headcounts.
+    // Names must match the role labels in signup-page-easter.html exactly.
     const VOLUNTEER_ROLES = [
-      "Hide the Eggs",
-      "Check-In Table",
-      "Age Zone Monitor",
-      "Craft Station",
-      "Photo Booth",
-      "Cleanup Crew",
-      "Setup / Decor",
-      "Snack Table",
+      { name: "Hide the Eggs", needed: 4 },
+      { name: "Check-In Table", needed: 3 },
+      { name: "Age Zone Monitor", needed: 4 },
+      { name: "Craft Station", needed: 2 },
+      { name: "Photo Booth", needed: 2 },
+      { name: "Cleanup Crew", needed: 4 },
+      { name: "Setup / Decor", needed: 4 },
+      { name: "Snack Table", needed: 3 },
     ];
 
-    // Donation categories and items shown on the dashboard.
-    // Must match the item labels in signup-page-easter.html exactly.
-    // "needed" is the target quantity (null = no specific goal set,
-    // so only the pledged count is shown without a remaining count).
+    // Donation categories and items.
+    // Labels must match DONATION_ITEMS in google-apps-script.gs exactly.
     const DONATION_CATEGORIES = [
       {
         category: "Eggs & Filling",
         items: [
-          { label: "Plastic Eggs — standard mixed colors", needed: 450 },
+          { label: "Plastic Eggs — any color", needed: 450 },
           { label: "Plastic Eggs — teal (allergy-friendly)", needed: 30 },
           { label: "Golden Eggs — special prize eggs", needed: 6 },
           { label: "Candy — individually wrapped, nut-free", needed: 225 },
-          { label: "Candy — allergy-friendly (non-nut)", needed: 30 },
           { label: "Bouncy Balls — small", needed: 45 },
           { label: "Mini Erasers — fun shapes", needed: 45 },
           { label: "Mini Play-Doh or putty containers", needed: 20 },
           { label: "Stickers — mini sheets", needed: 45 },
-          { label: "Small Coins (pennies/quarters)", needed: 45 },
+          { label: "Small Coins (nickels, dimes, quarters)", needed: 45 },
           { label: "Fake Tattoo / Fun Coupons (DIY)", needed: 20 },
           { label: "Temporary Tattoos — mini", needed: 45 },
-          { label: "Golden Egg Prize Baskets", needed: 3 },
           { label: "Storage bins to save eggs for next year", needed: 2 },
         ],
       },
       {
         category: "Prizes",
         items: [
-          { label: "Prize baskets — golden egg winners", needed: 3 },
+          { label: "Golden Egg Prize Baskets — golden egg winners", needed: 3 },
           { label: "Prizes for Inside Baskets", needed: null },
           { label: "Ribbon for prize baskets", needed: 1 },
         ],
@@ -184,15 +163,16 @@
         items: [
           { label: "Juice boxes for kids", needed: 35 },
           { label: "Water bottles or water jug + cups", needed: 55 },
-          { label: "Lemonade / punch supplies", needed: 1 },
-          { label: "Cookie cake or cupcakes (donated/requested)", needed: 1 },
-          { label: "Easter candy dish for adults", needed: 2 },
-          { label: "Baked Goods", needed: null },
-          { label: "Napkins", needed: 100 },
+          { label: "Other beverage", needed: null },
+          { label: "Main entree", needed: null },
+          { label: "Side entree", needed: null },
+          { label: "Dessert", needed: null },
+          { label: "Easter candy for grown-ups", needed: null },
           { label: "Small plates", needed: 60 },
-          { label: "Serving platters / trays (borrowed OK)", needed: 10 },
-          { label: "Aluminum foil trays (backup)", needed: 5 },
-          { label: "Allergy warning signs", needed: 3 },
+          { label: "Large plates", needed: 60 },
+          { label: "Plastic cups", needed: 60 },
+          { label: "Plastic eating utensils", needed: 60 },
+          { label: "Paper towels / napkins", needed: 100 },
         ],
       },
       {
@@ -206,7 +186,7 @@
         ],
       },
       {
-        category: "Decor (including DIY-friendly)",
+        category: "Decor",
         items: [
           { label: "Pastel balloons — latex", needed: 50 },
           { label: "Pastel streamers", needed: 10 },
@@ -229,6 +209,7 @@
           { label: "Photobooth backdrop stand", needed: 1 },
           { label: "Easter basket prop (real or faux)", needed: 1 },
           { label: "Printable photo booth props (DIY)", needed: null },
+          { label: "Other photo booth props (DIY)", needed: null },
           { label: "Popsicle sticks for props", needed: null },
           { label: "Tripod (for phone)", needed: 1 },
         ],
@@ -251,199 +232,514 @@
           { label: "Folding tables — raffle/prize display", needed: 1 },
           { label: "Folding chairs", needed: null },
           { label: "Tablecloths — pastel/Easter themed", needed: null },
-          { label: "Plastic cups", needed: null },
-          { label: "Plastic serving utensils", needed: null },
-          { label: "Paper towels / napkins", needed: null },
-          { label: "Trash bags — large (39 gal)", needed: null },
-          { label: "Recycling bags", needed: null },
-          { label: "Hand sanitizer", needed: null },
-          { label: "Pens / clipboards for sign-in", needed: null },
+          { label: "Trash bags — large (39 gal)", needed: 3 },
+          { label: "Recycling bags", needed: 3 },
+          { label: "Hand sanitizer", needed: 2 },
+          { label: "Pens / clipboards for sign-in", needed: 5 },
           { label: "Portable bluetooth speaker", needed: 1 },
           { label: "Extension cord (if music/PA)", needed: 1 },
           { label: "First aid kit", needed: 1 },
           { label: "Bug spray", needed: null },
-          { label: "Sunscreen station", needed: 1 },
+          { label: "Sunscreen", needed: null },
         ],
       },
     ];
+
     // ============================================================
-    //  End of config — no edits needed below this line
+    //  STATE
     // ============================================================
+    let dashData = null;
+    let currentTab = 'overview';
+    let volFilter = 'all';
+    let supFilter = 'all';
+    let supSort = 'remaining';
+    let volSortCol = {};   // { "Role Name": "name" | "email" | "phone" }
+    let volSortDir = {};   // { "Role Name": "asc" | "desc" }
+    let lookupQuery = '';
+    let lookupResults = null;   // null = not searched yet, [] = searched but no results
+    let lookupLoading = false;
 
 
-    // ── LOAD DASHBOARD ──────────────────────────────────────────
-    // Fetches live sign-up data from the Google Apps Script endpoint,
-    // then passes the result to renderDashboard() to build the HTML.
-    // Called automatically on page load and when the Refresh button is clicked.
+    // ============================================================
+    //  TAB + FILTER SWITCHING
+    // ============================================================
+    function setTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.dash-tab').forEach(b =>
+        b.classList.toggle('active', b.dataset.tab === tab)
+      );
+      if (dashData || tab === 'lookup') renderTab();
+    }
+
+    function setVolFilter(role) { volFilter = role; renderTab(); }
+    function setSupFilter(cat) { supFilter = cat; renderTab(); }
+    function setSupSort(val) { supSort = val; renderTab(); }
+
+    function sortVolTable(roleEncoded, col) {
+      const role = decodeURIComponent(roleEncoded);
+      if (volSortCol[role] === col) {
+        volSortDir[role] = volSortDir[role] === 'asc' ? 'desc' : 'asc';
+      } else {
+        volSortCol[role] = col;
+        volSortDir[role] = 'asc';
+      }
+      renderTab();
+    }
+
+
+    // ============================================================
+    //  DATA FETCH
+    // ============================================================
     async function loadDashboard() {
-      // Get references to the dashboard body, refresh button, and timestamp elements.
-      const body = document.getElementById("dash-body");
-      const btn = document.getElementById("refresh-btn");
-      const ts = document.getElementById("last-updated");
+      const body = document.getElementById('dash-body');
+      const btn = document.getElementById('refresh-btn');
+      const ts = document.getElementById('last-updated');
 
-      // Disable the Refresh button while loading to prevent duplicate requests.
       btn.disabled = true;
-
-      // Show the loading spinner inside the dashboard body while fetching data.
       body.innerHTML = '<div class="dash-loading">Loading sign-up data…</div>';
 
       try {
-        // Fetch the sign-up summary JSON from the Google Apps Script web app.
         const res = await fetch(SCRIPT_URL);
         const data = await res.json();
-
-        // If the script returned an error field, throw it so the catch block handles it.
         if (data.error) throw new Error(data.error);
-
-        // Render the full dashboard HTML from the fetched data object.
-        renderDashboard(data);
-
-        // Update the "Last refreshed" timestamp with the current local time.
+        dashData = data;
+        renderTab();
         const d = new Date(data.lastUpdated);
-        ts.textContent = "Last refreshed: " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
+        ts.textContent = 'Last refreshed: ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       } catch (err) {
-        // If the fetch or JSON parse failed, show an error message with the reason.
         body.innerHTML = `<div class="dash-error">
-          Could not load data. Make sure the script is deployed and try refreshing.<br />
-          <small style="opacity:0.6;">${err.message}</small>
+          Could not load data. Make sure the script is deployed and try refreshing.<br>
+          <small style="opacity:0.6">${err.message}</small>
         </div>`;
-
-        // Show a dash in the timestamp since we have no data.
-        ts.textContent = "—";
-
+        ts.textContent = '—';
       } finally {
-        // Always re-enable the Refresh button, whether the fetch succeeded or failed.
         btn.disabled = false;
       }
     }
 
 
-    // ── RENDER DASHBOARD ────────────────────────────────────────
-    // Takes the JSON data object returned by the Google Apps Script
-    // and builds the full dashboard HTML, then inserts it into #dash-body.
-    function renderDashboard(data) {
-      const body = document.getElementById("dash-body");
+    // ============================================================
+    //  RENDER DISPATCH
+    // ============================================================
+    function renderTab() {
+      const body = document.getElementById('dash-body');
+      if (!dashData) return;
+      if (currentTab === 'overview') body.innerHTML = renderOverview(dashData);
+      else if (currentTab === 'volunteers') body.innerHTML = renderVolunteers(dashData);
+      else if (currentTab === 'supplies') body.innerHTML = renderSupplies(dashData);
+      else if (currentTab === 'potluck') body.innerHTML = renderPotluck(dashData);
+      else if (currentTab === 'lookup') body.innerHTML = renderLookup();
+    }
 
-      // ── Calculate coverage counts ──────────────────────────
-      // Count how many volunteer roles have at least one person signed up.
-      const volTotal   = VOLUNTEER_ROLES.length;
-      const volCovered = VOLUNTEER_ROLES.filter(r => (data.volunteerCounts[r] || 0) > 0).length;
 
-      // Flatten all donation items from all categories into a single array.
-      const allItems   = DONATION_CATEGORIES.flatMap(c => c.items);
-      const donTotal   = allItems.length;
-
-      // Count how many donation items have at least one pledge.
+    // ============================================================
+    //  OVERVIEW TAB
+    // ============================================================
+    function renderOverview(data) {
+      const allItems = DONATION_CATEGORIES.flatMap(c => c.items);
+      const volCovered = VOLUNTEER_ROLES.filter(r => (data.volunteerCounts[r.name] || 0) > 0).length;
       const donCovered = allItems.filter(i => (data.donationCounts[i.label] || 0) > 0).length;
+      const volPct = VOLUNTEER_ROLES.length ? Math.round(volCovered / VOLUNTEER_ROLES.length * 100) : 0;
+      const donPct = allItems.length ? Math.round(donCovered / allItems.length * 100) : 0;
 
-      // Calculate percentage covered for the progress bars in the coverage pills.
-      const volPct = volTotal ? Math.round(volCovered / volTotal * 100) : 0;
-      const donPct = donTotal ? Math.round(donCovered / donTotal * 100) : 0;
-
-      // ── Build the dashboard HTML ──────────────────────────
-      // All sections are generated as template literal strings and
-      // inserted into #dash-body in one operation.
-      body.innerHTML = `
-
-        <!-- Summary stats: total sign-ups, attending count, adults, children. -->
+      return `
+        <!-- Primary stats row -->
         <div class="stat-grid">
-          ${stat(data.totalSignups, "Total Sign-Ups")}
-          ${stat(data.attendingCount, "Attending")}
-          ${stat(data.totalAdults, "Adults")}
-          ${stat(data.totalChildren, "Children")}
+          ${stat(data.totalSignups, 'Total Sign-Ups')}
+          ${stat(data.attendingCount, 'Attending')}
+          ${stat(data.totalAdults, 'Adults')}
+          ${stat(data.totalChildren, 'Children')}
         </div>
 
-        <!-- Coverage pills: show fraction of volunteer roles and donation items covered. -->
+        <!-- Age breakdown row -->
+        <div class="age-grid">
+          ${stat(data.ages_0_3 || 0, 'Ages 0–3')}
+          ${stat(data.ages_4_8 || 0, 'Ages 4–8')}
+          ${stat(data.ages_9_plus || 0, 'Ages 9+')}
+        </div>
+
+        <!-- Estimated vs Actual -->
+        <div class="est-section">
+          <div class="dash-section-header">
+            <span class="dash-section-title">Estimated vs. Actual Attendance</span>
+            <div class="dash-section-rule"></div>
+          </div>
+          <div class="est-grid">
+            ${estRow('Adults', ESTIMATED_ADULTS, data.totalAdults)}
+            ${estRow('Children', ESTIMATED_CHILDREN, data.totalChildren)}
+            ${estRow('Total', ESTIMATED_ADULTS + ESTIMATED_CHILDREN, data.totalAdults + data.totalChildren)}
+          </div>
+        </div>
+
+        <!-- Coverage pills -->
         <div class="coverage-bar">
-          ${coveragePill("🙋", "Volunteer Roles", volCovered, volTotal, volPct)}
-          ${coveragePill("🎁", "Donation Items", donCovered, donTotal, donPct)}
+          ${coveragePill('🙋', 'Volunteer Roles', volCovered, VOLUNTEER_ROLES.length, volPct)}
+          ${coveragePill('🎁', 'Donation Items', donCovered, allItems.length, donPct)}
         </div>
-
-        <!-- Volunteer roles section: one card per role showing sign-up count. -->
-        <div class="dash-section">
-          <div class="dash-section-header">
-            <span class="dash-section-title">Volunteer Roles</span>
-            <div class="dash-section-rule"></div>
-          </div>
-          <div class="vol-grid">
-            ${VOLUNTEER_ROLES.map(role => {
-        // Look up how many people signed up for this role (default 0 if none).
-        const count = data.volunteerCounts[role] || 0;
-        const covered = count > 0;   // True if at least one volunteer.
-        return `<div class="vol-card ${covered ? "covered" : "uncovered"}">
-                <div class="vol-badge">${covered ? count : "–"}</div>
-                <div class="vol-info">
-                  <div class="vol-name">${role}</div>
-                  <div class="vol-count">${count === 0 ? "No sign-ups yet" : count === 1 ? "1 volunteer" : count + " volunteers"}</div>
-                </div>
-              </div>`;
-      }).join("")}
-          </div>
-        </div>
-
-        <!-- Donations section: one card per item showing pledged vs. needed. -->
-        <div class="dash-section">
-          <div class="dash-section-header">
-            <span class="dash-section-title">Donations &amp; Supplies</span>
-            <div class="dash-section-rule"></div>
-          </div>
-          ${DONATION_CATEGORIES.map(cat => `
-            <div class="don-category">
-              <!-- Category label, e.g., "EGGS & FILLING". -->
-              <div class="don-category-label">${cat.category}</div>
-              <div class="don-item-grid">
-                ${cat.items.map(item => {
-        // Get how many of this item have been pledged so far.
-        const pledged = data.donationCounts[item.label] || 0;
-        const covered = pledged > 0;   // True if at least one pledged.
-
-        // Calculate remaining need (only when a target quantity was set).
-        const remaining = item.needed !== null ? Math.max(0, item.needed - pledged) : null;
-
-        return `<div class="don-item ${covered ? "covered" : "uncovered"}">
-                    <div class="don-item-top">
-                      <div class="don-dot"></div>
-                      <div class="don-label">${item.label}</div>
-                    </div>
-                    <div class="don-stats">
-                      <!-- Show "Total Needed" stat only if a target was provided. -->
-                      ${item.needed !== null ? `<div class="don-stat"><div class="don-stat-val">${item.needed}</div><div class="don-stat-label">Total Needed</div></div>` : ""}
-                      <!-- Always show the pledged count. -->
-                      <div class="don-stat"><div class="don-stat-val ${pledged === 0 ? "zero" : ""}">${pledged}</div><div class="don-stat-label">Pledged</div></div>
-                      <!-- Show "Remaining" stat only when a target was provided. -->
-                      ${remaining !== null ? `<div class="don-stat ${remaining === 0 ? "met" : ""}"><div class="don-stat-val">${remaining}</div><div class="don-stat-label">Remaining</div></div>` : ""}
-                    </div>
-                  </div>`;
-      }).join("")}
-              </div>
-            </div>`).join("")}
-        </div>
-
-        <!-- Potluck items section: shows all food/dish items people plan to bring. -->
-        <div class="dash-section">
-          <div class="dash-section-header">
-            <span class="dash-section-title">Potluck Items</span>
-            <div class="dash-section-rule"></div>
-          </div>
-          ${data.potluckItems.length
-          // If there are potluck items, render them as pill tags.
-          ? `<div class="potluck-grid">
-                ${data.potluckItems.map(p => `<span class="potluck-tag">${p}</span>`).join("")}
-               </div>`
-          // If no potluck items yet, show a placeholder message.
-          : `<p class="potluck-empty">No potluck items signed up yet.</p>`
-        }
-        </div>
-
       `;
     }
 
 
-    // ── STAT CARD HELPER ────────────────────────────────────────
-    // Returns the HTML for a single summary stat card.
-    // value: the number to display (e.g., 42)
-    // label: the label below the number (e.g., "Total Sign-Ups")
+    // ============================================================
+    //  VOLUNTEERS TAB
+    // ============================================================
+    function renderVolunteers(data) {
+      const vd = data.volunteerDetails || {};
+
+      // Filter pills
+      const pills = ['all', ...VOLUNTEER_ROLES.map(r => r.name)].map(r => {
+        const isAll = r === 'all';
+        const active = volFilter === r;
+        const count = isAll ? '' : ` (${data.volunteerCounts[r] || 0})`;
+        const label = isAll ? 'All Roles' : r;
+        return `<button class="sup-pill${active ? ' active' : ''}"
+                  onclick="setVolFilter('${esc(r)}')">${esc(label)}${count}</button>`;
+      }).join('');
+
+      // Which roles to show
+      const roles = volFilter === 'all'
+        ? VOLUNTEER_ROLES
+        : VOLUNTEER_ROLES.filter(r => r.name === volFilter);
+
+      const panels = roles.map(role => {
+        const signedUp = data.volunteerCounts[role.name] || 0;
+        const stillNeeded = Math.max(0, role.needed - signedUp);
+        const people = vd[role.name] || [];
+
+        // Sort the contact list
+        const scol = volSortCol[role.name] || 'name';
+        const sdir = volSortDir[role.name] || 'asc';
+        const sorted = [...people].sort((a, b) => {
+          const av = (a[scol] || '').toLowerCase();
+          const bv = (b[scol] || '').toLowerCase();
+          return sdir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+        });
+
+        const re = encodeURIComponent(role.name);
+
+        const thSort = col => {
+          if (volSortCol[role.name] !== col) return '';
+          return ` class="${volSortDir[role.name] === 'asc' ? 'sort-asc' : 'sort-desc'}"`;
+        };
+
+        const tableHtml = sorted.length
+          ? `<table class="vol-table">
+               <thead><tr>
+                 <th onclick="sortVolTable('${re}','name')"${thSort('name')}>Name</th>
+                 <th onclick="sortVolTable('${re}','email')"${thSort('email')}>Email</th>
+                 <th onclick="sortVolTable('${re}','phone')"${thSort('phone')}>Phone</th>
+               </tr></thead>
+               <tbody>
+                 ${sorted.map(p => `<tr>
+                   <td>${esc(p.name)}</td>
+                   <td>${p.email ? `<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>` : '—'}</td>
+                   <td>${esc(p.phone || '—')}</td>
+                 </tr>`).join('')}
+               </tbody>
+             </table>`
+          : `<p class="vol-empty">No volunteers signed up yet.</p>`;
+
+        return `
+          <div class="role-section">
+            <div class="role-header">
+              <span class="role-name">${esc(role.name)}</span>
+              <div class="role-counts">
+                <div class="role-count-box">
+                  <span class="rcb-val">${role.needed}</span>
+                  <span class="rcb-label">Needed</span>
+                </div>
+                <div class="role-count-box ${signedUp > 0 ? 'rcb-green' : ''}">
+                  <span class="rcb-val">${signedUp}</span>
+                  <span class="rcb-label">Signed Up</span>
+                </div>
+                <div class="role-count-box ${stillNeeded === 0 ? 'rcb-met' : 'rcb-warn'}">
+                  <span class="rcb-val">${stillNeeded}</span>
+                  <span class="rcb-label">Still Needed</span>
+                </div>
+              </div>
+            </div>
+            ${tableHtml}
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="sup-toolbar">
+          <div class="sup-pills">${pills}</div>
+        </div>
+        ${panels || '<p class="vol-empty" style="margin-top:24px">No roles match the selected filter.</p>'}
+      `;
+    }
+
+
+    // ============================================================
+    //  SUPPLIES TAB
+    // ============================================================
+    function renderSupplies(data) {
+      const catNames = DONATION_CATEGORIES.map(c => c.category);
+
+      // Category filter pills
+      const pills = ['all', ...catNames].map(c => {
+        const active = supFilter === c;
+        const label = c === 'all' ? 'All Categories' : c;
+        return `<button class="sup-pill${active ? ' active' : ''}"
+                  onclick="setSupFilter('${esc(c)}')">${esc(label)}</button>`;
+      }).join('');
+
+      // Sort dropdown
+      const sortSelect = `
+        <select class="sup-sort-select" onchange="setSupSort(this.value)">
+          <option value="remaining"${supSort === 'remaining' ? ' selected' : ''}>Sort: Most Remaining</option>
+          <option value="pledged"${supSort === 'pledged' ? ' selected' : ''}>Sort: Most Pledged</option>
+          <option value="name"${supSort === 'name' ? ' selected' : ''}>Sort: Name</option>
+        </select>`;
+
+      // Which categories to show
+      const cats = supFilter === 'all'
+        ? DONATION_CATEGORIES
+        : DONATION_CATEGORIES.filter(c => c.category === supFilter);
+
+      const tables = cats.map(cat => {
+        // Enrich items with live pledge counts
+        let items = cat.items.map(item => {
+          const pledged = data.donationCounts[item.label] || 0;
+          const remaining = item.needed !== null ? Math.max(0, item.needed - pledged) : null;
+          return { ...item, pledged, remaining };
+        });
+
+        // Apply sort
+        if (supSort === 'remaining') {
+          items.sort((a, b) => {
+            const aHas = a.remaining !== null, bHas = b.remaining !== null;
+            if (aHas !== bHas) return aHas ? -1 : 1;
+            if (aHas) {
+              if (a.remaining === 0 && b.remaining > 0) return 1;
+              if (b.remaining === 0 && a.remaining > 0) return -1;
+              return b.remaining - a.remaining;
+            }
+            return 0;
+          });
+        } else if (supSort === 'pledged') {
+          items.sort((a, b) => b.pledged - a.pledged);
+        } else {
+          items.sort((a, b) => a.label.localeCompare(b.label));
+        }
+
+        const rows = items.map(item => {
+          const met = item.remaining === 0 && item.needed !== null;
+          return `<tr class="${item.pledged > 0 ? 'row-covered' : ''} ${met ? 'row-met' : ''}">
+            <td class="sup-label">${esc(item.label)}</td>
+            <td class="sup-num">${item.needed !== null ? item.needed : '—'}</td>
+            <td class="sup-num ${item.pledged === 0 ? 'zero' : ''}">${item.pledged > 0 ? item.pledged : '—'}</td>
+            <td class="sup-num ${met ? 'met' : ''}">${item.remaining !== null ? (met ? '✓' : item.remaining) : '—'}</td>
+          </tr>`;
+        }).join('');
+
+        return `
+          <div class="don-category-label">${esc(cat.category)}</div>
+          <table class="sup-table">
+            <thead><tr>
+              <th class="sup-label">Item</th>
+              <th class="sup-num">Needed</th>
+              <th class="sup-num">Pledged</th>
+              <th class="sup-num">Remaining</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      }).join('');
+
+      return `
+        <div class="sup-toolbar">
+          <div class="sup-pills">${pills}</div>
+          ${sortSelect}
+        </div>
+        <div class="sup-tables">${tables}</div>
+      `;
+    }
+
+
+    // ============================================================
+    //  POTLUCK TAB
+    // ============================================================
+    function renderPotluck(data) {
+      if (!data.potluckItems || data.potluckItems.length === 0) {
+        return '<p class="potluck-empty" style="margin-top:40px">No potluck items signed up yet.</p>';
+      }
+
+      // Count duplicates (case-insensitive key, preserve original casing for display)
+      const counts = {};
+      data.potluckItems.forEach(p => {
+        const key = p.trim().toLowerCase();
+        if (!counts[key]) counts[key] = { label: p.trim(), count: 0 };
+        counts[key].count++;
+      });
+
+      // Sort by count desc, then label asc
+      const sorted = Object.values(counts).sort((a, b) =>
+        b.count - a.count || a.label.localeCompare(b.label)
+      );
+
+      const tags = sorted.map(({ label, count }) =>
+        `<span class="potluck-tag">
+           ${esc(label)}
+           ${count > 1 ? `<span class="potluck-count">${count}</span>` : ''}
+         </span>`
+      ).join('');
+
+      return `
+        <div class="dash-section-header">
+          <span class="dash-section-title">Potluck Items &nbsp;(${data.potluckItems.length} total)</span>
+          <div class="dash-section-rule"></div>
+        </div>
+        <div class="potluck-grid">${tags}</div>
+      `;
+    }
+
+
+    // ============================================================
+    //  MY SIGN-UP TAB
+    // ============================================================
+
+    // Renders the lookup tab. The form is always shown; results
+    // appear below once a search has been performed.
+    function renderLookup() {
+      const inputVal = esc(lookupQuery);
+
+      let resultsHtml = '';
+
+      if (lookupLoading) {
+        resultsHtml = '<div class="lookup-status">Searching…</div>';
+      } else if (lookupResults === null) {
+        // Not searched yet — show nothing
+      } else if (lookupResults.length === 0) {
+        resultsHtml = `<div class="lookup-status">
+          No sign-up found for "<strong>${esc(lookupQuery)}</strong>".
+          Check the spelling and try again.
+        </div>`;
+      } else {
+        resultsHtml = lookupResults.map(r => buildLookupCard(r)).join('');
+      }
+
+      return `
+        <div class="lookup-intro">
+          <p>Type your first and/or last name to see your sign-up details.</p>
+        </div>
+        <form class="lookup-form" onsubmit="performLookup(); return false;">
+          <input  class="lookup-input"
+                  id="lookup-input"
+                  type="text"
+                  placeholder="e.g. Mandy Valiquette"
+                  value="${inputVal}"
+                  autocomplete="off" />
+          <button class="lookup-btn" type="submit">Look Up</button>
+        </form>
+        <div id="lookup-results">${resultsHtml}</div>
+      `;
+    }
+
+    // Builds a result card for one matching sign-up.
+    function buildLookupCard(r) {
+      const attending = r.attending.toLowerCase().startsWith('yes');
+
+      const rolesPills = r.roles.length
+        ? r.roles.map(role => `<span class="lookup-pill lookup-pill-role">${esc(role)}</span>`).join('')
+        : '<span class="lookup-none">None selected</span>';
+
+      const donationRows = r.donations.length
+        ? r.donations.map(d =>
+          `<tr><td>${esc(d.item)}</td><td class="lookup-qty">${d.qty}</td></tr>`
+        ).join('')
+        : null;
+
+      return `
+        <div class="lookup-card">
+
+          <div class="lookup-card-header">
+            <span class="lookup-name">${esc(r.name)}</span>
+            <span class="lookup-attending-pill ${attending ? 'attending-yes' : 'attending-no'}">
+              ${attending ? '✓ Attending' : 'Not attending'}
+            </span>
+          </div>
+
+          ${attending ? `
+          <div class="lookup-row">
+            <span class="lookup-row-label">Headcount</span>
+            <span class="lookup-row-val">${r.adults} adult${r.adults !== 1 ? 's' : ''}${r.children > 0 ? ', ' + r.children + ' child' + (r.children !== 1 ? 'ren' : '') : ''}</span>
+          </div>` : ''}
+
+          <div class="lookup-section">
+            <div class="lookup-section-title">Volunteer Roles</div>
+            <div class="lookup-pills">${rolesPills}</div>
+          </div>
+
+          ${r.potluck ? `
+          <div class="lookup-section">
+            <div class="lookup-section-title">Potluck Item</div>
+            <div class="lookup-row-val">${esc(r.potluck)}</div>
+          </div>` : ''}
+
+          ${donationRows ? `
+          <div class="lookup-section">
+            <div class="lookup-section-title">Supply Pledges</div>
+            <table class="lookup-table">
+              <thead><tr><th>Item</th><th class="lookup-qty">Qty</th></tr></thead>
+              <tbody>${donationRows}</tbody>
+            </table>
+          </div>` : ''}
+
+          ${r.otherDonation ? `
+          <div class="lookup-row">
+            <span class="lookup-row-label">Other donation</span>
+            <span class="lookup-row-val">${esc(r.otherDonation)}</span>
+          </div>` : ''}
+
+          ${r.cash ? `
+          <div class="lookup-row">
+            <span class="lookup-row-label">Cash / prize donation</span>
+            <span class="lookup-row-val">${esc(r.cash)}</span>
+          </div>` : ''}
+
+          ${r.notes ? `
+          <div class="lookup-section">
+            <div class="lookup-section-title">Notes</div>
+            <div class="lookup-notes">${esc(r.notes)}</div>
+          </div>` : ''}
+
+        </div>`;
+    }
+
+    // Fetches sign-up data for the entered name from the GAS endpoint.
+    async function performLookup() {
+      const input = document.getElementById('lookup-input');
+      if (!input) return;
+      lookupQuery = input.value.trim();
+      lookupResults = null;
+      if (!lookupQuery) { renderTab(); return; }
+
+      lookupLoading = true;
+      renderTab();
+
+      try {
+        const url = SCRIPT_URL + '?action=lookup&name=' + encodeURIComponent(lookupQuery);
+        const res = await fetch(url);
+        const data = await res.json();
+        lookupResults = data.results || [];
+      } catch (err) {
+        lookupResults = [];
+      } finally {
+        lookupLoading = false;
+        renderTab();
+        // Restore the typed value after re-render
+        const inp = document.getElementById('lookup-input');
+        if (inp) inp.value = lookupQuery;
+      }
+    }
+
+
+    // ============================================================
+    //  HELPER FUNCTIONS
+    // ============================================================
+
+    // Single summary stat card (used in Overview).
     function stat(value, label) {
       return `<div class="stat-card">
         <div class="stat-number">${value}</div>
@@ -451,34 +747,80 @@
       </div>`;
     }
 
+    // Estimated vs. Actual row with progress bar.
+    function estRow(label, estimated, actual) {
+      const pct = estimated > 0 ? Math.min(100, Math.round(actual / estimated * 100)) : 0;
+      return `<div class="est-row">
+        <span class="est-label">${esc(label)}</span>
+        <div class="est-col">
+          <span class="est-big">${estimated}</span>
+          <span class="est-sub">estimated</span>
+        </div>
+        <div class="est-col">
+          <span class="est-big est-actual">${actual}</span>
+          <span class="est-sub">actual</span>
+        </div>
+        <div class="est-track"><div class="est-fill" style="width:${pct}%"></div></div>
+        <span class="est-pct">${pct}%</span>
+      </div>`;
+    }
 
-    // ── COVERAGE PILL HELPER ─────────────────────────────────────
-    // Returns the HTML for a single coverage pill card.
-    // icon:    emoji icon (e.g., "🙋")
-    // label:   description text (e.g., "Volunteer Roles")
-    // covered: number of covered items
-    // total:   total number of items
-    // pct:     percentage covered (0–100), used for the progress bar width
+    // Coverage pill card (used in Overview).
     function coveragePill(icon, label, covered, total, pct) {
       return `<div class="coverage-pill">
         <div class="coverage-pill-icon">${icon}</div>
         <div class="coverage-pill-text">
-          <!-- Fraction display, e.g., "5 / 8". -->
           <div class="coverage-pill-fraction">${covered} / ${total}</div>
-          <!-- Label below the fraction, e.g., "VOLUNTEER ROLES COVERED". -->
           <div class="coverage-pill-label">${label} covered</div>
         </div>
         <div class="coverage-track">
-          <!-- The filled bar width is set inline as a percentage. -->
           <div class="coverage-fill" style="width:${pct}%"></div>
         </div>
       </div>`;
     }
 
+    // HTML-escape a string for safe insertion into innerHTML.
+    function esc(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
 
-    // ── AUTO-LOAD ON PAGE OPEN ───────────────────────────────────
-    // Automatically fetch and render dashboard data when the page first loads.
+
+    // ============================================================
+    //  INIT
+    // ============================================================
     loadDashboard();
+
+    // ── Hamburger nav ──
+    const hamburger = document.querySelector('.nav-hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    if (hamburger && navLinks) {
+      hamburger.addEventListener('click', () => {
+        const isOpen = navLinks.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        hamburger.setAttribute('aria-expanded', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      });
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          navLinks.classList.remove('open');
+          hamburger.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        });
+      });
+    }
+    document.querySelectorAll('.nav-has-dropdown > a').forEach(link => {
+      link.addEventListener('click', e => {
+        if (window.innerWidth <= 1100) {
+          e.preventDefault();
+          link.parentElement.classList.toggle('open');
+        }
+      });
+    });
 
   </script>
 

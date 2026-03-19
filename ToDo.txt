@@ -1,9 +1,15 @@
-1. Add dashboard to track nominations, events, donations, etc.
-2. Add a neighborhood "BUlletin Board"
+1. Have all submissions email the user with their submission details and confirmation.
+2. Add dashboard to track nominations, events, donations, etc.
 3. A Resident-Owned Business & Service Directory
 Neighbors love supporting neighbors. A dedicated page where residents can list their own local businesses, side projects, or services would be a massive value-add for the community. It’s also the perfect spot to compile a community-sourced list of trusted Easley-area providers, such as plumbers, landscapers, teenage babysitters, and pet sitters.
-4. Create pages where I can update or add events, announcements, awards awarded, etc.
+4. Create UI pages where admins can update or add events, announcements, awards awarded, etc.
 5. Adjust links, buttons, etc to be more generic for future use.
 6. Add board, etc. to email notifications, etc.
 7. Add a community calendar?
 8. Add a resident directory maybe
+9. Merge googlesheets documents into one? Rename as well.
+10. Change  "View All Memories →" & "Have photos from a neighborhood event? Upload them to be featured here." into buttons.
+11. Add button and code to allow neighbors to sign up to be notified when there's new events, announcements, competitions, bulletins, etc.
+12. Add UI pages to authorize posts, review award nominations and select winners, etc.
+13. Update seasonal decor deadline description.
+

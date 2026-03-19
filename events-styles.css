@@ -1,0 +1,318 @@
+/* ============================================================
+   File:        events-styles.css
+   Purpose:     Styles for the Neighborhood Events hub page
+                (events.html). Builds on index-styles.css which
+                provides the nav, footer, color variables, and resets.
+   ============================================================ */
+
+
+/* ── PAGE HEADER ──────────────────────────────────────────────*/
+.events-page-header {
+  padding: 120px 24px 60px;
+  text-align: center;
+  background: linear-gradient(160deg, var(--forest) 0%, #1a2b1c 100%);
+  color: var(--cream);
+  position: relative;
+  overflow: hidden;
+}
+
+.events-page-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.events-page-header .page-eyebrow {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 18px;
+}
+
+.events-page-header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--cream);
+  margin-bottom: 16px;
+}
+
+.events-page-header h1 em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.events-page-header .header-rule {
+  width: 48px;
+  height: 2px;
+  background: var(--gold);
+  margin: 0 auto 20px;
+}
+
+.events-page-header .header-sub {
+  font-size: 1rem;
+  font-weight: 300;
+  color: rgba(245, 240, 232, 0.75);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+
+/* ── QUICK-NAV JUMP LINKS ──────────────────────────────────────*/
+.events-quicknav {
+  background: var(--parchment);
+  border-bottom: 1px solid rgba(44, 61, 46, 0.12);
+  padding: 0 24px;
+  position: sticky;
+  top: 64px; /* below the fixed main nav */
+  z-index: 90;
+}
+
+.events-quicknav-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.events-quicknav-inner::-webkit-scrollbar { display: none; }
+
+.events-quicknav-inner a {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 14px 16px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--forest);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.events-quicknav-inner a:hover {
+  color: var(--moss);
+  border-bottom-color: var(--gold);
+}
+
+
+/* ── EVENTS WRAPPER ───────────────────────────────────────────*/
+.events-wrapper {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 60px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
+}
+
+
+/* ── INDIVIDUAL EVENT SECTION ─────────────────────────────────*/
+.event-section {
+  scroll-margin-top: 120px; /* offset for sticky nav + quicknav */
+}
+
+.event-card-full {
+  background: var(--cream);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(44, 61, 46, 0.08);
+  border: 1px solid rgba(44, 61, 46, 0.08);
+}
+
+/* Colored banner at top of each event card */
+.event-banner {
+  padding: 36px 40px 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.event-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.event-emoji-large {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.event-banner-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 600;
+  color: inherit;
+  line-height: 1.2;
+}
+
+.event-banner-date {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  opacity: 0.82;
+  margin-top: 4px;
+  letter-spacing: 0.03em;
+}
+
+/* Status badge — reuses index-styles classes where possible */
+.event-status-badge {
+  flex-shrink: 0;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.badge-open   { background: rgba(255,255,255,0.3); color: #fff; border: 1.5px solid rgba(255,255,255,0.6); }
+.badge-soon   { background: rgba(0,0,0,0.12);      color: inherit; border: 1.5px solid rgba(0,0,0,0.2); }
+.badge-closed { background: rgba(0,0,0,0.12);      color: inherit; border: 1.5px solid rgba(0,0,0,0.2); }
+
+/* Banner color themes */
+.banner-green  { background: linear-gradient(135deg, #2c5c2e 0%, #3d7a40 100%); color: #e8f5e9; }
+.banner-blue   { background: linear-gradient(135deg, #1565a0 0%, #2196c3 100%); color: #e3f2fd; }
+.banner-red    { background: linear-gradient(135deg, #8b1a1a 0%, #c0392b 100%); color: #fde8e8; }
+.banner-teal   { background: linear-gradient(135deg, #00695c 0%, #26a69a 100%); color: #e0f2f1; }
+.banner-orange { background: linear-gradient(135deg, #bf360c 0%, #e64a19 100%); color: #fbe9e7; }
+.banner-gold   { background: linear-gradient(135deg, #7a5200 0%, #c9a84c 100%); color: #fff8e1; }
+
+/* Event body content */
+.event-body {
+  padding: 32px 40px 36px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px 40px;
+  align-items: start;
+}
+
+.event-description {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--muted);
+  font-weight: 300;
+  grid-column: 1 / -1;
+}
+
+.event-details-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.event-details-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--forest);
+}
+
+.event-details-list .detail-label {
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  min-width: 52px;
+}
+
+/* Event action buttons */
+.event-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.btn-event-primary {
+  display: inline-block;
+  padding: 12px 26px;
+  background: var(--forest);
+  color: var(--cream);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.btn-event-primary:hover {
+  background: var(--moss);
+  transform: translateY(-1px);
+}
+
+.btn-event-outline {
+  display: inline-block;
+  padding: 11px 24px;
+  border: 1.5px solid var(--forest);
+  color: var(--forest);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.btn-event-outline:hover {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+.event-coming-soon-note {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 6px;
+}
+
+
+/* ── RESPONSIVE ───────────────────────────────────────────────*/
+@media (max-width: 680px) {
+  .event-banner {
+    padding: 28px 24px 22px;
+  }
+
+  .event-body {
+    padding: 24px 24px 28px;
+    grid-template-columns: 1fr;
+  }
+
+  .event-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .events-page-header {
+    padding: 100px 20px 48px;
+  }
+}

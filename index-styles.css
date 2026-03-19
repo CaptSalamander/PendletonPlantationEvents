@@ -147,14 +147,14 @@ nav {
    the nav bar. List bullets are hidden. */
 .nav-links {
   display: flex;
-  gap: 36px;
+  gap: 14px;
   /* Space between each navigation link. */
   list-style: none;
 }
 
 /* Individual navigation link styling. */
 .nav-links a {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -168,6 +168,37 @@ nav {
 .nav-links a:hover {
   color: var(--forest);
 }
+
+/* Dropdown menus */
+.nav-has-dropdown { position: relative; }
+.nav-has-dropdown > a { display: flex; align-items: center; gap: 3px; }
+.nav-caret { font-size: 0.6rem; transition: transform 0.2s; display: inline-block; }
+.nav-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 180px;
+  background: rgba(253, 248, 239, 0.98);
+  border: 1px solid #e8ddd0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  padding: 14px 0 6px; /* top padding bridges the visual gap so hover isn't lost */
+  list-style: none;
+  z-index: 200;
+}
+.nav-has-dropdown:hover .nav-dropdown { display: block; }
+.nav-has-dropdown:hover .nav-caret { transform: rotate(180deg); }
+.nav-dropdown li a {
+  display: block;
+  padding: 7px 16px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.nav-dropdown li a:hover { color: var(--forest); background: rgba(44,61,46,0.05); }
 
 /* ── NAV CALL-TO-ACTION LINK ──────────────────────────────────
    The "Sign Up" link in the nav bar is styled as a filled button
@@ -220,10 +251,10 @@ nav {
 
 
 /* ── MOBILE NAV ───────────────────────────────────────────────
-   On screens 768px wide and below, the horizontal nav links list
+   On screens 1100px wide and below, the horizontal nav links list
    becomes a full-screen vertical overlay. The hamburger button
    becomes visible, and clicking it toggles the "open" class. */
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
   nav {
     padding: 16px 24px;
     /* Reduce nav padding on mobile. */
@@ -261,11 +292,26 @@ nav {
 
   /* Larger, more readable link text inside the mobile menu. */
   .nav-links a {
-    font-size: 1rem;
+    font-size: 1.1rem;
     letter-spacing: 0.14em;
     color: var(--forest);
     /* Full forest green instead of the subdued muted color. */
   }
+
+  .nav-has-dropdown > a { justify-content: center; }
+  .nav-dropdown {
+    display: none;
+    position: static;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 4px 0 8px;
+    text-align: center;
+  }
+  .nav-has-dropdown.open .nav-dropdown { display: block; }
+  .nav-has-dropdown.open .nav-caret { transform: rotate(180deg); }
+  .nav-dropdown li a { font-size: 0.95rem; padding: 6px 16px; }
 
   /* ── HAMBURGER X ANIMATION ──────────────────────────────────
      When the "open" class is added to the hamburger button,

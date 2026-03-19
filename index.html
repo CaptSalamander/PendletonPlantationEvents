@@ -56,31 +56,38 @@
        clicking the hamburger reveals a full-screen overlay menu.
        JavaScript at the bottom handles the hamburger toggle logic. -->
   <nav>
-    <!-- Site brand / logo — always visible, links back to the top of the homepage. -->
     <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
 
-    <!-- Hamburger menu button — visible only on mobile (hidden via CSS on desktop).
-         aria-label provides an accessible text description for screen readers.
-         The three <span> elements form the three horizontal bars of the icon. -->
     <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
-      <span></span>
-      <span></span>
-      <span></span>
+      <span></span><span></span><span></span>
     </button>
 
-    <!-- Navigation links list.
-         On desktop: displayed as a horizontal flex row.
-         On mobile: hidden by default; shown as a full-screen overlay when "open" class is added. -->
     <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="index.html#awards">Awards</a></li>
-      <li><a href="index.html#events">Events</a></li>
-      <li><a href="index.html#memories">Memories</a></li>
-      <li><a href="index.html#announcements">Announcements</a></li>
-      <li><a href="index.html#contact">Contact</a></li>
-      <li><a href="signup-page-easter.html">Sign Up</a></li>
-      <li><a href="nominations.html">Nominate a Neighbor</a></li>
+      <li class="nav-has-dropdown">
+        <a href="index.html">Home <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="index.html#awards">Awards</a></li>
+          <li><a href="index.html#events">Events</a></li>
+          <li><a href="index.html#memories">Memories</a></li>
+          <li><a href="index.html#announcements">Announcements</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </li>
+      <li><a href="awards.html">Awards</a></li>
+      <li class="nav-has-dropdown">
+        <a href="events.html">Events <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="events.html#Easter">🐣 Easter Egg Hunt</a></li>
+          <li><a href="events.html#IceCreamSocial">🍦 Ice Cream Social</a></li>
+          <li><a href="events.html#July4th">🎆 4th of July</a></li>
+          <li><a href="events.html#ShrimpBoil">🦐 Shrimp Boil</a></li>
+          <li><a href="events.html#TrunkOrTreat">🎃 Trunk or Treat</a></li>
+          <li><a href="events.html#HolidayLights">✨ Holiday Lights</a></li>
+        </ul>
+      </li>
+      <li><a href="memories.html">Memories</a></li>
       <li><a href="bulletin-board.html">Bulletin Board</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
     </ul>
@@ -448,6 +455,16 @@
         });
       });
     }
+
+    // Dropdown toggles (mobile only)
+    document.querySelectorAll('.nav-has-dropdown > a').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        if (window.innerWidth <= 1100) {
+          e.preventDefault();
+          link.parentElement.classList.toggle('open');
+        }
+      });
+    });
 
 
     // ── RENDER AWARDS ────────────────────────────────────────

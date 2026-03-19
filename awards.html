@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ============================================================
+     File:        awards.html
+     Purpose:     Community Awards hub — shows active competitions
+                  and a filterable archive of past winners.
+                  Winner and competition data are static JS arrays
+                  updated manually by the site admin.
+     Styles:      index-styles.css (global), awards-styles.css
+     ============================================================ -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Community Awards — Pendleton Plantation</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="index-styles.css" />
+  <link rel="stylesheet" href="awards-styles.css" />
+</head>
+
+<body>
+
+  <!-- ── NAVIGATION ───────────────────────────────────────────-->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-links">
+      <li class="nav-has-dropdown">
+        <a href="index.html">Home <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="index.html#awards">Awards</a></li>
+          <li><a href="index.html#events">Events</a></li>
+          <li><a href="index.html#memories">Memories</a></li>
+          <li><a href="index.html#announcements">Announcements</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </li>
+      <li><a href="awards.html">Awards</a></li>
+      <li class="nav-has-dropdown">
+        <a href="events.html">Events <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="events.html#Easter">🐣 Easter Egg Hunt</a></li>
+          <li><a href="events.html#IceCreamSocial">🍦 Ice Cream Social</a></li>
+          <li><a href="events.html#July4th">🎆 4th of July</a></li>
+          <li><a href="events.html#ShrimpBoil">🦐 Shrimp Boil</a></li>
+          <li><a href="events.html#TrunkOrTreat">🎃 Trunk or Treat</a></li>
+          <li><a href="events.html#HolidayLights">✨ Holiday Lights</a></li>
+        </ul>
+      </li>
+      <li><a href="memories.html">Memories</a></li>
+      <li><a href="bulletin-board.html">Bulletin Board</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+    </ul>
+  </nav>
+
+
+  <!-- ── PAGE HEADER ──────────────────────────────────────────-->
+  <header class="awards-page-header">
+    <p class="page-eyebrow">✦ &nbsp; Recognizing Our Best &nbsp; ✦</p>
+    <h1>Community <em>Awards</em></h1>
+    <div class="header-rule"></div>
+    <p class="header-sub">
+      Celebrating the neighbors who make Pendleton Plantation a wonderful place to call home —
+      from the most beautiful yard on the block to the kindest heart in the neighborhood.
+    </p>
+  </header>
+
+
+  <!-- ── ACTIVE COMPETITIONS ──────────────────────────────────-->
+  <section class="awards-outer-section" id="competitions">
+    <div class="awards-wrapper">
+
+      <div class="awards-section-header">
+        <p class="section-eyebrow">✦ &nbsp; Currently Open &nbsp; ✦</p>
+        <h2 class="section-title">Active <em>Competitions</em></h2>
+        <div class="section-rule"></div>
+        <p class="awards-section-sub">
+          Know a neighbor who deserves recognition? Nominate them below.
+        </p>
+      </div>
+
+      <!-- Competition filters (populated by JS) -->
+      <div class="comp-filters" id="comp-filters" hidden>
+        <div class="comp-filter-group">
+          <span class="comp-filter-label">Status</span>
+          <div class="filter-pills" id="comp-status-pills" role="group" aria-label="Filter by status"></div>
+        </div>
+        <div class="comp-filter-group">
+          <span class="comp-filter-label">Category</span>
+          <div class="filter-pills" id="comp-category-pills" role="group" aria-label="Filter by category"></div>
+        </div>
+      </div>
+
+      <!-- Competition cards injected by JS -->
+      <div class="competitions-list" id="competitions-list"></div>
+
+      <!-- Shown when competitions array is empty -->
+      <div class="comp-empty" id="comp-empty" hidden>
+        <p class="comp-empty-text">No competitions are open right now — check back soon!</p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ── PAST WINNERS ─────────────────────────────────────────-->
+  <section class="awards-outer-section awards-outer-section--alt" id="winners">
+    <div class="awards-wrapper">
+
+      <div class="awards-section-header">
+        <p class="section-eyebrow">✦ &nbsp; Hall of Fame &nbsp; ✦</p>
+        <h2 class="section-title">Past <em>Winners</em></h2>
+        <div class="section-rule"></div>
+      </div>
+
+      <!-- Filter controls -->
+      <div class="winners-filters" id="winners-filters">
+        <div class="filter-pills" id="category-pills" role="group" aria-label="Filter by award category"></div>
+        <select class="filter-year" id="year-select" aria-label="Filter by year">
+          <option value="all">All Years</option>
+        </select>
+      </div>
+
+      <!-- Loading state -->
+      <div class="winners-loading" id="winners-loading" hidden>
+        <p class="winners-loading-text">Loading winners…</p>
+      </div>
+
+      <!-- Winner cards injected by JS -->
+      <div class="winners-list" id="winners-list"></div>
+
+      <!-- Shown when no winners match current filters -->
+      <div class="winners-empty" id="winners-empty" hidden>
+        <div class="winners-empty-icon">🏆</div>
+        <p class="winners-empty-title">No winners yet for this selection</p>
+        <p class="winners-empty-sub">Check back after the next award cycle — or nominate a neighbor today!</p>
+        <a href="nominations.html" class="btn-nominate-sm">Nominate Someone →</a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ── NOMINATION CTA ────────────────────────────────────────-->
+  <section class="nominate-cta">
+    <div class="nominate-cta-inner">
+      <p class="nominate-eyebrow">✦ &nbsp; Make a Difference &nbsp; ✦</p>
+      <h2 class="nominate-title">Know Someone Who <em>Deserves</em> Recognition?</h2>
+      <div class="nominate-rule"></div>
+      <p class="nominate-body">
+        Our awards are only as meaningful as the neighbors who nominate each other.
+        If someone in Pendleton Plantation has gone above and beyond — in their yard,
+        their community spirit, or just by being a great neighbor — tell us about them.
+      </p>
+      <a href="nominations.html" class="btn-nominate-primary">Nominate a Neighbor →</a>
+    </div>
+  </section>
+
+
+  <!-- ── FOOTER ───────────────────────────────────────────────-->
+  <footer>
+    <div class="footer-brand">Pendleton Plantation</div>
+    <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Awards</strong></p>
+    <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp; <a
+        href="mailto:mandyvaliquette00@gmail.com" style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact
+        Us</a></p>
+  </footer>
+
+</body>
+
+<script>
+
+  // ============================================================
+  //  AWARDS DATA
+  //  ✏️  Update these arrays whenever a new winner is chosen
+  //      or a competition changes status.
+  // ============================================================
+
+  // ── WINNERS — loaded from Google Sheet ───────────────────────
+  // Winners are pulled automatically from the "Winners" tab of the
+  // shared Google Sheet. To update winners, edit the sheet — no
+  // code changes needed.
+  //
+  // Sheet columns (row 1 = headers, exact spelling required):
+  //   icon        → Emoji  e.g.  🌿
+  //   badge       → Badge filename only  e.g.  yard-of-the-month
+  //   bannerColor → CSS class  e.g.  banner-green
+  //   award       → Award name  e.g.  Yard of the Month
+  //   period      → Display period  e.g.  March 2026
+  //   year        → Numeric year  e.g.  2026
+  //   winner      → Winner's full name
+  //   photoId     → Google Drive file ID for winner photo (leave blank for silhouette)
+  //   prize       → Prize description (leave blank to hide)
+  //   blurb       → 1–3 sentence write-up
+  //   quote1      → Optional nomination quote
+  //   quote2      → Optional nomination quote
+  //   quote3      → Optional nomination quote
+  //
+  // ✏️  Paste your Google Sheet ID below (the long string in the URL).
+  //     The sheet must be shared as "Anyone with the link can view"
+  //     AND published to the web (File → Share → Publish to web → Winners sheet → CSV).
+  const WINNERS_SHEET_ID = 'YOUR_SHEET_ID_HERE';
+  const WINNERS_SHEET_URL =
+    `https://docs.google.com/spreadsheets/d/${WINNERS_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Winners`;
+
+
+  // ── ACTIVE COMPETITIONS ───────────────────────────────────────
+  // Each object is one card in the Active Competitions section.
+  //   icon:        Emoji fallback if badge image fails to load.
+  //   badge:       Path to award badge PNG. Available badges:
+  //                  "images/Awards%20Badges/awards-badges-pngs/above-and-beyond.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/best-seasonal-decoration.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/block-party-mvp.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/community-and-involvement-award.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/community-beautification-award.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/community-spirit-award.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/good-neighbor-award.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/green-thumb-award.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/neighborhood-hero.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/random-acts-of-kindness.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/spirit-of-giving.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/volunteer-of-the-year.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/welcome-wagon-award.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/yard-of-the-month.png"
+  //                  "images/Awards%20Badges/awards-badges-pngs/youth-spotlight.png"
+  //   bannerColor: CSS class for the card header color (see awards-styles.css).
+  //   award:       Award category name.
+  //   category:    Used for category filter. e.g. "Yard & Garden", "Community", "Service", "Events", "Youth"
+  //   period:      The award period, e.g. "April 2026".
+  //   status:      "open" | "soon" | "voting" | "deliberating" | "awarded"
+  //                  open         → green pill, nominations accepted
+  //                  soon         → gold pill, coming up
+  //                  voting       → blue pill, community voting in progress
+  //                  deliberating → bronze pill, closed for committee review
+  //                  awarded      → navy pill, winner has been announced
+  //   description: A short paragraph describing the award / current status.
+  //   deadline:    Nomination deadline string. Leave "" to omit.
+  //   prize:       Prize description. Leave "" to omit.
+  const competitions = [
+    {
+      icon: "🌿",
+      badge: "images/Awards%20Badges/awards-badges-pngs/yard-of-the-month.png",
+      bannerColor: "banner-green",
+      award: "Yard of the Month",
+      category: "Yard & Garden",
+      period: "April 2026",
+      status: "open",
+      description: "Know a neighbor with an outstanding yard? Whether it's a perfectly manicured lawn, beautiful seasonal flowers, or creative landscaping — nominate them! One winner is recognized each month.",
+      deadline: "March 31, 2026",
+      prize: "$25 gift card + neighborhood recognition"
+    },
+    {
+      icon: "🌱",
+      badge: "images/Awards%20Badges/awards-badges-pngs/green-thumb-award.png",
+      bannerColor: "banner-forest",
+      award: "Green Thumb Award",
+      category: "Yard & Garden",
+      period: "Spring 2026",
+      status: "soon",
+      description: "Celebrate the neighbor with the most impressive garden, flower beds, or container plants. Nominations open April 15th — start scouting your favorite green thumbs now!",
+      deadline: "",
+      prize: "HOA recognition + garden center gift card"
+    },
+    {
+      icon: "❄️",
+      badge: "images/Awards%20Badges/awards-badges-pngs/best-seasonal-decoration.png",
+      bannerColor: "banner-purple",
+      award: "Best Seasonal Decoration",
+      category: "Yard & Garden",
+      period: "Spring 2026",
+      status: "soon",
+      description: "Celebrate the season with the most beautiful front-yard spring display! Nominations open April 1st. Start planning your porch, garden, or window boxes now.",
+      deadline: "",
+      prize: "HOA recognition + neighborhood bragging rights"
+    },
+    {
+      icon: "🎉",
+      badge: "images/Awards%20Badges/awards-badges-pngs/block-party-mvp.png",
+      bannerColor: "banner-navy",
+      award: "Block Party MVP",
+      category: "Events",
+      period: "Summer 2026",
+      status: "soon",
+      description: "Who made the neighborhood the life of the party this summer? Nominate the neighbor who went all-out to bring the community together for fun, food, and good times.",
+      deadline: "",
+      prize: "Recognition at the annual block party"
+    },
+    {
+      icon: "🏡",
+      badge: "images/Awards%20Badges/awards-badges-pngs/community-beautification-award.png",
+      bannerColor: "banner-teal",
+      award: "Community Beautification Award",
+      category: "Community",
+      period: "Q2 2026",
+      status: "open",
+      description: "Recognize a neighbor who has made a visible, lasting improvement to the look and feel of our neighborhood — through landscaping, painting, a clean-up drive, or any effort that makes Pendleton Plantation shine.",
+      deadline: "April 15, 2026",
+      prize: "Plaque + HOA recognition"
+    },
+    {
+      icon: "✨",
+      badge: "images/Awards%20Badges/awards-badges-pngs/community-spirit-award.png",
+      bannerColor: "banner-amber",
+      award: "Community Spirit Award",
+      category: "Community",
+      period: "Q1 2026",
+      status: "deliberating",
+      description: "Nominations for Q1's Community Spirit Award are now closed. Our committee is reviewing all submissions and will announce the winner shortly — thank you to everyone who participated!",
+      deadline: "",
+      prize: "HOA recognition + community spotlight"
+    },
+    {
+      icon: "🌍",
+      badge: "images/Awards%20Badges/awards-badges-pngs/community-and-involvement-award.png",
+      bannerColor: "banner-bronze",
+      award: "Community & Involvement Award",
+      category: "Community",
+      period: "Q1 2026",
+      status: "voting",
+      description: "Finalists have been selected for Q1! Cast your vote for the neighbor who showed the greatest dedication to community involvement. Voting closes soon — every vote counts!",
+      deadline: "March 20, 2026",
+      prize: "Personalized plaque + neighborhood recognition"
+    },
+    {
+      icon: "🤝",
+      badge: "images/Awards%20Badges/awards-badges-pngs/good-neighbor-award.png",
+      bannerColor: "banner-gold",
+      award: "Good Neighbor Award",
+      category: "Community",
+      period: "April 2026",
+      status: "open",
+      description: "Know someone who goes out of their way to be kind, helpful, and welcoming? Nominate the neighbor who makes our street a better place just by being on it.",
+      deadline: "March 31, 2026",
+      prize: "Recognition + gift card"
+    },
+    {
+      icon: "🦸",
+      badge: "images/Awards%20Badges/awards-badges-pngs/neighborhood-hero.png",
+      bannerColor: "banner-blue",
+      award: "Neighborhood Hero",
+      category: "Service",
+      period: "Q1 2026",
+      status: "voting",
+      description: "Three finalists have been selected for Q1's Neighborhood Hero award! Community voting is now open. Cast your vote for the neighbor who has gone above and beyond for our community.",
+      deadline: "March 15, 2026",
+      prize: "Personalized recognition plaque"
+    },
+    {
+      icon: "🦅",
+      badge: "images/Awards%20Badges/awards-badges-pngs/above-and-beyond.png",
+      bannerColor: "banner-gold-warm",
+      award: "Above & Beyond Award",
+      category: "Service",
+      period: "Q1 2026",
+      status: "deliberating",
+      description: "Nominations have closed and our review committee is deliberating. The Above & Beyond Award recognizes a neighbor who truly exceeded all expectations in service to our community.",
+      deadline: "",
+      prize: "Award of Excellence plaque"
+    },
+    {
+      icon: "🦋",
+      badge: "images/Awards%20Badges/awards-badges-pngs/random-acts-of-kindness.png",
+      bannerColor: "banner-navy",
+      award: "Random Acts of Kindness",
+      category: "Service",
+      period: "Spring 2026",
+      status: "soon",
+      description: "This award celebrates neighbors who quietly make life better for those around them — a kind note, helping with groceries, or simply brightening someone's day. Nominations open April 1st.",
+      deadline: "",
+      prize: "Community recognition"
+    },
+    {
+      icon: "🕊️",
+      badge: "images/Awards%20Badges/awards-badges-pngs/spirit-of-giving.png",
+      bannerColor: "banner-gold",
+      award: "Spirit of Giving Award",
+      category: "Service",
+      period: "Holiday 2025",
+      status: "awarded",
+      description: "The Holiday 2025 Spirit of Giving Award has been presented! Congratulations to this cycle's winner — and thank you to all who were nominated. See the Past Winners section below.",
+      deadline: "",
+      prize: "Community recognition plaque"
+    },
+    {
+      icon: "🙌",
+      badge: "images/Awards%20Badges/awards-badges-pngs/volunteer-of-the-year.png",
+      bannerColor: "banner-crimson",
+      award: "Volunteer of the Year",
+      category: "Service",
+      period: "2025",
+      status: "awarded",
+      description: "The 2025 Volunteer of the Year has been announced! This annual award honors a neighbor who gave their time and heart to making Pendleton Plantation a better place for all. See Past Winners for details.",
+      deadline: "",
+      prize: "Annual recognition award"
+    },
+    {
+      icon: "🛖",
+      badge: "images/Awards%20Badges/awards-badges-pngs/welcome-wagon-award.png",
+      bannerColor: "banner-teal",
+      award: "Welcome Wagon Award",
+      category: "Community",
+      period: "Q2 2026",
+      status: "open",
+      description: "Who made you feel most at home when you moved to Pendleton Plantation? Nominate the neighbor who goes out of their way to welcome new families to our community.",
+      deadline: "April 30, 2026",
+      prize: "Recognition + welcome basket"
+    },
+    {
+      icon: "⭐",
+      badge: "images/Awards%20Badges/awards-badges-pngs/youth-spotlight.png",
+      bannerColor: "banner-sky",
+      award: "Youth Spotlight",
+      category: "Youth",
+      period: "Spring 2026",
+      status: "open",
+      description: "Celebrate a young neighbor (age 18 and under) who has shown exceptional kindness, leadership, or community spirit. Nominate a young person who makes Pendleton Plantation proud!",
+      deadline: "April 15, 2026",
+      prize: "Certificate + community recognition"
+    },
+  ];
+
+
+  // ============================================================
+  //  Rendering — no edits needed below this line
+  // ============================================================
+
+  // ── NAV: HAMBURGER TOGGLE ──────────────────────────────────
+  const hamburger = document.querySelector('.nav-hamburger');
+  const navLinks = document.querySelector('.nav-links');
+
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        hamburger.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  }
+
+  document.querySelectorAll('.nav-has-dropdown > a').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      if (window.innerWidth <= 1100) {
+        e.preventDefault();
+        link.parentElement.classList.toggle('open');
+      }
+    });
+  });
+
+
+  // ── STATUS HELPERS ─────────────────────────────────────────
+  const STATUS_BANNER = { open: 'banner-green', soon: 'banner-gold', voting: 'banner-blue', deliberating: 'banner-bronze', awarded: 'banner-navy' };
+  const STATUS_BADGE  = { open: 'badge-open',   soon: 'badge-soon',  voting: 'badge-voting', deliberating: 'badge-deliberating', awarded: 'badge-awarded' };
+  const STATUS_LABEL  = { open: 'Nominations Open', soon: 'Coming Soon', voting: 'Voting Open', deliberating: 'Under Review', awarded: 'Winner Announced' };
+
+
+  // ── RENDER COMPETITIONS ────────────────────────────────────
+  (function renderCompetitions() {
+    const list            = document.getElementById('competitions-list');
+    const empty           = document.getElementById('comp-empty');
+    const filtersEl       = document.getElementById('comp-filters');
+    const statusPillsEl   = document.getElementById('comp-status-pills');
+    const categoryPillsEl = document.getElementById('comp-category-pills');
+
+    if (!competitions.length) {
+      if (empty) empty.hidden = false;
+      return;
+    }
+
+    filtersEl.hidden = false;
+
+    let activeStatus   = 'all';
+    let activeCategory = 'all';
+
+    // Build ordered status list (only statuses present in the data)
+    const statusOrder = ['open', 'voting', 'deliberating', 'soon', 'awarded'];
+    const presentStatuses = statusOrder.filter(s => competitions.some(c => c.status === s));
+    const categories = [...new Set(competitions.map(c => c.category))].sort();
+
+    // Status pills
+    statusPillsEl.innerHTML = ['all', ...presentStatuses].map((s, i) => {
+      const label = s === 'all' ? 'All' : (STATUS_LABEL[s] || s);
+      return `<button class="filter-pill${i === 0 ? ' active' : ''}" data-value="${s}">${label}</button>`;
+    }).join('');
+
+    // Category pills
+    categoryPillsEl.innerHTML = ['all', ...categories].map((cat, i) => {
+      const label = cat === 'all' ? 'All' : cat;
+      return `<button class="filter-pill${i === 0 ? ' active' : ''}" data-value="${cat}">${label}</button>`;
+    }).join('');
+
+    function applyFilters() {
+      const filtered = competitions.filter(c => {
+        const sOk = activeStatus   === 'all' || c.status   === activeStatus;
+        const cOk = activeCategory === 'all' || c.category === activeCategory;
+        return sOk && cOk;
+      });
+
+      if (filtered.length) {
+        list.hidden  = false;
+        empty.hidden = true;
+        list.innerHTML = filtered.map(renderCompCard).join('');
+      } else {
+        list.hidden  = true;
+        empty.hidden = false;
+      }
+    }
+
+    statusPillsEl.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-pill');
+      if (!btn) return;
+      statusPillsEl.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      activeStatus = btn.dataset.value;
+      applyFilters();
+    });
+
+    categoryPillsEl.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-pill');
+      if (!btn) return;
+      categoryPillsEl.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.value;
+      applyFilters();
+    });
+
+    applyFilters();
+  })();
+
+
+  // ── BUILD A SINGLE COMPETITION CARD ───────────────────────
+  function renderCompCard(c) {
+    const bannerClass = c.bannerColor || STATUS_BANNER[c.status] || 'banner-gold';
+    const badgeClass  = STATUS_BADGE[c.status]  || 'badge-soon';
+    const badgeLabel  = STATUS_LABEL[c.status]  || c.status;
+
+    const deadlineRow = c.deadline
+      ? `<li><span class="detail-label">Deadline</span> ${c.deadline}</li>`
+      : '';
+    const prizeRow = c.prize
+      ? `<li><span class="detail-label">Prize</span> ${c.prize}</li>`
+      : '';
+
+    const badgeImgHtml = c.badge
+      ? `<img src="${c.badge}" alt="${c.award} badge" class="comp-badge-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`
+      : '';
+    const badgeFallback = `<div class="comp-emoji"${c.badge ? ' style="display:none"' : ''}>${c.icon}</div>`;
+
+    let actionHtml;
+    switch (c.status) {
+      case 'open':         actionHtml = `<a href="nominations.html" class="btn-event-primary">Nominate Someone →</a>`; break;
+      case 'voting':       actionHtml = `<a href="nominations.html" class="btn-event-primary">Cast Your Vote →</a>`; break;
+      case 'awarded':      actionHtml = `<a href="#winners" class="btn-event-ghost">See Past Winners →</a>`; break;
+      default:             actionHtml = `<span class="comp-status-note">${badgeLabel}</span>`;
+    }
+
+    const awardedClass = c.status === 'awarded' ? ' comp-card--awarded' : '';
+
+    return `
+    <div class="comp-card${awardedClass}">
+      <div class="comp-banner ${bannerClass}">
+        <div class="comp-banner-top">
+          <div class="comp-banner-title">${c.award}</div>
+          <div class="comp-banner-period">${c.period}</div>
+        </div>
+        <div class="comp-banner-bottom">
+          <div class="comp-banner-badge-wrap">
+            ${badgeImgHtml}
+            ${badgeFallback}
+          </div>
+          <span class="comp-status-badge ${badgeClass}">${badgeLabel}</span>
+        </div>
+      </div>
+      <div class="comp-body">
+        <p class="comp-description">${c.description}</p>
+        <ul class="comp-details-list">
+          ${deadlineRow}
+          ${prizeRow}
+        </ul>
+        <div class="comp-actions">
+          ${actionHtml}
+        </div>
+      </div>
+    </div>`;
+  }
+
+
+  // ── RENDER WINNERS (with filters) ─────────────────────────
+  function initWinners(winners) {
+    const list = document.getElementById('winners-list');
+    const emptyState = document.getElementById('winners-empty');
+    const loadingEl = document.getElementById('winners-loading');
+    const pillsEl = document.getElementById('category-pills');
+    const yearSelect = document.getElementById('year-select');
+    const filtersEl = document.getElementById('winners-filters');
+
+    if (loadingEl) loadingEl.hidden = true;
+
+    // Hide filter bar if no winners yet
+    if (!winners.length) {
+      if (filtersEl) filtersEl.hidden = true;
+      if (emptyState) emptyState.hidden = false;
+      return;
+    }
+
+    let activeCategory = 'all';
+    let activeYear = 'all';
+
+    // Build unique sorted category + year lists from the data
+    const categories = [...new Set(winners.map(w => w.award))];
+    const years = [...new Set(winners.map(w => w.year))].sort((a, b) => b - a);
+
+    // Category pill buttons
+    pillsEl.innerHTML = ['All', ...categories].map((cat, i) => {
+      const val = i === 0 ? 'all' : cat;
+      return `<button class="filter-pill${i === 0 ? ' active' : ''}" data-category="${val}">${cat}</button>`;
+    }).join('');
+
+    // Year dropdown options
+    years.forEach(y => {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      yearSelect.appendChild(opt);
+    });
+
+    // Filter + render
+    function applyFilters() {
+      const filtered = winners.filter(w => {
+        const catOk = activeCategory === 'all' || w.award === activeCategory;
+        const yearOk = activeYear === 'all' || w.year === parseInt(activeYear);
+        return catOk && yearOk;
+      });
+
+      if (filtered.length) {
+        list.hidden = false;
+        emptyState.hidden = true;
+        list.innerHTML = filtered.map(buildWinnerCard).join('');
+      } else {
+        list.hidden = true;
+        emptyState.hidden = false;
+      }
+    }
+
+    // Pill click handler
+    pillsEl.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-pill');
+      if (!btn) return;
+      pillsEl.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.category;
+      applyFilters();
+    });
+
+    // Year change handler
+    yearSelect.addEventListener('change', () => {
+      activeYear = yearSelect.value;
+      applyFilters();
+    });
+
+    // Initial render
+    applyFilters();
+  }
+
+
+  // ── BUILD A SINGLE WINNER CARD ─────────────────────────────
+  function buildWinnerCard(w) {
+    const bannerClass = w.bannerColor || 'banner-green';
+
+    // Badge image (award PNG) or emoji fallback
+    const badgeHtml = w.badge
+      ? `<img src="${w.badge}" alt="${w.award} badge" class="winner-badge-img" onerror="this.style.display='none'">`
+      : `<span class="winner-badge-emoji">${w.icon || '🏆'}</span>`;
+
+    // Prize badge (only if prize is set)
+    const prizeBadge = w.prize
+      ? `<span class="winner-prize-badge">${w.prize}</span>`
+      : '';
+
+    // Quote blockquotes (up to 3)
+    const quotesHtml = (w.quotes && w.quotes.length)
+      ? w.quotes.slice(0, 3).map(q => `
+          <blockquote class="winner-quote">${q}</blockquote>`).join('')
+      : '';
+
+    // Photo column — always rendered; shows actual photo or silhouette placeholder
+    const photoWrap = w.photoId
+      ? `<div class="winner-photo-wrap">
+           <img
+             src="https://drive.google.com/thumbnail?id=${w.photoId}&sz=w300"
+             alt="Photo of ${w.winner}"
+             class="winner-photo-img"
+             onerror="this.parentElement.classList.add('winner-photo-placeholder');this.style.display='none'"
+           />
+         </div>`
+      : `<div class="winner-photo-wrap winner-photo-placeholder">
+           <svg class="winner-photo-silhouette" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+             <circle cx="40" cy="28" r="17" fill="rgba(255,255,255,0.55)"/>
+             <ellipse cx="40" cy="74" rx="27" ry="20" fill="rgba(255,255,255,0.55)"/>
+           </svg>
+         </div>`;
+
+    return `
+    <div class="winner-card">
+      <div class="winner-badge-col ${bannerClass}">
+        ${badgeHtml}
+        ${photoWrap}
+      </div>
+      <div class="winner-content">
+        <div class="winner-meta-row">
+          <span class="winner-award-badge">${w.icon} ${w.award}</span>
+          <span class="winner-period">${w.period}</span>
+        </div>
+        ${prizeBadge}
+        <div class="winner-name">${w.winner}</div>
+        ${w.blurb ? `<p class="winner-blurb">${w.blurb}</p>` : ''}
+        ${quotesHtml}
+      </div>
+    </div>`;
+  }
+
+
+  // ── GOOGLE SHEET FETCH & PARSE ─────────────────────────────
+
+  // Minimal CSV parser — handles quoted fields and embedded commas/newlines.
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
+        else if (c === '"') { inQuotes = false; }
+        else { field += c; }
+      } else {
+        if (c === '"') { inQuotes = true; }
+        else if (c === ',') { row.push(field); field = ''; }
+        else if (c === '\r' || c === '\n') {
+          row.push(field); field = '';
+          if (row.some(f => f.trim())) rows.push(row);
+          row = [];
+          if (c === '\r' && text[i + 1] === '\n') i++;
+        } else { field += c; }
+      }
+    }
+    if (field || row.length) { row.push(field); if (row.some(f => f.trim())) rows.push(row); }
+    return rows;
+  }
+
+  // Convert parsed CSV rows into the winners array format.
+  const BADGE_BASE = 'images/Awards%20Badges/awards-badges-pngs/';
+  function parseWinnersCSV(csv) {
+    const rows = parseCSV(csv);
+    if (rows.length < 2) return [];
+    const headers = rows[0].map(h => h.trim().toLowerCase());
+    const get = (row, col) => (row[headers.indexOf(col)] || '').trim();
+
+    return rows.slice(1)
+      .filter(r => r.some(f => f.trim()))
+      .map(r => {
+        const badgeName = get(r, 'badge');
+        return {
+          icon:        get(r, 'icon'),
+          badge:       badgeName ? `${BADGE_BASE}${badgeName}.png` : '',
+          bannerColor: get(r, 'bannercolor') || 'banner-green',
+          award:       get(r, 'award'),
+          period:      get(r, 'period'),
+          year:        parseInt(get(r, 'year')) || new Date().getFullYear(),
+          winner:      get(r, 'winner'),
+          photoId:     get(r, 'photoid'),
+          prize:       get(r, 'prize'),
+          blurb:       get(r, 'blurb'),
+          quotes:      [get(r, 'quote1'), get(r, 'quote2'), get(r, 'quote3')].filter(Boolean),
+        };
+      })
+      .filter(w => w.winner);
+  }
+
+  // Fetch the Winners sheet and initialize the UI.
+  async function loadWinners() {
+    const loadingEl = document.getElementById('winners-loading');
+    const emptyEl   = document.getElementById('winners-empty');
+
+    if (loadingEl) loadingEl.hidden = false;
+    if (emptyEl)   emptyEl.hidden   = true;
+
+    try {
+      const resp = await fetch(WINNERS_SHEET_URL);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const csv = await resp.text();
+      initWinners(parseWinnersCSV(csv));
+    } catch (err) {
+      console.warn('Could not load winners sheet:', err);
+      if (loadingEl) loadingEl.hidden = true;
+      initWinners([]);
+    }
+  }
+
+  loadWinners();
+
+</script>
+
+</html>

@@ -32,6 +32,13 @@ var NOTIFICATION_EMAIL = "mandyvaliquette00@gmail.com";
 //     spreadsheet and used in notification email subject lines.
 var EVENT_NAME = "Easter Egg Hunt 2025";
 
+// ✏️  PUT YOUR SHARED GOOGLE SPREADSHEET ID HERE.
+// This is the same sheet used by nominations-script.gs.
+// Find it in the sheet URL:
+//   https://docs.google.com/spreadsheets/d/YOUR_ID_HERE/edit
+// The Signups tab will be created automatically on first submission.
+var SPREADSHEET_ID = "17SlocYPigWSV3PL1e8d93WSTkz-Tzb01NeQQ9eIRKCs";
+
 
 // ── DONATION ITEMS ───────────────────────────────────────────
 // The full list of donation items tracked by the spreadsheet.
@@ -199,7 +206,7 @@ function doPost(e) {
 
     // ── Get or create the Signups sheet ─────────────────────
     // Open the active spreadsheet (the one this script is attached to).
-    var ss    = SpreadsheetApp.getActiveSpreadsheet();
+    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
     var sheet = ss.getSheetByName("Signups");
 
     // If the "Signups" sheet doesn't exist yet, create it and add headers.
@@ -328,13 +335,17 @@ function doPost(e) {
 
 
 // ============================================================
-//  doGet — Returns a JSON summary for the dashboard
-//  Called automatically when the dashboard page fetches the
-//  web app URL via an HTTP GET request. Returns aggregated
-//  sign-up counts so the dashboard can display live stats
-//  without exposing individual personal data.
+//  doGet — Returns a JSON summary for the dashboard, or a
+//  single-person lookup when ?action=lookup&name=... is passed.
 // ============================================================
 function doGet(e) {
+  var params = (e && e.parameter) ? e.parameter : {};
+
+  // ── Lookup mode: find one person's sign-up by name ──────
+  if (params.action === "lookup") {
+    return handleLookup(params.name || "");
+  }
+
 
   // Define a default "empty" response object returned when there are
   // no sign-ups yet or if the sheet does not exist.
@@ -343,7 +354,11 @@ function doGet(e) {
     attendingCount:  0,
     totalAdults:     0,
     totalChildren:   0,
+    ages_0_3:        0,
+    ages_4_8:        0,
+    ages_9_plus:     0,
     volunteerCounts: {},   // Map of { "Role Name": count }
+    volunteerDetails:{},   // Map of { "Role Name": [{ name, email, phone }] }
     donationCounts:  {},   // Map of { "Item Label": total pledged }
     potluckItems:    [],   // Array of potluck item strings
     lastUpdated:     new Date().toISOString()
@@ -351,7 +366,7 @@ function doGet(e) {
 
   try {
     // Open the active spreadsheet and look for the "Signups" sheet.
-    var ss    = SpreadsheetApp.getActiveSpreadsheet();
+    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
     var sheet = ss.getSheetByName("Signups");
 
     // If the sheet doesn't exist or only has a header row (no sign-ups),
@@ -377,7 +392,11 @@ function doGet(e) {
     var attendingCount  = 0;             // Count of people attending the event.
     var totalAdults     = 0;             // Sum of all adult counts.
     var totalChildren   = 0;             // Sum of all children counts.
+    var ages_0_3        = 0;             // Sum of children aged 0–3.
+    var ages_4_8        = 0;             // Sum of children aged 4–8.
+    var ages_9_plus     = 0;             // Sum of children aged 9+.
     var volunteerCounts = {};            // Accumulates volunteer counts per role.
+    var volunteerDetails= {};            // Accumulates { name, email, phone } per role.
     var donationCounts  = {};            // Accumulates pledged quantities per item.
     var potluckItems    = [];            // List of all potluck items submitted.
 
@@ -395,6 +414,11 @@ function doGet(e) {
       totalAdults   += Number(row[col["# Adults"]]   || 0) || 0;
       totalChildren += Number(row[col["# Children"]] || 0) || 0;
 
+      // ── Age brackets ──────────────────────────────────────
+      ages_0_3    += Number(row[col["Ages 0-3"]] || 0) || 0;
+      ages_4_8    += Number(row[col["Ages 4-8"]] || 0) || 0;
+      ages_9_plus += Number(row[col["Ages 9+"]]  || 0) || 0;
+
       // ── Potluck items ─────────────────────────────────────
       // Read the potluck item text from this row and add it to the list
       // if it is not blank.
@@ -406,9 +430,15 @@ function doGet(e) {
       // Split it and increment the count for each role name found.
       var vols = String(row[col["Volunteer Roles"]] || "");
       if (vols && vols !== "None selected") {
+        var volName  = (String(row[col["First Name"]] || "") + " " + String(row[col["Last Name"]] || "")).trim();
+        var volEmail = String(row[col["Email"]] || "").trim();
+        var volPhone = String(row[col["Phone"]] || "").trim();
         vols.split(",").forEach(function(v) {
           v = v.trim();
-          if (v) volunteerCounts[v] = (volunteerCounts[v] || 0) + 1;
+          if (!v) return;
+          volunteerCounts[v] = (volunteerCounts[v] || 0) + 1;
+          if (!volunteerDetails[v]) volunteerDetails[v] = [];
+          volunteerDetails[v].push({ name: volName, email: volEmail, phone: volPhone });
         });
       }
 
@@ -425,14 +455,18 @@ function doGet(e) {
     // Return all the aggregated summary data for the dashboard to display.
     return ContentService
       .createTextOutput(JSON.stringify({
-        totalSignups:    totalSignups,
-        attendingCount:  attendingCount,
-        totalAdults:     totalAdults,
-        totalChildren:   totalChildren,
-        volunteerCounts: volunteerCounts,
-        donationCounts:  donationCounts,
-        potluckItems:    potluckItems,
-        lastUpdated:     new Date().toISOString()
+        totalSignups:     totalSignups,
+        attendingCount:   attendingCount,
+        totalAdults:      totalAdults,
+        totalChildren:    totalChildren,
+        ages_0_3:         ages_0_3,
+        ages_4_8:         ages_4_8,
+        ages_9_plus:      ages_9_plus,
+        volunteerCounts:  volunteerCounts,
+        volunteerDetails: volunteerDetails,
+        donationCounts:   donationCounts,
+        potluckItems:     potluckItems,
+        lastUpdated:      new Date().toISOString()
       }))
       .setMimeType(ContentService.MimeType.JSON);
 
@@ -442,6 +476,86 @@ function doGet(e) {
     empty.error = err.toString();
     return ContentService
       .createTextOutput(JSON.stringify(empty))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+
+// ============================================================
+//  handleLookup — Finds sign-up rows matching a name search.
+//  Called by doGet when ?action=lookup&name=... is present.
+//  Returns only the fields needed to confirm a sign-up;
+//  email, phone, and address are intentionally omitted.
+// ============================================================
+function handleLookup(searchName) {
+  try {
+    var query = searchName.trim().toLowerCase();
+
+    if (!query) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ results: [] }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var sheet = ss.getSheetByName("Signups");
+
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ results: [] }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var data    = sheet.getDataRange().getValues();
+    var headers = data[0];
+    var rows    = data.slice(1);
+
+    var col = {};
+    headers.forEach(function(h, i) { col[h] = i; });
+
+    var results = [];
+
+    rows.forEach(function(row) {
+      var firstName = String(row[col["First Name"]] || "").trim();
+      var lastName  = String(row[col["Last Name"]]  || "").trim();
+      var fullName  = (firstName + " " + lastName).trim();
+
+      // Match if the search query appears anywhere in the full name (case-insensitive).
+      if (fullName.toLowerCase().indexOf(query) === -1) return;
+
+      // Collect non-zero donation pledges for this person.
+      var donations = [];
+      DONATION_ITEMS.forEach(function(item) {
+        var qty = Number(row[col[item]] || 0) || 0;
+        if (qty > 0) donations.push({ item: item, qty: qty });
+      });
+
+      var roles = String(row[col["Volunteer Roles"]] || "")
+        .split(",")
+        .map(function(r) { return r.trim(); })
+        .filter(function(r) { return r && r !== "None selected"; });
+
+      results.push({
+        name:          fullName,
+        attending:     String(row[col["Attending?"]]   || ""),
+        adults:        Number(row[col["# Adults"]]     || 0) || 0,
+        children:      Number(row[col["# Children"]]   || 0) || 0,
+        roles:         roles,
+        potluck:       String(row[col["Potluck Item"]] || "").trim(),
+        donations:     donations,
+        otherDonation: String(row[col["Other Donation"]] || "").trim(),
+        cash:          String(row[col["Cash Donation"]]  || "").trim(),
+        notes:         String(row[col["Notes"]]          || "").trim(),
+      });
+    });
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ results: results }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ results: [], error: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }

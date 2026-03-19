@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ============================================================
+     File:        events.html
+     Purpose:     Neighborhood Events hub page. Each community event
+                  has its own section with description, date/time,
+                  and links to sign-up or details pages.
+                  Anchor IDs match the nav dropdown links:
+                    #Easter, #IceCreamSocial, #July4th,
+                    #ShrimpBoil, #TrunkOrTreat, #HolidayLights
+     Styles:      index-styles.css (global), events-styles.css
+     ============================================================ -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neighborhood Events — Pendleton Plantation</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="index-styles.css" />
+  <link rel="stylesheet" href="events-styles.css" />
+</head>
+
+<body>
+
+  <!-- ── NAVIGATION ───────────────────────────────────────────-->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-links">
+      <li class="nav-has-dropdown">
+        <a href="index.html">Home <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="index.html#awards">Awards</a></li>
+          <li><a href="index.html#events">Events</a></li>
+          <li><a href="index.html#memories">Memories</a></li>
+          <li><a href="index.html#announcements">Announcements</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </li>
+      <li><a href="awards.html">Awards</a></li>
+      <li class="nav-has-dropdown">
+        <a href="events.html">Events <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="events.html#Easter">🐣 Easter Egg Hunt</a></li>
+          <li><a href="events.html#IceCreamSocial">🍦 Ice Cream Social</a></li>
+          <li><a href="events.html#July4th">🎆 4th of July</a></li>
+          <li><a href="events.html#ShrimpBoil">🦐 Shrimp Boil</a></li>
+          <li><a href="events.html#TrunkOrTreat">🎃 Trunk or Treat</a></li>
+          <li><a href="events.html#HolidayLights">✨ Holiday Lights</a></li>
+        </ul>
+      </li>
+      <li><a href="memories.html">Memories</a></li>
+      <li><a href="bulletin-board.html">Bulletin Board</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+    </ul>
+  </nav>
+
+
+  <!-- ── PAGE HEADER ──────────────────────────────────────────-->
+  <header class="events-page-header">
+    <p class="page-eyebrow">✦ &nbsp; What's Happening &nbsp; ✦</p>
+    <h1>Neighborhood <em>Events</em></h1>
+    <div class="header-rule"></div>
+    <p class="header-sub">
+      From egg hunts to shrimp boils, we love any excuse to get together.
+      Browse all upcoming and annual community events below.
+    </p>
+  </header>
+
+
+  <!-- ── QUICK-NAV ────────────────────────────────────────────-->
+  <nav class="events-quicknav" aria-label="Jump to event">
+    <div class="events-quicknav-inner">
+      <a href="#Easter">🐣 Easter Egg Hunt</a>
+      <a href="#IceCreamSocial">🍦 Ice Cream Social</a>
+      <a href="#July4th">🎆 4th of July</a>
+      <a href="#ShrimpBoil">🦐 Shrimp Boil</a>
+      <a href="#TrunkOrTreat">🎃 Trunk or Treat</a>
+      <a href="#HolidayLights">✨ Holiday Lights</a>
+    </div>
+  </nav>
+
+
+  <!-- ── EVENT SECTIONS ───────────────────────────────────────-->
+  <div class="events-wrapper">
+
+
+    <!-- ── EASTER EGG HUNT ──────────────────────────────────-->
+    <section class="event-section" id="Easter">
+      <div class="event-card-full">
+
+        <div class="event-banner banner-green">
+          <div class="event-banner-left">
+            <div class="event-emoji-large">🐣</div>
+            <div>
+              <div class="event-banner-title">Easter Egg Hunt</div>
+              <div class="event-banner-date">March 21, 2026 &nbsp;·&nbsp; 10:00 AM – 1:00 PM</div>
+            </div>
+          </div>
+          <span class="event-status-badge badge-open">Sign-Ups Open</span>
+        </div>
+
+        <div class="event-body">
+          <p class="event-description">
+            A fun-filled spring morning for the whole family! We'll have egg hunts split by age group so every child
+            gets a fair shot, plus crafts, potluck snacks, and a community photobooth. This is one of our favorite
+            neighborhood traditions — come join the fun, meet your neighbors, and make some memories.
+            Volunteers and donations are still needed. Sign up to help set up, hide eggs, or bring a dish to share.
+          </p>
+
+          <ul class="event-details-list">
+            <li><span class="detail-label">Date</span> March 21, 2026</li>
+            <li><span class="detail-label">Time</span> 10:00 AM – 1:00 PM</li>
+            <li><span class="detail-label">Where</span> Pendleton Plantation neighborhood</li>
+            <li><span class="detail-label">Ages</span> All ages welcome</li>
+          </ul>
+
+          <div class="event-actions">
+            <a href="signup-page-easter.html" class="btn-event-primary">Sign Up Now →</a>
+            <a href="signup-page-easter.html" class="btn-event-outline">Volunteer / Donate</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ── ICE CREAM SOCIAL ──────────────────────────────────-->
+    <section class="event-section" id="IceCreamSocial">
+      <div class="event-card-full">
+
+        <div class="event-banner banner-blue">
+          <div class="event-banner-left">
+            <div class="event-emoji-large">🍦</div>
+            <div>
+              <div class="event-banner-title">Ice Cream Social</div>
+              <div class="event-banner-date">May 2026</div>
+            </div>
+          </div>
+          <span class="event-status-badge badge-soon">Coming Soon</span>
+        </div>
+
+        <div class="event-body">
+          <p class="event-description">
+            A sweet kick-off to summer! Join your neighbors by the pool for ice cream, cold drinks, and good
+            conversation. Whether you've lived here for years or just moved in, the Ice Cream Social is a perfect
+            low-key way to connect with the community. Details and exact date coming soon.
+          </p>
+
+          <ul class="event-details-list">
+            <li><span class="detail-label">Date</span> May 2026 — exact date TBD</li>
+            <li><span class="detail-label">Where</span> Pendleton Plantation pool area</li>
+            <li><span class="detail-label">Ages</span> All welcome</li>
+          </ul>
+
+          <div class="event-actions">
+            <p class="event-coming-soon-note">Check back for sign-up details as the date approaches.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ── 4TH OF JULY ──────────────────────────────────────-->
+    <section class="event-section" id="July4th">
+      <div class="event-card-full">
+
+        <div class="event-banner banner-red">
+          <div class="event-banner-left">
+            <div class="event-emoji-large">🎆</div>
+            <div>
+              <div class="event-banner-title">4th of July Block Party</div>
+              <div class="event-banner-date">July 4, 2026</div>
+            </div>
+          </div>
+          <span class="event-status-badge badge-soon">Coming Soon</span>
+        </div>
+
+        <div class="event-body">
+          <p class="event-description">
+            Celebrate Independence Day the neighborhood way — food, lawn games, music, and community spirit.
+            We'll fire up the grills, set out the lawn chairs, and enjoy a summer evening together.
+            Plans and volunteer opportunities will be posted here as the date approaches.
+          </p>
+
+          <ul class="event-details-list">
+            <li><span class="detail-label">Date</span> July 4, 2026</li>
+            <li><span class="detail-label">Where</span> Pendleton Plantation neighborhood</li>
+            <li><span class="detail-label">Ages</span> All welcome</li>
+          </ul>
+
+          <div class="event-actions">
+            <p class="event-coming-soon-note">Details and sign-ups coming soon.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ── SHRIMP BOIL ───────────────────────────────────────-->
+    <section class="event-section" id="ShrimpBoil">
+      <div class="event-card-full">
+
+        <div class="event-banner banner-teal">
+          <div class="event-banner-left">
+            <div class="event-emoji-large">🦐</div>
+            <div>
+              <div class="event-banner-title">Shrimp Boil</div>
+              <div class="event-banner-date">Summer 2026</div>
+            </div>
+          </div>
+          <span class="event-status-badge badge-soon">Coming Soon</span>
+        </div>
+
+        <div class="event-body">
+          <p class="event-description">
+            A classic Low Country tradition right here in the neighborhood. Shrimp, corn, potatoes, sausage — the
+            works. Bring a side dish, bring your appetite, and enjoy a warm summer evening with good food and even
+            better neighbors. Date and details to be announced.
+          </p>
+
+          <ul class="event-details-list">
+            <li><span class="detail-label">Date</span> Summer 2026 — exact date TBD</li>
+            <li><span class="detail-label">Where</span> Pendleton Plantation neighborhood</li>
+            <li><span class="detail-label">Bring</span> A side dish to share</li>
+          </ul>
+
+          <div class="event-actions">
+            <p class="event-coming-soon-note">Details and sign-ups coming soon.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ── TRUNK OR TREAT ────────────────────────────────────-->
+    <section class="event-section" id="TrunkOrTreat">
+      <div class="event-card-full">
+
+        <div class="event-banner banner-orange">
+          <div class="event-banner-left">
+            <div class="event-emoji-large">🎃</div>
+            <div>
+              <div class="event-banner-title">Halloween Trunk or Treat</div>
+              <div class="event-banner-date">October 2026</div>
+            </div>
+          </div>
+          <span class="event-status-badge badge-soon">Coming Soon</span>
+        </div>
+
+        <div class="event-body">
+          <p class="event-description">
+            A safe, spooky, and fun Halloween tradition for the little ones of Pendleton Plantation. Decorate your
+            car trunk and hand out candy to costumed trick-or-treaters right here in the neighborhood — no dark
+            streets, no strangers. Costume contests, prizes, and neighborhood spirit guaranteed.
+          </p>
+
+          <ul class="event-details-list">
+            <li><span class="detail-label">Date</span> October 2026 — exact date TBD</li>
+            <li><span class="detail-label">Where</span> Pendleton Plantation neighborhood</li>
+            <li><span class="detail-label">Ages</span> All ages welcome</li>
+          </ul>
+
+          <div class="event-actions">
+            <p class="event-coming-soon-note">Details and sign-ups coming soon.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ── HOLIDAY LIGHTS ────────────────────────────────────-->
+    <section class="event-section" id="HolidayLights">
+      <div class="event-card-full">
+
+        <div class="event-banner banner-gold">
+          <div class="event-banner-left">
+            <div class="event-emoji-large">✨</div>
+            <div>
+              <div class="event-banner-title">Holiday Lights Contest</div>
+              <div class="event-banner-date">December 2026</div>
+            </div>
+          </div>
+          <span class="event-status-badge badge-soon">Coming Soon</span>
+        </div>
+
+        <div class="event-body">
+          <p class="event-description">
+            Deck the halls and compete for bragging rights as the best-decorated home on the block! Residents vote
+            for their favorite displays and winners are announced in the community. A festive way to spread holiday
+            cheer and bring a little sparkle to the neighborhood. Details to follow.
+          </p>
+
+          <ul class="event-details-list">
+            <li><span class="detail-label">Date</span> December 2026</li>
+            <li><span class="detail-label">How</span> Decorate your home, neighbors vote</li>
+            <li><span class="detail-label">Prizes</span> TBD</li>
+          </ul>
+
+          <div class="event-actions">
+            <p class="event-coming-soon-note">Details coming as the season approaches.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+  </div><!-- /.events-wrapper -->
+
+
+  <!-- ── FOOTER ───────────────────────────────────────────────-->
+  <footer>
+    <div class="footer-brand">Pendleton Plantation</div>
+    <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
+    <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp; <a
+        href="mailto:mandyvaliquette00@gmail.com" style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact
+        Us</a></p>
+  </footer>
+
+</body>
+
+<script>
+  // ── NAV: HAMBURGER TOGGLE ──────────────────────────────────
+  const hamburger = document.querySelector('.nav-hamburger');
+  const navLinks  = document.querySelector('.nav-links');
+
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        hamburger.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  }
+
+  // Dropdown toggles (mobile only)
+  document.querySelectorAll('.nav-has-dropdown > a').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      if (window.innerWidth <= 1100) {
+        e.preventDefault();
+        link.parentElement.classList.toggle('open');
+      }
+    });
+  });
+</script>
+
+</html>

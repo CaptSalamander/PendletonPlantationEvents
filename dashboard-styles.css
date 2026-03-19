@@ -495,3 +495,578 @@
   font-weight: 300;
   font-style: italic;
 }
+
+/* Count badge on duplicate potluck tags */
+.potluck-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 7px;
+  background: var(--moss);
+  color: var(--cream);
+  font-size: 0.6rem;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  padding: 0 4px;
+  vertical-align: middle;
+}
+
+
+/* ── TAB BAR ──────────────────────────────────────────────────
+   Sticky navigation bar that sits between the hero and the
+   dashboard content. Holds the four tab buttons. */
+.dash-tabs-bar {
+  position: sticky;
+  top: 64px;            /* Sits just below the fixed nav bar. */
+  z-index: 90;
+  background: var(--warm-white);
+  border-bottom: 1px solid rgba(201,168,76,0.18);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.dash-tabs {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+  display: flex;
+  gap: 0;
+}
+
+.dash-tab {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 15px 20px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.dash-tab:hover  { color: var(--forest); }
+.dash-tab.active { color: var(--forest); border-bottom-color: var(--gold); }
+
+
+/* ── AGE BREAKDOWN GRID ───────────────────────────────────────
+   A secondary row of three stat cards below the main stats,
+   showing child age bracket counts. */
+.age-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: -44px;   /* Visually tucks under the main stat grid. */
+  margin-bottom: 48px;
+}
+.age-grid .stat-card {
+  background: rgba(74,103,65,0.04);
+  border-color: rgba(74,103,65,0.15);
+}
+.age-grid .stat-number {
+  font-size: 2rem;
+  color: var(--moss);
+}
+
+
+/* ── ESTIMATED VS ACTUAL ──────────────────────────────────────
+   Section that compares target attendance with real sign-ups. */
+.est-section { margin-bottom: 56px; }
+
+.est-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.est-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr 140px 52px;
+  align-items: center;
+  gap: 16px;
+  background: var(--cream);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 4px;
+  padding: 14px 20px;
+}
+
+.est-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--forest);
+}
+
+.est-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.est-big {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--forest);
+  line-height: 1;
+}
+.est-big.est-actual { color: var(--moss); }
+
+.est-sub {
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.est-track {
+  height: 4px;
+  background: rgba(201,168,76,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.est-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+.est-pct {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: right;
+}
+
+
+/* ── VOLUNTEER ROLE PANELS ────────────────────────────────────
+   Each volunteer role shown as a collapsible-style panel with
+   a header (counts) and a sortable contact table below. */
+.role-section {
+  background: var(--cream);
+  border: 1px solid rgba(201,168,76,0.18);
+  border-radius: 4px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.role-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(201,168,76,0.12);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.role-name {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--forest);
+  letter-spacing: 0.03em;
+}
+
+.role-counts {
+  display: flex;
+  gap: 8px;
+}
+
+.role-count-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 58px;
+  background: rgba(0,0,0,0.03);
+  border-radius: 3px;
+  padding: 7px 10px;
+}
+.role-count-box.rcb-green { background: rgba(74,103,65,0.10); }
+.role-count-box.rcb-met   { background: rgba(74,103,65,0.15); }
+.role-count-box.rcb-warn  { background: rgba(180,120,30,0.10); }
+
+.rcb-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 300;
+  color: var(--forest);
+  line-height: 1;
+}
+.role-count-box.rcb-green .rcb-val { color: var(--moss); }
+.role-count-box.rcb-met .rcb-val   { color: var(--moss); }
+.role-count-box.rcb-warn .rcb-val  { color: #9a6a10; }
+
+.rcb-label {
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+
+/* ── VOLUNTEER CONTACT TABLE ──────────────────────────────────
+   Sortable table inside each role panel showing volunteer
+   names, emails, and phone numbers. */
+.vol-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.vol-table th {
+  text-align: left;
+  padding: 10px 20px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(0,0,0,0.02);
+  border-bottom: 1px solid rgba(201,168,76,0.12);
+  cursor: pointer;
+  user-select: none;
+}
+.vol-table th:hover { color: var(--forest); }
+.vol-table th.sort-asc::after  { content: ' ↑'; color: var(--gold); }
+.vol-table th.sort-desc::after { content: ' ↓'; color: var(--gold); }
+
+.vol-table td {
+  padding: 10px 20px;
+  color: var(--forest);
+  border-bottom: 1px solid rgba(201,168,76,0.08);
+}
+.vol-table tr:last-child td { border-bottom: none; }
+.vol-table a { color: var(--moss); text-decoration: none; }
+.vol-table a:hover { text-decoration: underline; }
+
+.vol-empty {
+  padding: 16px 20px;
+  font-size: 0.84rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
+
+/* ── FILTER + SORT TOOLBAR ────────────────────────────────────
+   Shared by both the Volunteers and Supplies tabs. Contains
+   filter pills on the left and an optional sort dropdown on
+   the right. */
+.sup-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.sup-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+
+.sup-pill {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--cream);
+  border: 1px solid rgba(201,168,76,0.22);
+  border-radius: 100px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sup-pill:hover { color: var(--forest); border-color: rgba(74,103,65,0.3); }
+.sup-pill.active {
+  background: var(--forest);
+  color: var(--cream);
+  border-color: var(--forest);
+}
+
+.sup-sort-select {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--forest);
+  background: var(--cream);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 2px;
+  padding: 7px 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+
+/* ── SUPPLY TABLES ────────────────────────────────────────────
+   Compact tables for each donation category showing needed,
+   pledged, and remaining quantities per item. */
+.sup-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 32px;
+  font-size: 0.84rem;
+}
+
+.sup-table thead tr {
+  background: rgba(0,0,0,0.03);
+  border-bottom: 1px solid rgba(201,168,76,0.18);
+}
+
+.sup-table th {
+  padding: 9px 16px;
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+}
+.sup-table th.sup-num { text-align: right; }
+
+.sup-table td {
+  padding: 10px 16px;
+  color: var(--forest);
+  border-bottom: 1px solid rgba(201,168,76,0.08);
+}
+.sup-table tr:last-child td { border-bottom: none; }
+
+.sup-table td.sup-label { flex: 1; }
+
+.sup-table td.sup-num {
+  text-align: right;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
+  font-weight: 300;
+  white-space: nowrap;
+}
+
+.sup-table td.zero  { color: var(--muted); }
+.sup-table td.met   { color: var(--moss); font-weight: 600; font-family: 'Jost', sans-serif; font-size: 0.9rem; }
+.sup-table tr.row-covered td { }
+.sup-table tr.row-met { opacity: 0.65; }
+
+
+/* ── MY SIGN-UP LOOKUP ────────────────────────────────────────
+   Search form and result cards for the "My Sign-Up" tab. */
+
+.lookup-intro {
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-weight: 300;
+  margin-bottom: 20px;
+}
+
+.lookup-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.lookup-input {
+  flex: 1;
+  min-width: 200px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: var(--forest);
+  background: var(--cream);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 2px;
+  padding: 11px 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.lookup-input:focus { border-color: var(--moss); }
+.lookup-input::placeholder { color: var(--muted); opacity: 0.7; }
+
+.lookup-btn {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cream);
+  background: var(--forest);
+  border: none;
+  border-radius: 2px;
+  padding: 11px 24px;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.lookup-btn:hover { background: var(--moss); }
+
+.lookup-status {
+  text-align: center;
+  padding: 40px 24px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-weight: 300;
+  font-style: italic;
+}
+
+/* Individual result card */
+.lookup-card {
+  background: var(--cream);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.lookup-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 24px;
+  background: var(--forest);
+  flex-wrap: wrap;
+}
+
+.lookup-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: var(--cream);
+  letter-spacing: 0.02em;
+}
+
+.lookup-attending-pill {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-radius: 100px;
+  padding: 5px 14px;
+}
+.attending-yes { background: rgba(74,103,65,0.8);  color: #d8edd0; }
+.attending-no  { background: rgba(0,0,0,0.25);      color: rgba(245,240,232,0.6); }
+
+.lookup-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid rgba(201,168,76,0.1);
+}
+.lookup-row:last-child { border-bottom: none; }
+
+.lookup-row-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+.lookup-row-val {
+  font-size: 0.88rem;
+  font-weight: 300;
+  color: var(--forest);
+}
+
+.lookup-section {
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(201,168,76,0.1);
+}
+.lookup-section:last-child { border-bottom: none; }
+
+.lookup-section-title {
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.lookup-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.lookup-pill {
+  font-size: 0.78rem;
+  font-weight: 400;
+  border-radius: 100px;
+  padding: 5px 14px;
+}
+.lookup-pill-role {
+  background: rgba(74,103,65,0.1);
+  color: var(--moss);
+  border: 1px solid rgba(74,103,65,0.2);
+}
+
+.lookup-none {
+  font-size: 0.84rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--muted);
+}
+
+/* Supply pledges table inside the lookup card */
+.lookup-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+.lookup-table th {
+  text-align: left;
+  padding: 7px 12px;
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(0,0,0,0.02);
+  border-bottom: 1px solid rgba(201,168,76,0.1);
+}
+.lookup-table td {
+  padding: 9px 12px;
+  color: var(--forest);
+  border-bottom: 1px solid rgba(201,168,76,0.07);
+}
+.lookup-table tr:last-child td { border-bottom: none; }
+.lookup-qty { text-align: right; font-family: 'Cormorant Garamond', serif; font-size: 1rem; }
+
+.lookup-notes {
+  font-size: 0.84rem;
+  font-weight: 300;
+  color: var(--forest);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+
+/* ── RESPONSIVE ADJUSTMENTS ───────────────────────────────────
+   Tighten spacing and simplify layouts on smaller screens. */
+@media (max-width: 900px) {
+  .dash-tabs   { padding: 0 24px; }
+  .dash-tab    { padding: 13px 14px; font-size: 0.65rem; letter-spacing: 0.1em; }
+  .est-row     { grid-template-columns: 80px 1fr 1fr; }
+  .est-track,
+  .est-pct     { display: none; }
+}
+
+@media (max-width: 600px) {
+  .age-grid    { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .dash-tab    { padding: 12px 10px; font-size: 0.6rem; letter-spacing: 0.06em; }
+  .role-header { flex-direction: column; align-items: flex-start; }
+  .sup-toolbar { flex-direction: column; }
+  .sup-sort-select { width: 100%; }
+}

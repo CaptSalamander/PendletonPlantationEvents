@@ -925,13 +925,13 @@ nav {
 /* The horizontal list of navigation links. */
 .nav-links {
   display: flex;
-  gap: 36px;
+  gap: 14px;
   list-style: none;
 }
 
 /* Individual navigation link. */
 .nav-links a {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -945,6 +945,37 @@ nav {
 .nav-links a:hover {
   color: #2c3d2e;
 }
+
+/* Dropdown menus */
+.nav-has-dropdown { position: relative; }
+.nav-has-dropdown > a { display: flex; align-items: center; gap: 3px; }
+.nav-caret { font-size: 0.6rem; transition: transform 0.2s; display: inline-block; }
+.nav-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 180px;
+  background: rgba(253, 248, 239, 0.98);
+  border: 1px solid #e8ddd0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  padding: 6px 0;
+  list-style: none;
+  z-index: 200;
+}
+.nav-has-dropdown:hover .nav-dropdown { display: block; }
+.nav-has-dropdown:hover .nav-caret { transform: rotate(180deg); }
+.nav-dropdown li a {
+  display: block;
+  padding: 7px 16px;
+  font-size: 0.8rem;
+  color: #7a7060;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.nav-dropdown li a:hover { color: #2c3d2e; background: rgba(44,61,46,0.05); }
 
 /* The filled "Sign Up" call-to-action link in the nav. */
 .nav-cta {
@@ -963,60 +994,73 @@ nav {
 
 
 /* ── MOBILE NAV ───────────────────────────────────────────────
-   On screens 768px wide and below, switch to a hamburger menu
+   On screens 1100px wide and below, switch to a hamburger menu
    that reveals a full-screen overlay. */
-@media (max-width: 768px) {
-  @media (max-width: 768px) {
-    nav {
-      padding: 16px 24px;
-    }
+@media (max-width: 1100px) {
+  nav {
+    padding: 16px 24px;
+  }
 
-    /* Show the hamburger button on mobile. */
-    .nav-hamburger {
-      display: flex;
-    }
+  /* Show the hamburger button on mobile. */
+  .nav-hamburger {
+    display: flex;
+  }
 
-    /* The nav links become a full-viewport overlay. */
-    .nav-links {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: var(--cream);
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 36px;
-      z-index: 50;
-      display: none;
-      /* Hidden until JS adds the "open" class. */
-    }
+  /* The nav links become a full-viewport overlay. */
+  .nav-links {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--cream);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 36px;
+    z-index: 50;
+    display: none;
+    /* Hidden until JS adds the "open" class. */
+  }
 
-    /* Show the overlay when the hamburger is clicked. */
-    .nav-links.open {
-      display: flex;
-    }
+  /* Show the overlay when the hamburger is clicked. */
+  .nav-links.open {
+    display: flex;
+  }
 
-    /* Larger link text inside the mobile overlay. */
-    .nav-links a {
-      font-size: 1rem;
-      letter-spacing: 0.14em;
-      color: var(--forest);
-    }
+  /* Larger link text inside the mobile overlay. */
+  .nav-links a {
+    font-size: 1.1rem;
+    letter-spacing: 0.14em;
+    color: #2c3d2e;
+  }
 
-    /* Animate the hamburger bars into an X when the menu is open. */
-    .nav-hamburger.open span:nth-child(1) {
-      transform: translateY(7px) rotate(45deg);
-    }
+  .nav-has-dropdown > a { justify-content: center; }
+  .nav-dropdown {
+    display: none;
+    position: static;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 4px 0 8px;
+    text-align: center;
+  }
+  .nav-has-dropdown.open .nav-dropdown { display: block; }
+  .nav-has-dropdown.open .nav-caret { transform: rotate(180deg); }
+  .nav-dropdown li a { font-size: 0.95rem; padding: 6px 16px; }
 
-    .nav-hamburger.open span:nth-child(2) {
-      opacity: 0;
-      transform: scaleX(0);
-    }
+  /* Animate the hamburger bars into an X when the menu is open. */
+  .nav-hamburger.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
 
-    .nav-hamburger.open span:nth-child(3) {
-      transform: translateY(-7px) rotate(-45deg);
-    }
+  .nav-hamburger.open span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  .nav-hamburger.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
   }
 }
