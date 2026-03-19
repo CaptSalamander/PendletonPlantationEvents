@@ -169,6 +169,9 @@ nav {
   color: var(--forest);
 }
 
+/* Active nav link — highlights the current page in the nav bar. */
+.nav-active { color: var(--forest) !important; font-weight: 600; }
+
 /* Dropdown menus */
 .nav-has-dropdown { position: relative; }
 .nav-has-dropdown > a { display: flex; align-items: center; gap: 3px; }

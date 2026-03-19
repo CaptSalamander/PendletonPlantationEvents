@@ -101,7 +101,8 @@ nav {
   font-weight: 700;
   color: var(--forest);
   text-decoration: none;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 .nav-brand span { color: var(--gold); margin-right: 6px; }
 
@@ -115,9 +116,12 @@ nav {
   text-decoration: none;
   font-size: 0.82rem;
   font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   transition: color 0.2s;
 }
 .nav-links a:hover { color: var(--forest); }
+.nav-active { color: var(--forest) !important; font-weight: 600; }
 
 /* Dropdown menus */
 .nav-has-dropdown { position: relative; }

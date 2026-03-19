@@ -946,6 +946,9 @@ nav {
   color: #2c3d2e;
 }
 
+/* Active nav link — highlights the current page. */
+.nav-active { color: #2c3d2e !important; font-weight: 600; }
+
 /* Dropdown menus */
 .nav-has-dropdown { position: relative; }
 .nav-has-dropdown > a { display: flex; align-items: center; gap: 3px; }

@@ -77,10 +77,12 @@ nav {
   font-family: 'Playfair Display', serif;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--brick);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #2c3d2e;
   text-decoration: none;
 }
-.nav-brand span { color: var(--brick-light); margin-right: 6px; }
+.nav-brand span { color: #c9a84c; margin-right: 6px; }
 
 .nav-links { display: flex; list-style: none; gap: 14px; }
 .nav-links a {
@@ -88,9 +90,12 @@ nav {
   text-decoration: none;
   font-size: 0.82rem;
   font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   transition: color 0.2s;
 }
-.nav-links a:hover { color: var(--brick); }
+.nav-links a:hover { color: #2c3d2e; }
+.nav-active { color: #2c3d2e !important; font-weight: 600; }
 
 /* Dropdown menus */
 .nav-has-dropdown { position: relative; }
@@ -121,7 +126,7 @@ nav {
   white-space: nowrap;
   text-decoration: none;
 }
-.nav-dropdown li a:hover { color: var(--brick); background: rgba(139,58,42,0.05); }
+.nav-dropdown li a:hover { color: #2c3d2e; background: rgba(44,61,46,0.05); }
 
 .nav-hamburger {
   display: none;
@@ -134,7 +139,7 @@ nav {
 .nav-hamburger span {
   display: block;
   width: 24px; height: 2px;
-  background: var(--brick);
+  background: #2c3d2e;
   border-radius: 2px;
   transition: transform 0.3s, opacity 0.3s;
 }
