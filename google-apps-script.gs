@@ -361,6 +361,7 @@ function doGet(e) {
     volunteerDetails:{},   // Map of { "Role Name": [{ name, email, phone }] }
     donationCounts:  {},   // Map of { "Item Label": total pledged }
     potluckItems:    [],   // Array of potluck item strings
+    attendees:       [],   // Array of { name, attending, adults, children, roles }
     lastUpdated:     new Date().toISOString()
   };
 
@@ -399,6 +400,7 @@ function doGet(e) {
     var volunteerDetails= {};            // Accumulates { name, email, phone } per role.
     var donationCounts  = {};            // Accumulates pledged quantities per item.
     var potluckItems    = [];            // List of all potluck items submitted.
+    var attendees       = [];            // One entry per sign-up row for the Attendees tab.
 
     // ── Process each sign-up row ─────────────────────────────
     rows.forEach(function(row) {
@@ -442,6 +444,21 @@ function doGet(e) {
         });
       }
 
+      // ── Attendee list entry ───────────────────────────────
+      var attFirst = String(row[col["First Name"]] || "").trim();
+      var attLast  = String(row[col["Last Name"]]  || "").trim();
+      var attRoles = String(row[col["Volunteer Roles"]] || "")
+        .split(",")
+        .map(function(r) { return r.trim(); })
+        .filter(function(r) { return r && r !== "None selected"; });
+      attendees.push({
+        name:      (attFirst + " " + attLast).trim(),
+        attending: String(row[col["Attending?"]] || ""),
+        adults:    Number(row[col["# Adults"]]   || 0) || 0,
+        children:  Number(row[col["# Children"]] || 0) || 0,
+        roles:     attRoles
+      });
+
       // ── Donation item counts ──────────────────────────────
       // Each donation item has its own column. Read the quantity value
       // from each column and add it to the running total for that item.
@@ -466,6 +483,7 @@ function doGet(e) {
         volunteerDetails: volunteerDetails,
         donationCounts:   donationCounts,
         potluckItems:     potluckItems,
+        attendees:        attendees,
         lastUpdated:      new Date().toISOString()
       }))
       .setMimeType(ContentService.MimeType.JSON);

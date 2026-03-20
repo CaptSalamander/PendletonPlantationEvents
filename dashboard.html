@@ -45,10 +45,18 @@
           <li><a href="index.html#contact">Contact</a></li>
         </ul>
       </li>
-      <li><a href="awards.html">Awards</a></li>
       <li class="nav-has-dropdown">
-        <a href="events.html">Events <span class="nav-caret">▾</span></a>
+        <a href="awards.html">Awards <span class="nav-caret">▾</span></a>
         <ul class="nav-dropdown">
+          <li><a href="awards.html#competitions">🏆 Active Competitions</a></li>
+          <li><a href="awards.html#winners">🥇 Past Winners</a></li>
+          <li><a href="nominations.html">📝 Nominate a Neighbor</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="events.html" class="nav-active">Events <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="dashboard.html" class="nav-active">📊 Event Dashboard</a></li>
           <li><a href="events.html#Easter">🐣 Easter Egg Hunt</a></li>
           <li><a href="events.html#IceCreamSocial">🍦 Ice Cream Social</a></li>
           <li><a href="events.html#July4th">🎆 4th of July</a></li>
@@ -57,9 +65,20 @@
           <li><a href="events.html#HolidayLights">✨ Holiday Lights</a></li>
         </ul>
       </li>
-      <li><a href="memories.html">Memories</a></li>
-      <li><a href="bulletin-board.html">Bulletin Board</a></li>
-      <li><a href="dashboard.html" class="nav-active">Dashboard</a></li>
+      <li class="nav-has-dropdown">
+        <a href="memories.html">Memories <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="memories.html">📷 Memory Scrapbook</a></li>
+          <li><a href="submit-memory.html">✍️ Share a Memory</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="bulletin-board.html">Bulletin Board <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="bulletin-board.html">📋 View Board</a></li>
+          <li><a href="post-to-board.html">📝 Post to Board</a></li>
+        </ul>
+      </li>
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
     </ul>
@@ -82,7 +101,9 @@
       <button class="dash-tab active" data-tab="overview" onclick="setTab('overview')">Overview</button>
       <button class="dash-tab" data-tab="volunteers" onclick="setTab('volunteers')">Volunteers</button>
       <button class="dash-tab" data-tab="supplies" onclick="setTab('supplies')">Supplies</button>
+      <button class="dash-tab" data-tab="shopping" onclick="setTab('shopping')">Shopping List</button>
       <button class="dash-tab" data-tab="potluck" onclick="setTab('potluck')">Potluck</button>
+      <button class="dash-tab" data-tab="attendees" onclick="setTab('attendees')">Attendees</button>
       <button class="dash-tab" data-tab="lookup" onclick="setTab('lookup')">My Sign-Up</button>
     </div>
   </div>
@@ -258,6 +279,14 @@
     let lookupQuery = '';
     let lookupResults = null;   // null = not searched yet, [] = searched but no results
     let lookupLoading = false;
+    let attendeesSort = 'name';
+    let attendeesSortDir = 'asc';
+    let shopName = '';
+    let shopResults = null;   // null = not searched, array = searched
+    let shopLoading = false;
+    let shopIncludePledged = true;
+    let shopIncludeUnclaimed = true;
+    let shopChecked = new Set();
 
 
     // ============================================================
@@ -328,6 +357,8 @@
       else if (currentTab === 'volunteers') body.innerHTML = renderVolunteers(dashData);
       else if (currentTab === 'supplies') body.innerHTML = renderSupplies(dashData);
       else if (currentTab === 'potluck') body.innerHTML = renderPotluck(dashData);
+      else if (currentTab === 'attendees') body.innerHTML = renderAttendees(dashData);
+      else if (currentTab === 'shopping') body.innerHTML = renderShoppingList();
       else if (currentTab === 'lookup') body.innerHTML = renderLookup();
     }
 
@@ -346,7 +377,6 @@
         <!-- Primary stats row -->
         <div class="stat-grid">
           ${stat(data.totalSignups, 'Total Sign-Ups')}
-          ${stat(data.attendingCount, 'Attending')}
           ${stat(data.totalAdults, 'Adults')}
           ${stat(data.totalChildren, 'Children')}
         </div>
@@ -373,8 +403,8 @@
 
         <!-- Coverage pills -->
         <div class="coverage-bar">
-          ${coveragePill('🙋', 'Volunteer Roles', volCovered, VOLUNTEER_ROLES.length, volPct)}
-          ${coveragePill('🎁', 'Donation Items', donCovered, allItems.length, donPct)}
+          ${coveragePill('🙋', 'Volunteer Roles', volCovered, VOLUNTEER_ROLES.length, volPct, "setTab('volunteers')")}
+          ${coveragePill('🎁', 'Donation Items', donCovered, allItems.length, donPct, "setTab('supplies')")}
         </div>
       `;
     }
@@ -596,6 +626,269 @@
 
 
     // ============================================================
+    //  SHOPPING LIST TAB
+    // ============================================================
+
+    function renderShoppingList() {
+      // Build a map of my pledges from lookup results
+      const myPledgeMap = {};
+      if (shopResults) {
+        shopResults.forEach(r =>
+          (r.donations || []).forEach(d => {
+            myPledgeMap[d.item] = (myPledgeMap[d.item] || 0) + d.qty;
+          })
+        );
+      }
+
+      // Walk every supply item and decide whether to include it
+      const groups = [];
+      let totalItems = 0, totalQty = 0;
+      DONATION_CATEGORIES.forEach(cat => {
+        const items = [];
+        cat.items.forEach(item => {
+          const totalPledged = (dashData.donationCounts[item.label] || 0);
+          const remaining = item.needed !== null ? Math.max(0, item.needed - totalPledged) : null;
+          const myQty = myPledgeMap[item.label] || 0;
+          const showMine = shopIncludePledged && shopResults !== null && myQty > 0;
+          const showNeeded = shopIncludeUnclaimed && remaining !== null && remaining > 0;
+          if (!showMine && !showNeeded) return;
+          const qty = (showMine ? myQty : 0) + (showNeeded ? remaining : 0);
+          totalQty += qty;
+          totalItems++;
+          items.push({
+            label: item.label, myQty: showMine ? myQty : 0,
+            unclaimed: showNeeded ? remaining : 0, qty, showMine, showNeeded
+          });
+        });
+        if (items.length) groups.push({ category: cat.category, items });
+      });
+
+      // ── Search form ───────────────────────────────────────────
+      const searchSection = `
+        <div class="shop-search-row">
+          <input class="lookup-input" id="shop-input" type="text"
+                 placeholder="Your name (optional — to include your pledges)"
+                 value="${esc(shopName)}" autocomplete="off"
+                 onkeydown="if(event.key==='Enter'){performShopLookup();event.preventDefault();}" />
+          <button class="lookup-btn" onclick="performShopLookup()">
+            ${shopLoading ? 'Searching…' : 'Look Up My Pledges'}
+          </button>
+        </div>
+        ${shopResults !== null && shopResults.length === 0 && shopName
+          ? `<p class="shop-no-match">No sign-up found for "<strong>${esc(shopName)}</strong>". Check the spelling.</p>`
+          : ''}
+      `;
+
+      // ── Option toggles ────────────────────────────────────────
+      const myPledgeCount = Object.keys(myPledgeMap).length;
+      const toggles = `
+        <div class="shop-toggles">
+          <button class="shop-toggle ${shopIncludePledged ? 'shop-toggle-on' : ''}"
+                  onclick="toggleShopOpt('pledged')"
+                  ${shopResults === null ? 'disabled title="Look up your name first"' : ''}>
+            🙋 My Pledges${shopResults !== null && myPledgeCount > 0 ? ` <span class="shop-toggle-ct">(${myPledgeCount})</span>` : ''}
+          </button>
+          <button class="shop-toggle ${shopIncludeUnclaimed ? 'shop-toggle-on' : ''}"
+                  onclick="toggleShopOpt('unclaimed')">
+            📋 Still Unclaimed
+          </button>
+        </div>
+      `;
+
+      // ── Item list ─────────────────────────────────────────────
+      let listHtml;
+      if (shopLoading) {
+        listHtml = `<div class="shop-empty">Looking up your pledges…</div>`;
+      } else if (groups.length === 0) {
+        listHtml = `<div class="shop-empty">
+          ${shopResults === null && shopIncludeUnclaimed
+            ? 'No items are still unclaimed — all needs are covered!'
+            : 'No items match the selected filters. Try enabling more options or looking up a name.'}
+        </div>`;
+      } else {
+        const rowsHtml = groups.map(g => {
+          const catRow = `<tr class="shop-cat-row"><td colspan="4">${esc(g.category)}</td></tr>`;
+          const itemRows = g.items.map(item => `
+            <tr class="shop-item-row${shopChecked.has(item.label) ? ' shop-checked' : ''}"
+                data-shop-label="${esc(item.label)}"
+                onclick="toggleShopItem(this)">
+              <td class="shop-check-cell">
+                <input type="checkbox" class="shop-cb"
+                       ${shopChecked.has(item.label) ? 'checked' : ''}
+                       onclick="event.stopPropagation()"
+                       onchange="toggleShopItem(this.closest('tr'))">
+              </td>
+              <td class="shop-item-name">${esc(item.label)}</td>
+              <td class="shop-tags-cell">
+                ${item.showMine ? `<span class="shop-tag shop-tag-mine">My Pledge · ${item.myQty}</span>` : ''}
+                ${item.showNeeded ? `<span class="shop-tag shop-tag-need">Still Needed · ${item.unclaimed}</span>` : ''}
+              </td>
+              <td class="shop-qty-cell">${item.qty}</td>
+            </tr>`).join('');
+          return catRow + itemRows;
+        }).join('');
+
+        listHtml = `
+          <div class="shop-list-wrap">
+            <table class="shop-table">
+              <thead>
+                <tr>
+                  <th class="shop-th shop-th-check"></th>
+                  <th class="shop-th">Item</th>
+                  <th class="shop-th">Source</th>
+                  <th class="shop-th shop-th-qty">Qty</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+          <div class="shop-footer">
+            <span class="shop-total">${totalItems} item${totalItems !== 1 ? 's' : ''} &nbsp;·&nbsp; ${totalQty} total units</span>
+            <button class="lookup-print-btn" onclick="window.print()">🖨&nbsp; Print Shopping List</button>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="dash-section-header">
+          <span class="dash-section-title">Shopping List</span>
+          <div class="dash-section-rule"></div>
+        </div>
+        <p class="shop-intro">
+          Combine your personal pledges with items still unclaimed by the community into one printable shopping list.
+          Look up your name to include what you signed up to bring, then check off items as you shop.
+        </p>
+        ${searchSection}
+        ${toggles}
+        <div id="shop-results">${listHtml}</div>
+      `;
+    }
+
+    // Toggle a shopping list item's checked state without re-rendering.
+    function toggleShopItem(row) {
+      const label = row.dataset.shopLabel;
+      if (!label) return;
+      if (shopChecked.has(label)) shopChecked.delete(label);
+      else shopChecked.add(label);
+      row.classList.toggle('shop-checked', shopChecked.has(label));
+      const cb = row.querySelector('.shop-cb');
+      if (cb) cb.checked = shopChecked.has(label);
+    }
+
+    // Toggle include/exclude options and re-render.
+    function toggleShopOpt(opt) {
+      if (opt === 'pledged') shopIncludePledged = !shopIncludePledged;
+      else if (opt === 'unclaimed') shopIncludeUnclaimed = !shopIncludeUnclaimed;
+      renderTab();
+      const inp = document.getElementById('shop-input');
+      if (inp) inp.value = shopName;
+    }
+
+    // Look up a name's pledges for the shopping list.
+    async function performShopLookup() {
+      const input = document.getElementById('shop-input');
+      if (!input) return;
+      shopName = input.value.trim();
+      shopResults = null;
+      shopChecked = new Set();
+      if (!shopName) { renderTab(); return; }
+
+      shopLoading = true;
+      renderTab();
+      const inp = document.getElementById('shop-input');
+      if (inp) inp.value = shopName;
+
+      try {
+        const url = SCRIPT_URL + '?action=lookup&name=' + encodeURIComponent(shopName);
+        const res = await fetch(url);
+        const data = await res.json();
+        shopResults = data.results || [];
+      } catch (err) {
+        shopResults = [];
+      } finally {
+        shopLoading = false;
+        renderTab();
+        const inp2 = document.getElementById('shop-input');
+        if (inp2) inp2.value = shopName;
+      }
+    }
+
+
+    // ============================================================
+    //  ATTENDEES TAB
+    // ============================================================
+    function renderAttendees(data) {
+      const rows = data.attendees || [];
+
+      if (rows.length === 0) {
+        return `<div class="vol-empty" style="padding:60px 0;">No sign-ups yet.</div>`;
+      }
+
+      // Sort
+      const sorted = [...rows].sort((a, b) => {
+        let av = a[attendeesSort], bv = b[attendeesSort];
+        if (typeof av === 'string') av = av.toLowerCase();
+        if (typeof bv === 'string') bv = bv.toLowerCase();
+        const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+        return attendeesSortDir === 'asc' ? cmp : -cmp;
+      });
+
+      const caret = col => attendeesSort === col ? (attendeesSortDir === 'asc' ? ' ▴' : ' ▾') : '';
+      const th = (col, label) =>
+        `<th class="att-th att-sortable" onclick="sortAttendees('${col}')">${label}${caret(col)}</th>`;
+
+      const attending = rows.filter(r => r.attending.toLowerCase().startsWith('yes')).length;
+
+      const rowsHtml = sorted.map(r => {
+        const isAttending = r.attending.toLowerCase().startsWith('yes');
+        const roleHtml = r.roles.length
+          ? r.roles.map(ro => `<span class="att-role-tag">${esc(ro)}</span>`).join('')
+          : '<span class="att-none">—</span>';
+        return `<tr class="${isAttending ? '' : 'att-row-absent'}">
+          <td class="att-name">${esc(r.name)}</td>
+          <td class="att-center">
+            <span class="att-pill ${isAttending ? 'att-yes' : 'att-no'}">${isAttending ? '✓ Yes' : '✗ No'}</span>
+          </td>
+          <td class="att-center">${isAttending ? r.adults : '—'}</td>
+          <td class="att-center">${isAttending ? r.children : '—'}</td>
+          <td class="att-roles-cell">${roleHtml}</td>
+        </tr>`;
+      }).join('');
+
+      return `
+        <div class="dash-section-header">
+          <span class="dash-section-title">All Sign-Ups &nbsp;<span class="att-meta">${attending} attending · ${rows.length} total</span></span>
+          <div class="dash-section-rule"></div>
+        </div>
+        <div class="att-table-wrap">
+          <table class="att-table">
+            <thead>
+              <tr>
+                ${th('name', 'Name')}
+                ${th('attending', 'Attending')}
+                ${th('adults', 'Adults')}
+                ${th('children', 'Children')}
+                <th class="att-th">Volunteer Roles</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function sortAttendees(col) {
+      if (attendeesSort === col) {
+        attendeesSortDir = attendeesSortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        attendeesSort = col;
+        attendeesSortDir = 'asc';
+      }
+      renderTab();
+    }
+
+
+    // ============================================================
     //  MY SIGN-UP TAB
     // ============================================================
 
@@ -616,7 +909,11 @@
           Check the spelling and try again.
         </div>`;
       } else {
-        resultsHtml = lookupResults.map(r => buildLookupCard(r)).join('');
+        resultsHtml =
+          `<div class="lookup-print-row">
+            <button class="lookup-print-btn" onclick="window.print()">🖨&nbsp; Print My Sign-Up</button>
+          </div>` +
+          lookupResults.map(r => buildLookupCard(r)).join('');
       }
 
       return `
@@ -766,8 +1063,10 @@
     }
 
     // Coverage pill card (used in Overview).
-    function coveragePill(icon, label, covered, total, pct) {
-      return `<div class="coverage-pill">
+    function coveragePill(icon, label, covered, total, pct, onclick) {
+      const clickAttr = onclick ? ` onclick="${onclick}" role="button" tabindex="0"` : '';
+      const linkClass = onclick ? ' coverage-pill-link' : '';
+      return `<div class="coverage-pill${linkClass}"${clickAttr}>
         <div class="coverage-pill-icon">${icon}</div>
         <div class="coverage-pill-text">
           <div class="coverage-pill-fraction">${covered} / ${total}</div>

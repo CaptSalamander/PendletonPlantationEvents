@@ -13,30 +13,41 @@
    manual Refresh button. Uses a soft radial gradient at the top
    to give a gentle green glow above the content. */
 .dash-hero {
-  padding: 140px 48px 56px;   /* Top padding accounts for the fixed nav bar height. */
+  padding: 140px 48px 56px;
+  /* Top padding accounts for the fixed nav bar height. */
   text-align: center;
   background:
     /* Soft green elliptical gradient fading from the top-center. */
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74,103,65,0.12) 0%, transparent 70%),
-    var(--warm-white);         /* Falls back to the global warm-white background color. */
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74, 103, 65, 0.12) 0%, transparent 70%),
+    var(--warm-white);
+  /* Falls back to the global warm-white background color. */
 }
 
 /* Scale the hero headline up slightly larger than the default section title. */
-.dash-hero .section-title { font-size: clamp(2.2rem, 4vw, 3.6rem); }
+.dash-hero .section-title {
+  font-size: clamp(2.2rem, 4vw, 3.6rem);
+}
 
 /* Push the decorative gold rule down a bit from the title. */
-.dash-hero .section-rule  { margin-top: 20px; }
+.dash-hero .section-rule {
+  margin-top: 20px;
+}
 
 /* ── DASHBOARD META BAR ───────────────────────────────────────
    The small row below the page title that shows the
    "Last refreshed" timestamp and the Refresh button side by side. */
 .dash-meta {
-  display: flex;              /* Lay out timestamp and button in a horizontal row. */
-  align-items: center;        /* Vertically center both items. */
-  justify-content: center;    /* Center the whole group horizontally on the page. */
-  gap: 20px;                  /* Space between the timestamp text and the button. */
+  display: flex;
+  /* Lay out timestamp and button in a horizontal row. */
+  align-items: center;
+  /* Vertically center both items. */
+  justify-content: center;
+  /* Center the whole group horizontally on the page. */
+  gap: 20px;
+  /* Space between the timestamp text and the button. */
   margin-top: 20px;
-  flex-wrap: wrap;            /* Allow items to wrap to a new line on very narrow screens. */
+  flex-wrap: wrap;
+  /* Allow items to wrap to a new line on very narrow screens. */
 }
 
 /* ── LAST UPDATED TIMESTAMP ───────────────────────────────────
@@ -46,7 +57,8 @@
   font-size: 0.72rem;
   font-weight: 400;
   letter-spacing: 0.08em;
-  color: var(--muted);        /* Uses the global muted (warm gray) color variable. */
+  color: var(--muted);
+  /* Uses the global muted (warm gray) color variable. */
 }
 
 /* ── REFRESH BUTTON ───────────────────────────────────────────
@@ -58,18 +70,22 @@
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--moss);              /* Green text to match the site's nature palette. */
-  background: transparent;         /* No fill by default — outline-only style. */
-  border: 1px solid rgba(74,103,65,0.3);  /* Semi-transparent moss-green border. */
+  color: var(--moss);
+  /* Green text to match the site's nature palette. */
+  background: transparent;
+  /* No fill by default — outline-only style. */
+  border: 1px solid rgba(74, 103, 65, 0.3);
+  /* Semi-transparent moss-green border. */
   border-radius: 2px;
   padding: 6px 16px;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;  /* Smooth hover transition. */
+  transition: background 0.2s, border-color 0.2s;
+  /* Smooth hover transition. */
 }
 
 /* On hover: add a very light green tint and darken the border. */
 .refresh-btn:hover {
-  background: rgba(74,103,65,0.06);
+  background: rgba(74, 103, 65, 0.06);
   border-color: var(--moss);
 }
 
@@ -85,24 +101,37 @@
    adds generous padding on the sides so content never stretches
    edge-to-edge on wide monitors. */
 .dash-content {
-  max-width: 1200px;          /* Cap the readable width on large screens. */
-  margin: 0 auto;             /* Center the content block horizontally. */
-  padding: 48px 48px 100px;   /* Top, sides, and generous bottom padding. */
+  max-width: 1200px;
+  /* Cap the readable width on large screens. */
+  margin: 0 auto;
+  /* Center the content block horizontally. */
+  padding: 48px 48px 100px;
+  /* Top, sides, and generous bottom padding. */
 }
 
 /* On mobile screens, reduce horizontal padding to avoid cramped text. */
 @media (max-width: 768px) {
-  .dash-hero    { padding: 110px 24px 48px; }   /* Tighter vertical spacing on small screens. */
-  .dash-content { padding: 32px 24px 80px; }    /* Reduced side and bottom padding. */
+  .dash-hero {
+    padding: 110px 24px 48px;
+  }
+
+  /* Tighter vertical spacing on small screens. */
+  .dash-content {
+    padding: 32px 24px 80px;
+  }
+
+  /* Reduced side and bottom padding. */
 }
 
 
 /* ── LOADING / ERROR STATES ───────────────────────────────────
    Placeholder UI shown inside #dash-body while data is being
    fetched from the Google Sheet, or if the fetch fails. */
-.dash-loading, .dash-error {
+.dash-loading,
+.dash-error {
   text-align: center;
-  padding: 80px 24px;         /* Generous padding so the message feels centered vertically. */
+  padding: 80px 24px;
+  /* Generous padding so the message feels centered vertically. */
   color: var(--muted);
   font-size: 0.9rem;
   letter-spacing: 0.05em;
@@ -115,18 +144,26 @@
   width: 32px;
   height: 32px;
   /* Semi-transparent gold ring that spins to indicate activity. */
-  border: 2px solid rgba(201,168,76,0.2);
-  border-top-color: var(--gold);   /* Only the top arc is fully opaque — creates the spin effect. */
+  border: 2px solid rgba(201, 168, 76, 0.2);
+  border-top-color: var(--gold);
+  /* Only the top arc is fully opaque — creates the spin effect. */
   border-radius: 50%;
   margin: 0 auto 20px;
-  animation: spin 0.8s linear infinite;  /* Reference the keyframe defined below. */
+  animation: spin 0.8s linear infinite;
+  /* Reference the keyframe defined below. */
 }
 
 /* Keyframe: rotate the element one full turn continuously. */
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* Error state: use a muted red instead of the default gray to draw attention. */
-.dash-error { color: #a04040; }
+.dash-error {
+  color: #a04040;
+}
 
 
 /* ── SUMMARY STATS GRID ───────────────────────────────────────
@@ -136,16 +173,16 @@
    naturally from 4 columns down to 1 column as the screen narrows. */
 .stat-grid {
   display: grid;
-  /* Each card is at least 180px wide; extra space is distributed evenly. */
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  margin-bottom: 56px;  /* Space between the stats row and the next section. */
+  margin-bottom: 56px;
 }
 
 /* Individual stat card: cream background with a subtle gold border. */
 .stat-card {
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.2);  /* Faint gold border. */
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  /* Faint gold border. */
   border-radius: 4px;
   padding: 24px 20px;
   text-align: center;
@@ -153,9 +190,11 @@
 
 /* The large number displayed in each stat card (e.g., "42"). */
 .stat-number {
-  font-family: 'Cormorant Garamond', serif;  /* Elegant serif font for the big numeral. */
+  font-family: 'Cormorant Garamond', serif;
+  /* Elegant serif font for the big numeral. */
   font-size: 3rem;
-  font-weight: 300;   /* Light weight gives an airy, refined look. */
+  font-weight: 300;
+  /* Light weight gives an airy, refined look. */
   color: var(--forest);
   line-height: 1;
   margin-bottom: 8px;
@@ -165,7 +204,8 @@
 .stat-label {
   font-size: 0.68rem;
   font-weight: 500;
-  letter-spacing: 0.2em;  /* Wide tracking makes the all-caps label readable at small size. */
+  letter-spacing: 0.2em;
+  /* Wide tracking makes the all-caps label readable at small size. */
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -179,14 +219,17 @@
 .coverage-bar {
   display: flex;
   gap: 16px;
-  flex-wrap: wrap;        /* Wrap to a second row on narrow screens. */
+  flex-wrap: wrap;
+  /* Wrap to a second row on narrow screens. */
   margin-bottom: 56px;
 }
 
 /* Each individual coverage pill — dark forest-green background. */
 .coverage-pill {
-  flex: 1;                /* Allow pills to grow and share available width equally. */
-  min-width: 220px;       /* Prevent pills from collapsing too narrow before wrapping. */
+  flex: 1;
+  /* Allow pills to grow and share available width equally. */
+  min-width: 220px;
+  /* Prevent pills from collapsing too narrow before wrapping. */
   background: var(--forest);
   border-radius: 4px;
   padding: 18px 24px;
@@ -195,18 +238,34 @@
   gap: 16px;
 }
 
+/* Clickable variant — pointer cursor and subtle brightness lift on hover. */
+.coverage-pill-link {
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.coverage-pill-link:hover {
+  filter: brightness(1.15);
+}
+
 /* The emoji icon on the left of each pill (e.g., 🙋 or 🎁). */
-.coverage-pill-icon { font-size: 1.4rem; }
+.coverage-pill-icon {
+  font-size: 1.4rem;
+}
 
 /* Text area between the icon and the progress track. */
-.coverage-pill-text { flex: 1; }  /* Takes up remaining horizontal space. */
+.coverage-pill-text {
+  flex: 1;
+}
+
+/* Takes up remaining horizontal space. */
 
 /* The large fraction number, e.g., "5 / 8". */
 .coverage-pill-fraction {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.5rem;
   font-weight: 300;
-  color: var(--cream);    /* Light cream text on the dark green background. */
+  color: var(--cream);
+  /* Light cream text on the dark green background. */
   line-height: 1;
 }
 
@@ -216,7 +275,8 @@
   font-weight: 500;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(245,240,232,0.5);  /* Semi-transparent cream for a secondary look. */
+  color: rgba(245, 240, 232, 0.5);
+  /* Semi-transparent cream for a secondary look. */
   margin-top: 3px;
 }
 
@@ -225,18 +285,23 @@
 .coverage-track {
   width: 80px;
   height: 4px;
-  background: rgba(255,255,255,0.15);  /* Faint white track background. */
+  background: rgba(255, 255, 255, 0.15);
+  /* Faint white track background. */
   border-radius: 2px;
-  overflow: hidden;        /* Ensures the fill bar does not overflow the rounded track. */
-  flex-shrink: 0;          /* Prevents the track from shrinking when space is tight. */
+  overflow: hidden;
+  /* Ensures the fill bar does not overflow the rounded track. */
+  flex-shrink: 0;
+  /* Prevents the track from shrinking when space is tight. */
 }
 
 /* The filled portion of the progress track. Width is set inline via JS. */
 .coverage-fill {
   height: 100%;
-  background: var(--gold);          /* Gold fill color. */
+  background: var(--gold);
+  /* Gold fill color. */
   border-radius: 2px;
-  transition: width 0.6s ease;      /* Smooth animation when the width value changes. */
+  transition: width 0.6s ease;
+  /* Smooth animation when the width value changes. */
 }
 
 
@@ -244,14 +309,16 @@
    A reusable section wrapper used for the Volunteer Roles,
    Donations & Supplies, and Potluck Items sections of the dashboard. */
 .dash-section {
-  margin-bottom: 56px;   /* Space between each major dashboard section. */
+  margin-bottom: 56px;
+  /* Space between each major dashboard section. */
 }
 
 /* The header row for each dashboard section, containing the
    section title and a decorative horizontal rule. */
 .dash-section-header {
   display: flex;
-  align-items: center;   /* Vertically center the title and rule. */
+  align-items: center;
+  /* Vertically center the title and rule. */
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -262,15 +329,19 @@
   font-weight: 500;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: var(--gold);          /* Gold color to match the decorative accent palette. */
-  white-space: nowrap;         /* Prevent the title from breaking to a second line. */
+  color: var(--gold);
+  /* Gold color to match the decorative accent palette. */
+  white-space: nowrap;
+  /* Prevent the title from breaking to a second line. */
 }
 
 /* The horizontal rule that stretches to fill the remaining width beside the title. */
 .dash-section-rule {
-  flex: 1;               /* Grows to fill all available space to the right of the title. */
+  flex: 1;
+  /* Grows to fill all available space to the right of the title. */
   height: 1px;
-  background: rgba(201,168,76,0.2);   /* Faint gold line. */
+  background: rgba(201, 168, 76, 0.2);
+  /* Faint gold line. */
 }
 
 
@@ -288,27 +359,35 @@
 /* Individual volunteer role card. */
 .vol-card {
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.18);  /* Default faint gold border. */
+  border: 1px solid rgba(201, 168, 76, 0.18);
+  /* Default faint gold border. */
   border-radius: 4px;
   padding: 18px 20px;
   display: flex;
   align-items: center;
   gap: 14px;
-  transition: border-color 0.2s;    /* Smooth border color change when state changes. */
+  transition: border-color 0.2s;
+  /* Smooth border color change when state changes. */
 }
 
 /* A card that has at least one volunteer signed up gets a stronger green border. */
-.vol-card.covered  { border-color: rgba(74,103,65,0.35); }
+.vol-card.covered {
+  border-color: rgba(74, 103, 65, 0.35);
+}
 
 /* A card with no volunteers is dimmed to show it still needs help. */
-.vol-card.uncovered { opacity: 0.55; }
+.vol-card.uncovered {
+  opacity: 0.55;
+}
 
 /* The circular badge on the left that shows the volunteer count (or "–" if none). */
 .vol-badge {
-  flex-shrink: 0;   /* Prevent the badge from compressing when the card is narrow. */
+  flex-shrink: 0;
+  /* Prevent the badge from compressing when the card is narrow. */
   width: 32px;
   height: 32px;
-  border-radius: 50%;    /* Makes it a perfect circle. */
+  border-radius: 50%;
+  /* Makes it a perfect circle. */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -317,15 +396,22 @@
 }
 
 /* Covered badge: filled moss-green with cream text. */
-.vol-card.covered   .vol-badge { background: var(--moss); color: var(--cream); }
+.vol-card.covered .vol-badge {
+  background: var(--moss);
+  color: var(--cream);
+}
 
 /* Uncovered badge: light gray with muted text. */
-.vol-card.uncovered .vol-badge { background: rgba(0,0,0,0.06); color: var(--muted); }
+.vol-card.uncovered .vol-badge {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--muted);
+}
 
 /* The text column to the right of the badge. */
 .vol-info {
   display: flex;
-  flex-direction: column;  /* Stack the role name above the count label. */
+  flex-direction: column;
+  /* Stack the role name above the count label. */
   gap: 3px;
 }
 
@@ -342,19 +428,27 @@
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.08em;
-  color: var(--moss);    /* Moss green for a positive, active appearance. */
+  color: var(--moss);
+  /* Moss green for a positive, active appearance. */
 }
 
 /* Uncovered card text overrides: switch both name and count to muted gray. */
-.vol-card.uncovered .vol-name  { color: var(--muted); }
-.vol-card.uncovered .vol-count { color: var(--muted); }
+.vol-card.uncovered .vol-name {
+  color: var(--muted);
+}
+
+.vol-card.uncovered .vol-count {
+  color: var(--muted);
+}
 
 
 /* ── DONATION CATEGORIES ──────────────────────────────────────
    Each donation category (e.g., "Eggs & Filling", "Crafts") is
    wrapped in a .don-category container with a blush-colored
    label header and a grid of individual donation items below. */
-.don-category { margin-bottom: 36px; }
+.don-category {
+  margin-bottom: 36px;
+}
 
 /* The small category label above each item group (e.g., "EGGS & FILLING"). */
 .don-category-label {
@@ -362,7 +456,8 @@
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--blush);    /* Soft blush/tan color to distinguish category headers. */
+  color: var(--blush);
+  /* Soft blush/tan color to distinguish category headers. */
   margin-bottom: 12px;
 }
 
@@ -377,19 +472,24 @@
 /* Individual donation item card. Stacks the item name on top of the stats row. */
 .don-item {
   display: flex;
-  flex-direction: column;  /* Name row on top, stats row below. */
+  flex-direction: column;
+  /* Name row on top, stats row below. */
   gap: 10px;
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.15);
+  border: 1px solid rgba(201, 168, 76, 0.15);
   border-radius: 4px;
   padding: 14px 16px;
 }
 
 /* A covered item (at least one pledge) gets a stronger green border. */
-.don-item.covered   { border-color: rgba(74,103,65,0.3); }
+.don-item.covered {
+  border-color: rgba(74, 103, 65, 0.3);
+}
 
 /* An uncovered item (zero pledges) is dimmed. */
-.don-item.uncovered { opacity: 0.5; }
+.don-item.uncovered {
+  opacity: 0.5;
+}
 
 /* The top row of each item card: colored dot + item label side by side. */
 .don-item-top {
@@ -403,14 +503,19 @@
   flex-shrink: 0;
   width: 8px;
   height: 8px;
-  border-radius: 50%;   /* Makes it a circle. */
+  border-radius: 50%;
+  /* Makes it a circle. */
 }
 
 /* Covered dot: solid moss green. */
-.don-item.covered   .don-dot { background: var(--moss); }
+.don-item.covered .don-dot {
+  background: var(--moss);
+}
 
 /* Uncovered dot: light gray. */
-.don-item.uncovered .don-dot { background: #ccc; }
+.don-item.uncovered .don-dot {
+  background: #ccc;
+}
 
 /* The item name text, e.g., "Plastic Eggs — standard mixed colors". */
 .don-label {
@@ -422,19 +527,23 @@
 }
 
 /* Uncovered item label: switch to muted gray. */
-.don-item.uncovered .don-label { color: var(--muted); }
+.don-item.uncovered .don-label {
+  color: var(--muted);
+}
 
 /* The row of stat figures below the item name (Needed / Pledged / Remaining). */
 .don-stats {
   display: flex;
   gap: 16px;
-  padding-left: 18px;   /* Indent to align under the item name (past the dot). */
+  padding-left: 18px;
+  /* Indent to align under the item name (past the dot). */
 }
 
 /* A single stat column (e.g., "Total Needed"). */
 .don-stat {
   display: flex;
-  flex-direction: column;  /* Number on top, label below. */
+  flex-direction: column;
+  /* Number on top, label below. */
   gap: 2px;
   min-width: 52px;
 }
@@ -449,10 +558,14 @@
 }
 
 /* Zero value: switch to muted gray to indicate nothing pledged yet. */
-.don-stat-val.zero { color: var(--muted); }
+.don-stat-val.zero {
+  color: var(--muted);
+}
 
 /* When the remaining count reaches zero, color the stat green to show it's met. */
-.don-stat.met .don-stat-val { color: var(--moss); }
+.don-stat.met .don-stat-val {
+  color: var(--moss);
+}
 
 /* The small uppercase label below each stat value (e.g., "PLEDGED"). */
 .don-stat-label {
@@ -464,8 +577,13 @@
 }
 
 /* For uncovered items, further mute the stat values and labels. */
-.don-item.uncovered .don-stat-val   { color: var(--muted); }
-.don-item.uncovered .don-stat-label { opacity: 0.6; }
+.don-item.uncovered .don-stat-val {
+  color: var(--muted);
+}
+
+.don-item.uncovered .don-stat-label {
+  opacity: 0.6;
+}
 
 
 /* ── POTLUCK LIST ─────────────────────────────────────────────
@@ -473,15 +591,17 @@
    bring as a collection of pill-shaped tags. */
 .potluck-grid {
   display: flex;
-  flex-wrap: wrap;   /* Allow tags to flow onto multiple lines naturally. */
+  flex-wrap: wrap;
+  /* Allow tags to flow onto multiple lines naturally. */
   gap: 10px;
 }
 
 /* Each potluck item tag: a rounded pill with a faint gold border. */
 .potluck-tag {
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.25);
-  border-radius: 100px;   /* Fully rounded pill shape. */
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 100px;
+  /* Fully rounded pill shape. */
   padding: 7px 18px;
   font-size: 0.84rem;
   font-weight: 300;
@@ -519,11 +639,12 @@
    dashboard content. Holds the four tab buttons. */
 .dash-tabs-bar {
   position: sticky;
-  top: 64px;            /* Sits just below the fixed nav bar. */
+  top: 64px;
+  /* Sits just below the fixed nav bar. */
   z-index: 90;
   background: var(--warm-white);
-  border-bottom: 1px solid rgba(201,168,76,0.18);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .dash-tabs {
@@ -548,8 +669,15 @@
   cursor: pointer;
   transition: color 0.2s, border-color 0.2s;
 }
-.dash-tab:hover  { color: var(--forest); }
-.dash-tab.active { color: var(--forest); border-bottom-color: var(--gold); }
+
+.dash-tab:hover {
+  color: var(--forest);
+}
+
+.dash-tab.active {
+  color: var(--forest);
+  border-bottom-color: var(--gold);
+}
 
 
 /* ── AGE BREAKDOWN GRID ───────────────────────────────────────
@@ -559,13 +687,16 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-top: -44px;   /* Visually tucks under the main stat grid. */
+  margin-top: -44px;
+  /* Visually tucks under the main stat grid. */
   margin-bottom: 48px;
 }
+
 .age-grid .stat-card {
-  background: rgba(74,103,65,0.04);
-  border-color: rgba(74,103,65,0.15);
+  background: rgba(74, 103, 65, 0.04);
+  border-color: rgba(74, 103, 65, 0.15);
 }
+
 .age-grid .stat-number {
   font-size: 2rem;
   color: var(--moss);
@@ -574,7 +705,9 @@
 
 /* ── ESTIMATED VS ACTUAL ──────────────────────────────────────
    Section that compares target attendance with real sign-ups. */
-.est-section { margin-bottom: 56px; }
+.est-section {
+  margin-bottom: 56px;
+}
 
 .est-grid {
   display: flex;
@@ -588,7 +721,7 @@
   align-items: center;
   gap: 16px;
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.15);
+  border: 1px solid rgba(201, 168, 76, 0.15);
   border-radius: 4px;
   padding: 14px 20px;
 }
@@ -614,7 +747,10 @@
   color: var(--forest);
   line-height: 1;
 }
-.est-big.est-actual { color: var(--moss); }
+
+.est-big.est-actual {
+  color: var(--moss);
+}
 
 .est-sub {
   font-size: 0.6rem;
@@ -626,10 +762,11 @@
 
 .est-track {
   height: 4px;
-  background: rgba(201,168,76,0.15);
+  background: rgba(201, 168, 76, 0.15);
   border-radius: 2px;
   overflow: hidden;
 }
+
 .est-fill {
   height: 100%;
   background: var(--gold);
@@ -650,7 +787,7 @@
    a header (counts) and a sortable contact table below. */
 .role-section {
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.18);
+  border: 1px solid rgba(201, 168, 76, 0.18);
   border-radius: 4px;
   margin-bottom: 14px;
   overflow: hidden;
@@ -661,7 +798,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(201,168,76,0.12);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.12);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -684,13 +821,22 @@
   align-items: center;
   gap: 3px;
   min-width: 58px;
-  background: rgba(0,0,0,0.03);
+  background: rgba(0, 0, 0, 0.03);
   border-radius: 3px;
   padding: 7px 10px;
 }
-.role-count-box.rcb-green { background: rgba(74,103,65,0.10); }
-.role-count-box.rcb-met   { background: rgba(74,103,65,0.15); }
-.role-count-box.rcb-warn  { background: rgba(180,120,30,0.10); }
+
+.role-count-box.rcb-green {
+  background: rgba(74, 103, 65, 0.10);
+}
+
+.role-count-box.rcb-met {
+  background: rgba(74, 103, 65, 0.15);
+}
+
+.role-count-box.rcb-warn {
+  background: rgba(180, 120, 30, 0.10);
+}
 
 .rcb-val {
   font-family: 'Cormorant Garamond', serif;
@@ -699,9 +845,18 @@
   color: var(--forest);
   line-height: 1;
 }
-.role-count-box.rcb-green .rcb-val { color: var(--moss); }
-.role-count-box.rcb-met .rcb-val   { color: var(--moss); }
-.role-count-box.rcb-warn .rcb-val  { color: #9a6a10; }
+
+.role-count-box.rcb-green .rcb-val {
+  color: var(--moss);
+}
+
+.role-count-box.rcb-met .rcb-val {
+  color: var(--moss);
+}
+
+.role-count-box.rcb-warn .rcb-val {
+  color: #9a6a10;
+}
 
 .rcb-label {
   font-size: 0.58rem;
@@ -729,23 +884,44 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
-  background: rgba(0,0,0,0.02);
-  border-bottom: 1px solid rgba(201,168,76,0.12);
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.12);
   cursor: pointer;
   user-select: none;
 }
-.vol-table th:hover { color: var(--forest); }
-.vol-table th.sort-asc::after  { content: ' ↑'; color: var(--gold); }
-.vol-table th.sort-desc::after { content: ' ↓'; color: var(--gold); }
+
+.vol-table th:hover {
+  color: var(--forest);
+}
+
+.vol-table th.sort-asc::after {
+  content: ' ↑';
+  color: var(--gold);
+}
+
+.vol-table th.sort-desc::after {
+  content: ' ↓';
+  color: var(--gold);
+}
 
 .vol-table td {
   padding: 10px 20px;
   color: var(--forest);
-  border-bottom: 1px solid rgba(201,168,76,0.08);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.08);
 }
-.vol-table tr:last-child td { border-bottom: none; }
-.vol-table a { color: var(--moss); text-decoration: none; }
-.vol-table a:hover { text-decoration: underline; }
+
+.vol-table tr:last-child td {
+  border-bottom: none;
+}
+
+.vol-table a {
+  color: var(--moss);
+  text-decoration: none;
+}
+
+.vol-table a:hover {
+  text-decoration: underline;
+}
 
 .vol-empty {
   padding: 16px 20px;
@@ -783,13 +959,18 @@
   text-transform: uppercase;
   color: var(--muted);
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.22);
+  border: 1px solid rgba(201, 168, 76, 0.22);
   border-radius: 100px;
   padding: 6px 14px;
   cursor: pointer;
   transition: all 0.15s;
 }
-.sup-pill:hover { color: var(--forest); border-color: rgba(74,103,65,0.3); }
+
+.sup-pill:hover {
+  color: var(--forest);
+  border-color: rgba(74, 103, 65, 0.3);
+}
+
 .sup-pill.active {
   background: var(--forest);
   color: var(--cream);
@@ -803,7 +984,7 @@
   letter-spacing: 0.06em;
   color: var(--forest);
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.25);
+  border: 1px solid rgba(201, 168, 76, 0.25);
   border-radius: 2px;
   padding: 7px 12px;
   cursor: pointer;
@@ -822,8 +1003,8 @@
 }
 
 .sup-table thead tr {
-  background: rgba(0,0,0,0.03);
-  border-bottom: 1px solid rgba(201,168,76,0.18);
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.18);
 }
 
 .sup-table th {
@@ -835,16 +1016,24 @@
   color: var(--muted);
   text-align: left;
 }
-.sup-table th.sup-num { text-align: right; }
+
+.sup-table th.sup-num {
+  text-align: right;
+}
 
 .sup-table td {
   padding: 10px 16px;
   color: var(--forest);
-  border-bottom: 1px solid rgba(201,168,76,0.08);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.08);
 }
-.sup-table tr:last-child td { border-bottom: none; }
 
-.sup-table td.sup-label { flex: 1; }
+.sup-table tr:last-child td {
+  border-bottom: none;
+}
+
+.sup-table td.sup-label {
+  flex: 1;
+}
 
 .sup-table td.sup-num {
   text-align: right;
@@ -854,10 +1043,22 @@
   white-space: nowrap;
 }
 
-.sup-table td.zero  { color: var(--muted); }
-.sup-table td.met   { color: var(--moss); font-weight: 600; font-family: 'Jost', sans-serif; font-size: 0.9rem; }
-.sup-table tr.row-covered td { }
-.sup-table tr.row-met { opacity: 0.65; }
+.sup-table td.zero {
+  color: var(--muted);
+}
+
+.sup-table td.met {
+  color: var(--moss);
+  font-weight: 600;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.9rem;
+}
+
+.sup-table tr.row-covered td {}
+
+.sup-table tr.row-met {
+  opacity: 0.65;
+}
 
 
 /* ── MY SIGN-UP LOOKUP ────────────────────────────────────────
@@ -885,14 +1086,21 @@
   font-weight: 300;
   color: var(--forest);
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.3);
+  border: 1px solid rgba(201, 168, 76, 0.3);
   border-radius: 2px;
   padding: 11px 16px;
   outline: none;
   transition: border-color 0.2s;
 }
-.lookup-input:focus { border-color: var(--moss); }
-.lookup-input::placeholder { color: var(--muted); opacity: 0.7; }
+
+.lookup-input:focus {
+  border-color: var(--moss);
+}
+
+.lookup-input::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
 
 .lookup-btn {
   font-family: 'Jost', sans-serif;
@@ -909,7 +1117,10 @@
   transition: background 0.2s;
   white-space: nowrap;
 }
-.lookup-btn:hover { background: var(--moss); }
+
+.lookup-btn:hover {
+  background: var(--moss);
+}
 
 .lookup-status {
   text-align: center;
@@ -923,7 +1134,7 @@
 /* Individual result card */
 .lookup-card {
   background: var(--cream);
-  border: 1px solid rgba(201,168,76,0.2);
+  border: 1px solid rgba(201, 168, 76, 0.2);
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 20px;
@@ -955,17 +1166,28 @@
   border-radius: 100px;
   padding: 5px 14px;
 }
-.attending-yes { background: rgba(74,103,65,0.8);  color: #d8edd0; }
-.attending-no  { background: rgba(0,0,0,0.25);      color: rgba(245,240,232,0.6); }
+
+.attending-yes {
+  background: rgba(74, 103, 65, 0.8);
+  color: #d8edd0;
+}
+
+.attending-no {
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(245, 240, 232, 0.6);
+}
 
 .lookup-row {
   display: flex;
   align-items: baseline;
   gap: 12px;
   padding: 12px 24px;
-  border-bottom: 1px solid rgba(201,168,76,0.1);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.1);
 }
-.lookup-row:last-child { border-bottom: none; }
+
+.lookup-row:last-child {
+  border-bottom: none;
+}
 
 .lookup-row-label {
   font-size: 0.65rem;
@@ -985,9 +1207,12 @@
 
 .lookup-section {
   padding: 14px 24px;
-  border-bottom: 1px solid rgba(201,168,76,0.1);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.1);
 }
-.lookup-section:last-child { border-bottom: none; }
+
+.lookup-section:last-child {
+  border-bottom: none;
+}
 
 .lookup-section-title {
   font-size: 0.62rem;
@@ -998,7 +1223,11 @@
   margin-bottom: 10px;
 }
 
-.lookup-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.lookup-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
 .lookup-pill {
   font-size: 0.78rem;
@@ -1006,10 +1235,11 @@
   border-radius: 100px;
   padding: 5px 14px;
 }
+
 .lookup-pill-role {
-  background: rgba(74,103,65,0.1);
+  background: rgba(74, 103, 65, 0.1);
   color: var(--moss);
-  border: 1px solid rgba(74,103,65,0.2);
+  border: 1px solid rgba(74, 103, 65, 0.2);
 }
 
 .lookup-none {
@@ -1025,24 +1255,44 @@
   border-collapse: collapse;
   font-size: 0.84rem;
 }
+
 .lookup-table th {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
   text-align: left;
   padding: 7px 12px;
-  font-size: 0.6rem;
-  font-weight: 500;
+
+  font-weight: bold;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--muted);
-  background: rgba(0,0,0,0.02);
-  border-bottom: 1px solid rgba(201,168,76,0.1);
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.5);
 }
+
 .lookup-table td {
   padding: 9px 12px;
   color: var(--forest);
-  border-bottom: 1px solid rgba(201,168,76,0.07);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.07);
 }
-.lookup-table tr:last-child td { border-bottom: none; }
-.lookup-qty { text-align: right; font-family: 'Cormorant Garamond', serif; font-size: 1rem; }
+
+.lookup-table tr:last-child td {
+  border-bottom: none;
+}
+
+.lookup-table tbody tr:nth-child(odd) td {
+  background: rgba(245, 240, 232, 0.6);
+}
+
+.lookup-table tbody tr:nth-child(even) td {
+  background: rgba(255, 253, 248, 0.9);
+}
+
+.lookup-table .lookup-qty {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+}
 
 .lookup-notes {
   font-size: 0.84rem;
@@ -1052,21 +1302,391 @@
   font-style: italic;
 }
 
+/* Print button row */
+.lookup-print-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.lookup-print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: var(--forest);
+  color: var(--cream);
+  border: none;
+  border-radius: 3px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.lookup-print-btn:hover {
+  background: var(--moss);
+}
+
+
+/* ── PRINT STYLES ─────────────────────────────────────────────
+   When the user prints from the My Sign-Up tab, hide everything
+   except the result cards. */
+@media print {
+  nav,
+  .dash-hero,
+  .dash-tabs-bar,
+  .lookup-intro,
+  .lookup-form,
+  .lookup-print-row,
+  .lookup-status,
+  .shop-intro,
+  .shop-search-row,
+  .shop-no-match,
+  .shop-toggles,
+  .shop-footer,
+  footer {
+    display: none !important;
+  }
+
+  body, .dash-content {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .dash-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .lookup-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+    margin-bottom: 24px;
+  }
+
+  .lookup-card-header {
+    border-bottom: 1px solid #ddd !important;
+  }
+
+  /* Make alternating table rows print-friendly */
+  .lookup-table tbody tr:nth-child(odd) td {
+    background: #f5f2ed !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+
+/* ── ATTENDEES TAB ────────────────────────────────────────────*/
+.att-meta {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.att-table-wrap {
+  overflow-x: auto;
+}
+
+.att-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.att-th {
+  text-align: left;
+  padding: 9px 14px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(0,0,0,0.025);
+  border-bottom: 1px solid rgba(201,168,76,0.15);
+  white-space: nowrap;
+}
+
+.att-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.att-sortable:hover { color: var(--forest); }
+
+.att-table tbody tr {
+  border-bottom: 1px solid rgba(201,168,76,0.07);
+}
+.att-table tbody tr:last-child { border-bottom: none; }
+.att-table tbody tr:nth-child(odd)  td { background: rgba(245,240,232,0.55); }
+.att-table tbody tr:nth-child(even) td { background: rgba(255,253,248,0.9); }
+.att-row-absent td { opacity: 0.5; }
+
+.att-table td {
+  padding: 10px 14px;
+  color: var(--forest);
+  vertical-align: middle;
+}
+
+.att-name { font-weight: 500; }
+.att-center { text-align: center; }
+
+.att-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.att-yes { background: rgba(44,61,46,0.1); color: var(--forest); }
+.att-no  { background: rgba(180,60,60,0.1); color: #8b2020; }
+
+.att-roles-cell { min-width: 180px; }
+
+.att-role-tag {
+  display: inline-block;
+  background: rgba(201,168,76,0.15);
+  color: var(--forest);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin: 2px 3px 2px 0;
+  white-space: nowrap;
+}
+
+.att-none { color: var(--muted); font-size: 0.84rem; }
+
+
+/* ── SHOPPING LIST TAB ────────────────────────────────────────*/
+.shop-intro {
+  font-size: 0.87rem;
+  color: var(--muted);
+  font-weight: 300;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.shop-search-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.shop-no-match {
+  font-size: 0.84rem;
+  color: #8b2020;
+  margin: -8px 0 12px;
+}
+
+/* Toggle pills */
+.shop-toggles {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.shop-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 24px;
+  background: transparent;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.shop-toggle:disabled { opacity: 0.4; cursor: not-allowed; }
+.shop-toggle-on {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: var(--cream);
+}
+.shop-toggle-ct {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+/* Empty state */
+.shop-empty {
+  padding: 48px 0;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-weight: 300;
+  font-style: italic;
+}
+
+/* Table */
+.shop-list-wrap { overflow-x: auto; }
+
+.shop-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.shop-th {
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(0,0,0,0.025);
+  border-bottom: 1px solid rgba(201,168,76,0.15);
+}
+.shop-th-check { width: 36px; }
+.shop-th-qty   { text-align: center; width: 60px; }
+
+/* Category header row */
+.shop-cat-row td {
+  padding: 10px 14px 5px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-bottom: 1px solid rgba(201,168,76,0.12);
+  background: rgba(201,168,76,0.04);
+}
+
+/* Item rows */
+.shop-item-row {
+  border-bottom: 1px solid rgba(201,168,76,0.07);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.shop-table tbody .shop-item-row:nth-child(odd)  td { background: rgba(245,240,232,0.5); }
+.shop-table tbody .shop-item-row:nth-child(even) td { background: rgba(255,253,248,0.9); }
+.shop-item-row:hover td { background: rgba(201,168,76,0.08) !important; }
+
+.shop-checked .shop-item-name,
+.shop-checked .shop-tags-cell,
+.shop-checked .shop-qty-cell {
+  text-decoration: line-through;
+  opacity: 0.4;
+}
+
+.shop-table td { padding: 10px 14px; color: var(--forest); vertical-align: middle; }
+
+.shop-check-cell { width: 36px; }
+.shop-cb { cursor: pointer; accent-color: var(--forest); width: 15px; height: 15px; }
+
+.shop-item-name { font-weight: 500; }
+
+.shop-tags-cell { min-width: 160px; }
+
+.shop-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin: 2px 4px 2px 0;
+  white-space: nowrap;
+}
+.shop-tag-mine { background: rgba(44,61,46,0.1);  color: var(--forest); }
+.shop-tag-need { background: rgba(201,168,76,0.18); color: #7a5c00; }
+
+.shop-qty-cell {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--forest);
+  width: 60px;
+}
+
+/* Footer */
+.shop-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(201,168,76,0.15);
+}
+
+.shop-total {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
 
 /* ── RESPONSIVE ADJUSTMENTS ───────────────────────────────────
    Tighten spacing and simplify layouts on smaller screens. */
 @media (max-width: 900px) {
-  .dash-tabs   { padding: 0 24px; }
-  .dash-tab    { padding: 13px 14px; font-size: 0.65rem; letter-spacing: 0.1em; }
-  .est-row     { grid-template-columns: 80px 1fr 1fr; }
+  .dash-tabs {
+    padding: 0 24px;
+  }
+
+  .dash-tab {
+    padding: 13px 14px;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+  }
+
+  .est-row {
+    grid-template-columns: 80px 1fr 1fr;
+  }
+
   .est-track,
-  .est-pct     { display: none; }
+  .est-pct {
+    display: none;
+  }
 }
 
 @media (max-width: 600px) {
-  .age-grid    { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .dash-tab    { padding: 12px 10px; font-size: 0.6rem; letter-spacing: 0.06em; }
-  .role-header { flex-direction: column; align-items: flex-start; }
-  .sup-toolbar { flex-direction: column; }
-  .sup-sort-select { width: 100%; }
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .age-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .dash-tab {
+    padding: 12px 10px;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+  }
+
+  .role-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sup-toolbar {
+    flex-direction: column;
+  }
+
+  .sup-sort-select {
+    width: 100%;
+  }
 }
