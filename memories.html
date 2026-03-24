@@ -35,6 +35,9 @@
 
   <!-- Memories-specific styles (photo grid, lightbox overlay). -->
   <link rel="stylesheet" href="memories-styles.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -159,12 +162,7 @@
 
   <script>
 
-    // ============================================================
-    //  ✏️  CONFIG
-    //  Paste your submit-memory-script.gs Web App URL here.
-    //  This is the same URL you put in submit-memory.html.
-    // ============================================================
-    const MEMORY_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVAlddIDr2eRgolc-A4v5OviKhIfaiqXnuCONA9uJ71HjAeDjiprfRZDD-ZAcfzWc4_g/exec";
+    // Memories are now loaded from Supabase (public_memories view).
 
     // Static fallback photos shown if the fetch fails or returns nothing.
     // These are always shown while the page loads.
@@ -350,23 +348,33 @@
     });
 
 
+    // ── HELPERS — extract Google Drive file ID from a URL ─────
+    function extractDriveId(url) {
+      if (!url) return null;
+      const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (m) return m[1];
+      const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (m2) return m2[1];
+      return null;
+    }
+
     // ── LOAD DATA ────────────────────────────────────────────
     // Render static photos immediately, then replace with live
-    // submitted photos if the fetch succeeds.
+    // submitted photos from Supabase.
     renderGrid(null);   // Start with static fallback.
 
-    if (MEMORY_SCRIPT_URL && MEMORY_SCRIPT_URL !== "PASTE_YOUR_MEMORY_SCRIPT_URL_HERE") {
-      fetch(MEMORY_SCRIPT_URL)
-        .then(r => r.json())
-        .then(data => {
-          if (data.submissions && data.submissions.length > 0) {
-            renderGrid(data.submissions);
-          }
-        })
-        .catch(() => {
-          // Static fallback already rendered — nothing to do.
-        });
-    }
+    db.from('public_memories').select('*').order('submitted_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          const submissions = data.map(row => ({
+            event:    row.event_name   || '',
+            caption:  row.caption      || '',
+            uploader: row.uploader_name || 'A neighbor',
+            photoIds: (row.photo_urls || []).map(extractDriveId).filter(Boolean),
+          })).filter(s => s.photoIds.length > 0);
+          if (submissions.length > 0) renderGrid(submissions);
+        }
+      });
 
   </script>
 

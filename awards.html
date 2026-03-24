@@ -21,6 +21,9 @@
 
   <link rel="stylesheet" href="index-styles.css" />
   <link rel="stylesheet" href="awards-styles.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -207,15 +210,7 @@
   //      or a competition changes status.
   // ============================================================
 
-  // ── SCRIPT URL (Google Apps Script Web App) ──────────────────
-  // Used to fetch competitions dynamically. Winners still use the
-  // published CSV URL below.
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxfLH4a-m-tqM9b2EMeHEjEhCjJrP_fVZ_7hO7n74sSKMkFoAjAmjm_zOYSJfqh8MrI/exec";
-
-  // ── WINNERS — loaded from Google Sheet (published CSV) ───────
-  const WINNERS_SHEET_ID = '17SlocYPigWSV3PL1e8d93WSTkz-Tzb01NeQQ9eIRKCs';
-  const WINNERS_SHEET_URL =
-    `https://docs.google.com/spreadsheets/d/${WINNERS_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Winners`;
+  // Competitions and winners are now loaded from Supabase.
 
 
   // ── ACTIVE COMPETITIONS (FALLBACK) ───────────────────────────
@@ -477,19 +472,19 @@
   const STATUS_LABEL  = { open: 'Nominations Open', soon: 'Coming Soon', voting: 'Voting Open', deliberating: 'Under Review', awarded: 'Winner Announced' };
 
 
-  // ── MAP API CONTEST OBJECT → local format ─────────────────
+  // ── MAP SUPABASE CONTEST ROW → local format ───────────────
   function apiContestToLocal(c) {
     return {
-      icon:        c["Icon"]         || c.icon        || "🏆",
-      badge:       c["Badge"]        || c.badge        || "",
-      bannerColor: c["Banner Color"] || c.bannerColor  || "banner-gold",
-      award:       c["Award Name"]   || c.award        || "",
-      category:    c["Category"]     || c.category     || "",
-      period:      c["Period"]       || c.period       || "",
-      status:      (c["Status"]      || c.status       || "soon").toLowerCase(),
-      description: c["Description"]  || c.description  || "",
-      deadline:    c["Deadline"]     || c.deadline     || "",
-      prize:       c["Prize"]        || c.prize        || "",
+      icon:        c.icon        || "🏆",
+      badge:       c.badge       || "",
+      bannerColor: c.banner_color || "banner-gold",
+      award:       c.award_name  || "",
+      category:    c.category    || "",
+      period:      c.period      || "",
+      status:      (c.status     || "soon").toLowerCase(),
+      description: c.description || "",
+      deadline:    c.deadline    || "",
+      prize:       c.prize       || "",
     };
   }
 
@@ -567,20 +562,15 @@
     applyFilters();
   }
 
-  // Render fallback immediately, then try to replace with live data.
+  // Render fallback immediately, then replace with live Supabase data.
   renderCompetitions(FALLBACK_COMPETITIONS);
 
-  if (SCRIPT_URL) {
-    fetch(SCRIPT_URL + "?action=allAwardContests")
-      .then(r => r.json())
-      .then(data => {
-        const list = data.contests || data;
-        if (Array.isArray(list) && list.length > 0) {
-          renderCompetitions(list.map(apiContestToLocal));
-        }
-      })
-      .catch(() => { /* fallback already showing */ });
-  }
+  db.from('award_contests').select('*').order('award_name')
+    .then(({ data, error }) => {
+      if (!error && data && data.length > 0) {
+        renderCompetitions(data.map(apiContestToLocal));
+      }
+    });
 
 
   // ── BUILD A SINGLE COMPETITION CARD ───────────────────────
@@ -775,83 +765,43 @@
   }
 
 
-  // ── GOOGLE SHEET FETCH & PARSE ─────────────────────────────
+  // ── LOAD WINNERS FROM SUPABASE ─────────────────────────────
 
-  // Minimal CSV parser — handles quoted fields and embedded commas/newlines.
-  function parseCSV(text) {
-    const rows = [];
-    let row = [], field = '', inQuotes = false;
-    for (let i = 0; i < text.length; i++) {
-      const c = text[i];
-      if (inQuotes) {
-        if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
-        else if (c === '"') { inQuotes = false; }
-        else { field += c; }
-      } else {
-        if (c === '"') { inQuotes = true; }
-        else if (c === ',') { row.push(field); field = ''; }
-        else if (c === '\r' || c === '\n') {
-          row.push(field); field = '';
-          if (row.some(f => f.trim())) rows.push(row);
-          row = [];
-          if (c === '\r' && text[i + 1] === '\n') i++;
-        } else { field += c; }
-      }
-    }
-    if (field || row.length) { row.push(field); if (row.some(f => f.trim())) rows.push(row); }
-    return rows;
-  }
-
-  // Convert parsed CSV rows into the winners array format.
   const BADGE_BASE = 'images/Awards%20Badges/awards-badges-pngs/';
-  function parseWinnersCSV(csv) {
-    const rows = parseCSV(csv);
-    if (rows.length < 2) return [];
-    const headers = rows[0].map(h => h.trim().toLowerCase());
-    const get = (row, col) => (row[headers.indexOf(col)] || '').trim();
 
-    return rows.slice(1)
-      .filter(r => r.some(f => f.trim()))
-      .map(r => {
-        const badgeName = get(r, 'badge');
-        return {
-          icon:        get(r, 'icon'),
-          badge:       badgeName ? `${BADGE_BASE}${badgeName}.png` : '',
-          bannerColor: get(r, 'bannercolor') || 'banner-green',
-          award:       get(r, 'award'),
-          period:      get(r, 'period'),
-          year:        parseInt(get(r, 'year')) || new Date().getFullYear(),
-          winner:      get(r, 'winner'),
-          photoId:     get(r, 'photoid'),
-          prize:       get(r, 'prize'),
-          blurb:       get(r, 'blurb'),
-          quotes:      [get(r, 'quote1'), get(r, 'quote2'), get(r, 'quote3')].filter(Boolean),
-        };
-      })
-      .filter(w => w.winner);
+  // Map a Supabase winners row to the format expected by buildWinnerCard.
+  function supabaseWinnerToLocal(w) {
+    return {
+      icon:        w.icon        || '🏆',
+      badge:       w.badge       || '',
+      bannerColor: w.banner_color || 'banner-green',
+      award:       w.award       || '',
+      period:      w.period      || '',
+      year:        parseInt(w.year) || new Date().getFullYear(),
+      winner:      w.winner_name || '',
+      photoId:     w.photo_id    || '',
+      prize:       w.prize       || '',
+      blurb:       w.blurb       || '',
+      quotes:      [w.quote1, w.quote2, w.quote3].filter(Boolean),
+    };
   }
 
-  // Fetch the Winners sheet and initialize the UI.
-  async function loadWinners() {
+  (async function loadWinners() {
     const loadingEl = document.getElementById('winners-loading');
     const emptyEl   = document.getElementById('winners-empty');
 
     if (loadingEl) loadingEl.hidden = false;
     if (emptyEl)   emptyEl.hidden   = true;
 
-    try {
-      const resp = await fetch(WINNERS_SHEET_URL);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const csv = await resp.text();
-      initWinners(parseWinnersCSV(csv));
-    } catch (err) {
-      console.warn('Could not load winners sheet:', err);
+    const { data, error } = await db.from('winners').select('*').order('created_at', { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      initWinners(data.map(supabaseWinnerToLocal));
+    } else {
       if (loadingEl) loadingEl.hidden = true;
       initWinners([]);
     }
-  }
-
-  loadWinners();
+  })();
 
 </script>
 

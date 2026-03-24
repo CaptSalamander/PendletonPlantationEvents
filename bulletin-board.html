@@ -23,6 +23,9 @@
     rel="stylesheet" />
 
   <link rel="stylesheet" href="bulletin-board-styles.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -147,11 +150,7 @@
 
   <script>
 
-    // ============================================================
-    //  CONFIG — paste your deployed Web App URL here.
-    // ============================================================
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5e-TBqSYDO3tkrL0W6_WNz2L8sVmWF3oA3A1zIA9gBaU9kMYDVI4W1D9Y0FkB6DiCaw/exec";
-    // ============================================================
+    // Posts are now loaded from Supabase (public_bulletin_posts view).
 
 
     // ── STATIC FALLBACK POSTS ─────────────────────────────────
@@ -400,22 +399,40 @@
     });
 
 
+    // ── HELPERS — extract Google Drive file ID from a URL ─────
+    function extractDriveId(url) {
+      if (!url) return null;
+      var m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (m) return m[1];
+      var m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (m2) return m2[1];
+      return null;
+    }
+
     // ── LOAD DATA ─────────────────────────────────────────────
     // Render static fallback immediately so the page isn't blank.
     renderPosts(null);
 
-    if (SCRIPT_URL !== "https://script.google.com/macros/s/AKfycbwHnFBD_MtB3gEvZ5zv0Ll0-zXcvOViXz1PJ1I38rbjAAVY3exHcUSIGyed6omGxZ1G8A/exec") {
-      fetch(SCRIPT_URL)
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          if (data.posts && data.posts.length > 0) {
-            renderPosts(data.posts);
-          }
-        })
-        .catch(function () {
-          // Static fallback already showing — nothing more to do.
-        });
-    }
+    db.from('public_bulletin_posts').select('*').order('submitted_at', { ascending: false })
+      .then(function (result) {
+        var data = result.data;
+        var error = result.error;
+        if (!error && data && data.length > 0) {
+          var posts = data.map(function (row) {
+            return {
+              date:     row.submitted_at,
+              name:     row.poster_name,
+              phone:    row.phone   || "",
+              email:    row.email   || "",
+              category: row.category || "",
+              title:    row.title   || "",
+              content:  row.content || "",
+              photoIds: (row.photo_urls || []).map(extractDriveId).filter(Boolean),
+            };
+          });
+          renderPosts(posts);
+        }
+      });
 
   </script>
 
