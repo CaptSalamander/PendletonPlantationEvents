@@ -22,6 +22,9 @@
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="signup-styles.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -272,19 +275,6 @@
             <div class="divider"></div>
 
 
-            <!-- ── SECTION 6: LOOKUP PASSWORD ────────────────── -->
-            <div class="section-label">🔑 Sign-Up Lookup (optional)</div>
-            <div class="field">
-              <label>Create a lookup password (optional)</label>
-              <input type="text" id="lookup_password" placeholder="e.g., sunshine42" autocomplete="off" />
-              <p style="font-size:0.82rem; color:var(--soft-text); margin-top:4px;">
-                Set a short password so you can view your sign-up details later on the
-                <a href="dashboard.html" style="color:inherit;">Event Dashboard</a> under "My Sign-Up".
-                Leave blank if you don't need this.
-              </p>
-            </div>
-
-
             <!-- ── SUBMIT ──────────────────────────────────────── -->
             <div class="submit-area">
               <button type="submit" class="submit-btn" id="submit-btn"></button>
@@ -321,42 +311,91 @@
 
   <script>
 
-    // ============================================================
-    //  ✏️  CONFIG — paste your Google Apps Script Web App URL here
-    // ============================================================
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylyN2ypYEab79HD_I1V8k1gNZp3nME5DolD_UrTkzzCBo3pezvUWxzjSTytWeqc_pYHg/exec";
-    // ============================================================
+    // Email-only GAS endpoint — receives minimal data and sends notification.
+    // Update this URL once the GAS email script is deployed.
+    const EMAIL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylyN2ypYEab79HD_I1V8k1gNZp3nME5DolD_UrTkzzCBo3pezvUWxzjSTytWeqc_pYHg/exec";
 
-
-    // Holds the loaded event data from the API
+    // Holds the loaded event data (normalized to camelCase for existing helpers)
     let EVENT = null;
 
 
     // ── LOAD EVENT ON PAGE START ──────────────────────────────
     (async function loadEvent() {
       try {
-        const res  = await fetch(SCRIPT_URL + "?action=nextEvent");
-        const data = await res.json();
+        // Check config table for a pinned current event, else use next by date.
+        const { data: cfgRow } = await db.from('config')
+          .select('value').eq('key', 'current_event_id').maybeSingle();
+        const eventId = cfgRow?.value;
 
-        if (!data.event) {
-          // No upcoming event found
+        let evQuery = db.from('events').select('*');
+        if (eventId) {
+          evQuery = evQuery.eq('id', eventId);
+        } else {
+          const today = new Date().toISOString().slice(0, 10);
+          evQuery = evQuery.gte('event_date', today).order('event_date').limit(1);
+        }
+        const { data: evRows, error: evErr } = await evQuery;
+        if (evErr) throw evErr;
+
+        const ev = Array.isArray(evRows) ? evRows[0] : evRows;
+        if (!ev) {
           document.getElementById("loading-state").style.display = "none";
           document.getElementById("no-event-state").style.display = "block";
           return;
         }
 
-        EVENT = data.event;
+        // Fetch volunteer roles and donation items in parallel.
+        const [rolesResult, itemsResult] = await Promise.all([
+          db.from('event_volunteer_roles').select('*').eq('event_id', ev.id).order('sort_order'),
+          db.from('event_donation_items').select('*').eq('event_id', ev.id).order('sort_order'),
+        ]);
+
+        // Map roles to { label, detail }
+        const volunteerRoles = (rolesResult.data || []).map(r => ({
+          label:  r.role_label,
+          detail: r.role_detail || '',
+        }));
+
+        // Group donation items by category → { category, items: [{ label, needed }] }
+        const catMap = {};
+        const donationCategories = [];
+        (itemsResult.data || []).forEach(item => {
+          if (!catMap[item.category]) {
+            catMap[item.category] = { category: item.category, items: [] };
+            donationCategories.push(catMap[item.category]);
+          }
+          catMap[item.category].items.push({ label: item.item_label, needed: item.qty_needed });
+        });
+
+        // Normalize to camelCase so existing helpers work unchanged.
+        EVENT = {
+          id:                 ev.id,
+          eventName:          ev.event_name,
+          eventDate:          ev.event_date,
+          eventTime:          ev.event_time,
+          emojiRow:           ev.emoji_row,
+          headlineAdjective:  ev.headline_adjective,
+          longDescription:    ev.long_description,
+          locationName:       ev.location_name,
+          locationAddress:    ev.location_address,
+          organizerEmail:     ev.organizer_email,
+          icsStart:           ev.ics_start,
+          icsEnd:             ev.ics_end,
+          volunteerRoles,
+          donationItems: donationCategories,
+        };
+
         populatePage(EVENT);
-        buildVolunteerGrid(EVENT.volunteerRoles || []);
-        buildDonationGrid(EVENT.donationItems || []);
+        buildVolunteerGrid(EVENT.volunteerRoles);
+        buildDonationGrid(EVENT.donationItems);
         setupAccordions();
         fetchCounts();
 
         document.getElementById("loading-state").style.display = "none";
-        document.getElementById("main-content").style.display = "block";
+        document.getElementById("main-content").style.display  = "block";
 
       } catch (err) {
-        // If fetch fails show a friendly error
+        console.error("loadEvent error:", err);
         document.getElementById("loading-state").innerHTML =
           '<div class="egg-row" style="font-size:2rem;">⚠️</div>' +
           '<h1 style="font-size:1.4rem; margin-top:16px;">Unable to load event</h1>' +
@@ -470,35 +509,48 @@
     // ── FETCH LIVE SIGN-UP COUNTS ─────────────────────────────
     async function fetchCounts() {
       try {
-        const res  = await fetch(SCRIPT_URL);
-        const data = await res.json();
+        const [volResult, donResult] = await Promise.all([
+          db.from('dashboard_volunteer_counts').select('role_label, volunteer_count').eq('event_id', EVENT.id),
+          db.from('dashboard_donations').select('item_label, qty_pledged, qty_remaining').eq('event_id', EVENT.id),
+        ]);
+
+        // Build lookup maps
+        const volCounts = {};
+        (volResult.data || []).forEach(r => { volCounts[r.role_label] = r.volunteer_count; });
+
+        const donPledged   = {};
+        const donRemaining = {};
+        (donResult.data || []).forEach(r => {
+          donPledged[r.item_label]   = r.qty_pledged;
+          donRemaining[r.item_label] = r.qty_remaining;
+        });
 
         // Update volunteer badges
         document.querySelectorAll(".item-label[data-item]").forEach(el => {
           const key     = el.getAttribute("data-item");
-          const pledged = data.volunteerCounts ? (data.volunteerCounts[key] || 0) : 0;
+          const pledged = volCounts[key] || 0;
           const badge   = document.createElement("span");
-          badge.className = "item-count" + (pledged === 0 ? " count-zero" : "");
+          badge.className   = "item-count" + (pledged === 0 ? " count-zero" : "");
           badge.textContent = pledged === 0 ? "Be the first!" :
-                              pledged === 1 ? "1 signed up"  : pledged + " signed up";
+                              pledged === 1 ? "1 signed up"   : pledged + " signed up";
           el.appendChild(badge);
         });
 
         // Update donation stats
         document.querySelectorAll(".donate-item[data-donate-item]").forEach(el => {
-          const key        = el.getAttribute("data-donate-item");
-          const neededAttr = el.getAttribute("data-needed");
-          const pledged    = data.donationCounts ? (data.donationCounts[key] || 0) : 0;
-          const pledgedEl  = el.querySelector("[data-pledged-val]");
+          const key       = el.getAttribute("data-donate-item");
+          const pledgedEl = el.querySelector("[data-pledged-val]");
           if (!pledgedEl) return;
-          const needed       = parseInt(neededAttr) || 0;
-          const remaining    = Math.max(0, needed - pledged);
-          const remainingVal = el.querySelector("[data-remaining-val]");
-          const remainingStat= el.querySelector("[data-remaining-stat]");
+          const pledged       = donPledged[key]   || 0;
+          const remaining     = donRemaining[key] !== undefined
+            ? donRemaining[key]
+            : Math.max(0, (parseInt(el.getAttribute("data-needed")) || 0) - pledged);
+          const remainingVal  = el.querySelector("[data-remaining-val]");
+          const remainingStat = el.querySelector("[data-remaining-stat]");
           pledgedEl.textContent = pledged;
           pledgedEl.className   = "item-stat-val" + (pledged === 0 ? " zero" : "");
-          remainingVal.textContent = remaining;
-          remainingStat.className  = "item-stat" + (remaining === 0 ? " met" : "");
+          if (remainingVal)  remainingVal.textContent  = remaining;
+          if (remainingStat) remainingStat.className   = "item-stat" + (remaining === 0 ? " met" : "");
         });
       } catch (_) {
         // Counts are nice-to-have; fail silently
@@ -519,55 +571,93 @@
         document.querySelectorAll('input[name="volunteer"]:checked')
       ).map(cb => cb.value);
 
-      const donateEntries = [];
+      const donateItems = [];
       document.querySelectorAll(".qty-input[data-donate]").forEach(input => {
         const qty = parseInt(input.value) || 0;
-        if (qty > 0) donateEntries.push(input.getAttribute("data-donate") + ": " + qty);
+        if (qty > 0) donateItems.push({ label: input.getAttribute("data-donate"), qty });
       });
 
       const children_0_3    = parseInt(document.getElementById("children_0_3").value)    || 0;
       const children_4_8    = parseInt(document.getElementById("children_4_8").value)    || 0;
       const children_9_plus = parseInt(document.getElementById("children_9_plus").value) || 0;
 
-      const payload = new URLSearchParams({
-        first_name:        document.getElementById("first_name").value.trim(),
-        last_name:         document.getElementById("last_name").value.trim(),
-        email:             document.getElementById("email").value.trim(),
-        phone:             document.getElementById("phone").value.trim(),
-        address:           document.getElementById("address").value.trim(),
-        attending:         document.getElementById("attending").value,
-        num_adults:        document.getElementById("num_adults").value,
-        num_children:      children_0_3 + children_4_8 + children_9_plus,
-        children_0_3:      children_0_3,
-        children_4_8:      children_4_8,
-        children_9_plus:   children_9_plus,
-        potluck_item:      document.getElementById("potluck_item").value.trim(),
-        volunteer_roles:   volunteerChecked.length ? volunteerChecked.join(", ") : "None selected",
-        donation_items:    donateEntries.length    ? donateEntries.join(", ")    : "None selected",
-        other_donation:    document.getElementById("other_donation").value.trim(),
-        notes:             document.getElementById("notes").value.trim(),
-        heard_about:       document.getElementById("heard_about").value,
-        special_skills:    document.getElementById("special_skills").value.trim(),
-        opt_in_events:     document.getElementById("opt_in_events").checked     ? "Yes" : "No",
-        opt_in_newsletter: document.getElementById("opt_in_newsletter").checked ? "Yes" : "No",
-        cash_donation:     document.getElementById("cash_donation").value.trim(),
-        lookup_password:   document.getElementById("lookup_password").value.trim(),
-        event:             EVENT.eventName,
-      });
-
       btn.textContent = "Sending… 🌸";
       btn.disabled    = true;
 
       try {
-        await fetch(SCRIPT_URL, {
-          method:  "POST",
-          mode:    "no-cors",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body:    payload.toString(),
-        });
+        // 1. Insert the signup row and get back its id.
+        const signupRow = {
+          event_id:          EVENT.id,
+          first_name:        document.getElementById("first_name").value.trim(),
+          last_name:         document.getElementById("last_name").value.trim(),
+          email:             document.getElementById("email").value.trim(),
+          phone:             document.getElementById("phone").value.trim()         || null,
+          address:           document.getElementById("address").value.trim()       || null,
+          attending:         document.getElementById("attending").value,
+          num_adults:        parseInt(document.getElementById("num_adults").value) || 0,
+          num_children:      children_0_3 + children_4_8 + children_9_plus,
+          children_0_3,
+          children_4_8,
+          children_9_plus,
+          potluck_item:      document.getElementById("potluck_item").value.trim()      || null,
+          other_donation:    document.getElementById("other_donation").value.trim()    || null,
+          cash_donation:     document.getElementById("cash_donation").value.trim()     || null,
+          notes:             document.getElementById("notes").value.trim()             || null,
+          heard_about:       document.getElementById("heard_about").value              || null,
+          special_skills:    document.getElementById("special_skills").value.trim()    || null,
+          opt_in_events:     document.getElementById("opt_in_events").checked,
+          opt_in_newsletter: document.getElementById("opt_in_newsletter").checked,
+        };
+
+        const { data: inserted, error: signupError } = await db
+          .from('signups')
+          .insert(signupRow)
+          .select('id')
+          .single();
+
+        if (signupError) throw signupError;
+
+        const signupId = inserted.id;
+
+        // 2. Insert junction rows in parallel.
+        const junctionInserts = [];
+        if (volunteerChecked.length > 0) {
+          junctionInserts.push(
+            db.from('signup_volunteer_roles').insert(
+              volunteerChecked.map(role => ({ signup_id: signupId, role_label: role }))
+            )
+          );
+        }
+        if (donateItems.length > 0) {
+          junctionInserts.push(
+            db.from('signup_donation_items').insert(
+              donateItems.map(d => ({ signup_id: signupId, item_label: d.label, qty_pledged: d.qty }))
+            )
+          );
+        }
+        if (junctionInserts.length > 0) await Promise.all(junctionInserts);
+
+        // 3. Fire-and-forget email notification via GAS.
+        if (EMAIL_SCRIPT_URL) {
+          fetch(EMAIL_SCRIPT_URL, {
+            method:  "POST",
+            mode:    "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body:    new URLSearchParams({
+              action:     "signupNotify",
+              first_name: signupRow.first_name,
+              last_name:  signupRow.last_name,
+              email:      signupRow.email,
+              event:      EVENT.eventName,
+            }).toString(),
+          }).catch(() => {});
+        }
+
         document.getElementById("form-content").style.display = "none";
         document.getElementById("success-msg").style.display  = "block";
+
       } catch (err) {
+        console.error("Signup error:", err);
         btn.textContent = "Count Me In! 🎉";
         btn.disabled    = false;
         errorMsg.style.display = "block";
