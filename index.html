@@ -571,7 +571,7 @@
     // Render fallback immediately, then replace with live data from Supabase.
     renderEvents(FALLBACK_EVENTS);
 
-    supabase.from('events').select('*').order('event_date')
+    db.from('events').select('*').order('event_date')
       .then(({ data, error }) => {
         if (!error && data && data.length > 0) {
           renderEvents(data.map(apiEventToCard));
@@ -602,7 +602,7 @@
     renderPhotoGrid(staticPhotos);
 
     // Fetch the 6 most recent approved memory photos from Supabase.
-    supabase.from('public_memories').select('photo_urls, event_name')
+    db.from('public_memories').select('photo_urls, event_name')
       .order('submitted_at', { ascending: false })
       .then(({ data, error }) => {
         if (error || !data || data.length === 0) return;
@@ -637,7 +637,7 @@
     // Render fallback immediately, then replace with live data from Supabase.
     renderAnnouncements(FALLBACK_ANNOUNCEMENTS);
 
-    supabase.from('announcements').select('*').eq('published', true)
+    db.from('announcements').select('*').eq('published', true)
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (!error && data && data.length > 0) {

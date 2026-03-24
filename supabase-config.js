@@ -17,4 +17,6 @@
 const SUPABASE_URL  = 'https://lqwfzdaudlioseijnlor.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_Vj6VxxABERwOnvKMoghzfw_e28Fp25L';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+// Use `db` (not `supabase`) to avoid conflicting with the CDN's own
+// window.supabase namespace object.
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);

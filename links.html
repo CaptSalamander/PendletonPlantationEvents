@@ -349,7 +349,7 @@
     // Render fallback immediately, then replace with live data from Supabase.
     renderLinks(FALLBACK_CATEGORIES);
 
-    supabase.from('links').select('*').order('sort_order')
+    db.from('links').select('*').order('sort_order')
       .then(({ data, error }) => {
         if (!error && data && data.length > 0) {
           renderLinks(groupByCategory(data));

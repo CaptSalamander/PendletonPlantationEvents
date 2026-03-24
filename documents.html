@@ -252,7 +252,7 @@
     // Render fallback immediately, then replace with live data from Supabase.
     renderDocs(FALLBACK_CATEGORIES);
 
-    supabase.from('documents').select('*').order('sort_order')
+    db.from('documents').select('*').order('sort_order')
       .then(({ data, error }) => {
         if (!error && data && data.length > 0) {
           renderDocs(groupByCategory(data));
