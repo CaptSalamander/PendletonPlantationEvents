@@ -32,6 +32,7 @@ var HEADERS = [
   "Event Name",
   "Caption / Message",
   "Photo URLs",
+  "Approved",   // "Y" = visible in gallery, "N" = pending admin approval
 ];
 
 
@@ -61,8 +62,22 @@ function doGet() {
       return output;
     }
 
+    // ── Migrate: add "Approved" column if missing ─────────────
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    var approvedCol = headers.indexOf("Approved");
+    if (approvedCol === -1) {
+      // Add header in the next available column
+      var newCol = sheet.getLastColumn() + 1;
+      sheet.getRange(1, newCol).setValue("Approved");
+      // Set all existing data rows to "Y" so they remain visible
+      var lastRow = sheet.getLastRow();
+      if (lastRow > 1) {
+        sheet.getRange(2, newCol, lastRow - 1, 1).setValue("Y");
+      }
+      approvedCol = newCol - 1;  // 0-based index
+    }
+
     var rows = sheet.getDataRange().getValues();
-    // rows[0] is the header row — skip it.
     var submissions = [];
 
     for (var i = 1; i < rows.length; i++) {
@@ -73,6 +88,10 @@ function doGet() {
       var eventName = row[3];   // Column D — Event Name
       var caption   = row[4];   // Column E — Caption / Message
       var urlsRaw   = row[5];   // Column F — Photo URLs (newline-separated)
+      var approved  = String(row[approvedCol] || "").trim().toUpperCase();
+
+      // Only return rows approved by admin.
+      if (approved !== "Y") continue;
 
       // Extract Drive file IDs from stored share URLs.
       // URL format: https://drive.google.com/file/d/FILE_ID/view?…
@@ -162,6 +181,7 @@ function doPost(e) {
     }
 
     // ── Append the row ───────────────────────────────────
+    // New submissions start as Approved = "N" (pending admin review).
     sheet.appendRow([
       new Date(),
       data.uploader_name || "",
@@ -169,6 +189,7 @@ function doPost(e) {
       data.event_name    || "",
       data.caption       || "",
       photoUrls.length ? photoUrls.join("\n") : "No photos",
+      "N",
     ]);
 
     // ── Notify organizer ─────────────────────────────────

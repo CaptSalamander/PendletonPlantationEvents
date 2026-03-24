@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ============================================================
+     File:        admin.html
+     Purpose:     Admin control panel for the Pendleton Plantation
+                  community website. Password-protected. Allows the
+                  admin to manage events, awards, announcements,
+                  memories, bulletin posts, links, documents, and
+                  site settings.
+     Config:      Set SCRIPT_URL below to your deployed web app URL.
+     Styles:      admin-styles.css, index-styles.css (for nav)
+     ============================================================ -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Pendleton Plantation</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="admin-styles.css" />
+</head>
+
+<body>
+
+  <!-- ── LOGIN SCREEN ─────────────────────────────────────── -->
+  <div id="login-screen">
+    <div class="login-card" id="login-card">
+      <div class="login-logo">🌿</div>
+      <h1>Admin Portal</h1>
+      <p>Pendleton Plantation Community Website</p>
+      <div class="login-field">
+        <input type="password" id="login-password" placeholder="Enter admin password"
+               onkeydown="if(event.key==='Enter') doLogin()" autocomplete="current-password" />
+      </div>
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+
+  <!-- ── ADMIN UI (revealed after login) ──────────────────── -->
+  <div id="admin-ui">
+
+    <!-- Header bar -->
+    <div class="admin-header">
+      <div class="admin-header-brand">
+        <span>✦</span> Pendleton Plantation &nbsp;—&nbsp; Admin
+      </div>
+      <div class="admin-header-right">
+        <a href="index.html" target="_blank">← View Site</a>
+        <button class="logout-btn" onclick="doLogout()">Log Out</button>
+      </div>
+    </div>
+
+    <div class="admin-body">
+
+      <!-- ── SIDEBAR ────────────────────────────────────────── -->
+      <div class="admin-sidebar">
+        <div class="sidebar-section-label">Content</div>
+        <div class="sidebar-nav-item active" data-panel="events"       onclick="showPanel('events')">       <span class="nav-icon">📅</span> Events</div>
+        <div class="sidebar-nav-item"        data-panel="awards"       onclick="showPanel('awards')">       <span class="nav-icon">🏆</span> Awards</div>
+        <div class="sidebar-nav-item"        data-panel="announcements" onclick="showPanel('announcements')"><span class="nav-icon">📢</span> Announcements</div>
+        <div class="sidebar-nav-item"        data-panel="memories"     onclick="showPanel('memories')">     <span class="nav-icon">📷</span> Memories</div>
+        <div class="sidebar-nav-item"        data-panel="bulletin"     onclick="showPanel('bulletin')">     <span class="nav-icon">📋</span> Bulletin Board</div>
+        <div class="sidebar-section-label">Resources</div>
+        <div class="sidebar-nav-item"        data-panel="links"        onclick="showPanel('links')">        <span class="nav-icon">🔗</span> Links</div>
+        <div class="sidebar-nav-item"        data-panel="documents"    onclick="showPanel('documents')">    <span class="nav-icon">📄</span> Documents</div>
+        <div class="sidebar-section-label">Admin</div>
+        <div class="sidebar-nav-item"        data-panel="settings"     onclick="showPanel('settings')">     <span class="nav-icon">⚙️</span> Settings</div>
+      </div>
+
+      <!-- ── MAIN CONTENT ──────────────────────────────────── -->
+      <div class="admin-content">
+
+
+        <!-- ══════════════════════════════════════════════════
+             EVENTS PANEL
+        ══════════════════════════════════════════════════ -->
+        <div class="admin-panel active" id="panel-events">
+          <div class="admin-page-title">Events</div>
+          <div class="admin-page-subtitle">Manage upcoming and past community events. The sign-up page automatically shows the next chronological confirmed event.</div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="openEventForm(null)">+ Add New Event</button>
+          </div>
+
+          <!-- Archive card -->
+          <div class="archive-card">
+            <h3>⚠️ Archive Current Sign-Ups</h3>
+            <p style="font-size:0.88rem; color:#7a7060; margin-bottom:16px;">
+              Archives the current Signups sheet under the event's name, then creates a fresh sheet for the next upcoming event. <strong>This action cannot be undone.</strong>
+            </p>
+            <button class="btn btn-warning" onclick="confirmArchive()">Archive Sign-Ups &amp; Advance to Next Event</button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table" id="events-table">
+              <thead>
+                <tr>
+                  <th>Event</th><th>Date</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="events-tbody">
+                <tr><td colspan="4" class="admin-loading">Loading events…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Event editor form (hidden by default) -->
+          <div class="admin-form" id="event-form" style="display:none;">
+            <h3 id="event-form-title">New Event</h3>
+
+            <div class="form-grid-2" style="margin-bottom:16px;">
+              <div class="form-field">
+                <label>Event Name *</label>
+                <input type="text" id="ef-name" placeholder="Easter Egg Hunt 2026" oninput="autoSlug()" />
+              </div>
+              <div class="form-field">
+                <label>Event ID / Slug *</label>
+                <input type="text" id="ef-id" placeholder="EasterEggHunt2026" />
+              </div>
+            </div>
+
+            <div class="form-grid-3" style="margin-bottom:16px;">
+              <div class="form-field">
+                <label>Event Date *</label>
+                <input type="date" id="ef-date" />
+              </div>
+              <div class="form-field">
+                <label>Event Time</label>
+                <input type="text" id="ef-time" placeholder="10:00 AM – 1:00 PM" />
+              </div>
+              <div class="form-field">
+                <label>Sign-Ups Open Date</label>
+                <input type="date" id="ef-signup-open" />
+              </div>
+            </div>
+
+            <div class="form-grid-2" style="margin-bottom:16px;">
+              <div class="form-field">
+                <label>Status</label>
+                <select id="ef-status">
+                  <option value="Tentative">Tentative (Details Forthcoming)</option>
+                  <option value="Confirmed">Confirmed (Sign-Ups Open)</option>
+                  <option value="Past">Past</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Banner Color Class</label>
+                <select id="ef-color">
+                  <option value="card-color-1">Color 1 (Teal)</option>
+                  <option value="card-color-2">Color 2 (Gold)</option>
+                  <option value="card-color-3">Color 3 (Green)</option>
+                  <option value="card-color-4">Color 4 (Rose)</option>
+                  <option value="card-color-5">Color 5 (Purple)</option>
+                  <option value="card-color-6">Color 6 (Navy)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid-2" style="margin-bottom:16px;">
+              <div class="form-field">
+                <label>Emoji Row</label>
+                <input type="text" id="ef-emoji" placeholder="🐰 🥚 🌸 🥚 🐰" />
+              </div>
+              <div class="form-field">
+                <label>Headline Adjective</label>
+                <input type="text" id="ef-adjective" placeholder="Magical" />
+              </div>
+            </div>
+
+            <div class="form-grid-2" style="margin-bottom:16px;">
+              <div class="form-field">
+                <label>Location Name</label>
+                <input type="text" id="ef-loc-name" placeholder="Pendleton Plantation Pool Area" />
+              </div>
+              <div class="form-field">
+                <label>Location Address</label>
+                <input type="text" id="ef-loc-addr" placeholder="100 Armistead Ln • Easley, SC 29642" />
+              </div>
+            </div>
+
+            <div class="form-grid-2" style="margin-bottom:16px;">
+              <div class="form-field">
+                <label>ICS Start (YYYYMMDDTHHmmss)</label>
+                <input type="text" id="ef-ics-start" placeholder="20260321T100000" />
+              </div>
+              <div class="form-field">
+                <label>ICS End (YYYYMMDDTHHmmss)</label>
+                <input type="text" id="ef-ics-end" placeholder="20260321T130000" />
+              </div>
+            </div>
+
+            <div class="form-field form-full" style="margin-bottom:16px;">
+              <label>Short Description (Homepage preview)</label>
+              <textarea id="ef-short" placeholder="1–2 sentences for the homepage event card."></textarea>
+            </div>
+
+            <div class="form-field form-full" style="margin-bottom:16px;">
+              <label>Medium Description (Events page card)</label>
+              <textarea id="ef-medium" placeholder="2–4 sentences for the events page."></textarea>
+            </div>
+
+            <div class="form-field form-full" style="margin-bottom:16px;">
+              <label>Long Description (Sign-Up page body — HTML allowed)</label>
+              <textarea id="ef-long" class="tall" placeholder="Full event description with schedule. HTML tags allowed."></textarea>
+            </div>
+
+            <!-- Organizer info -->
+            <h3 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.1rem; color:var(--forest); border-bottom:1px solid var(--parchment); padding-bottom:10px; margin-bottom:16px;">Organizer</h3>
+            <div class="form-grid-2" style="margin-bottom:16px;">
+              <div class="form-field">
+                <label>Organizer Name</label>
+                <input type="text" id="ef-org-name" />
+              </div>
+              <div class="form-field">
+                <label>Organizer Email</label>
+                <input type="email" id="ef-org-email" placeholder="mandyvaliquette00@gmail.com" />
+              </div>
+              <div class="form-field">
+                <label>Organizer Phone</label>
+                <input type="tel" id="ef-org-phone" />
+              </div>
+              <div class="form-field">
+                <label>Organizer Address</label>
+                <input type="text" id="ef-org-addr" />
+              </div>
+              <div class="form-field">
+                <label>Preferred Contact Method</label>
+                <select id="ef-org-contact">
+                  <option value="Email">Email</option>
+                  <option value="Phone">Phone</option>
+                  <option value="Text">Text</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Volunteer Roles -->
+            <h3 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.1rem; color:var(--forest); border-bottom:1px solid var(--parchment); padding-bottom:10px; margin-bottom:16px;">Volunteer Roles</h3>
+            <div id="vol-roles-list" class="dynamic-list"></div>
+            <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addVolRole()">+ Add Role</button>
+
+            <!-- Donation Categories/Items -->
+            <h3 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.1rem; color:var(--forest); border-bottom:1px solid var(--parchment); padding-bottom:10px; margin:20px 0 16px;">Donation Items</h3>
+            <div id="donation-cats-list"></div>
+            <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addDonationCategory()">+ Add Category</button>
+
+            <!-- Form action buttons -->
+            <div class="btn-row" style="margin-top:24px; border-top:1px solid var(--parchment); padding-top:20px;">
+              <button class="btn btn-primary" onclick="submitEventForm()">💾 Save Event</button>
+              <button class="btn btn-secondary" onclick="cancelEventForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ══════════════════════════════════════════════════
+             AWARDS PANEL
+        ══════════════════════════════════════════════════ -->
+        <div class="admin-panel" id="panel-awards">
+          <div class="admin-page-title">Awards</div>
+          <div class="admin-page-subtitle">Manage award contests and select winners.</div>
+
+          <div class="subtab-bar">
+            <button class="subtab active" onclick="setAwardsSubtab('contests', this)">Contests</button>
+            <button class="subtab"        onclick="setAwardsSubtab('winners',  this)">Winners</button>
+            <button class="subtab"        onclick="setAwardsSubtab('prep',     this)">Winner Prep</button>
+          </div>
+
+          <!-- Contests subtab -->
+          <div id="awards-contests-panel">
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="openContestForm(null)">+ Add Contest</button>
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Award</th><th>Category</th><th>Period</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="contests-tbody"><tr><td colspan="5" class="admin-loading">Loading…</td></tr></tbody>
+              </table>
+            </div>
+            <div class="admin-form" id="contest-form" style="display:none;">
+              <h3 id="contest-form-title">New Contest</h3>
+              <div class="form-grid-2" style="margin-bottom:14px;">
+                <div class="form-field"><label>Award Name *</label><input type="text" id="cf-name" oninput="autoContestId()" /></div>
+                <div class="form-field"><label>Contest ID *</label><input type="text" id="cf-id" /></div>
+                <div class="form-field"><label>Category</label>
+                  <select id="cf-cat">
+                    <option>Yard &amp; Garden</option><option>Community</option>
+                    <option>Service</option><option>Events</option><option>Youth</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Period</label><input type="text" id="cf-period" placeholder="April 2026" /></div>
+                <div class="form-field"><label>Status</label>
+                  <select id="cf-status">
+                    <option value="open">Open</option><option value="soon">Coming Soon</option>
+                    <option value="voting">Voting</option><option value="deliberating">Deliberating</option>
+                    <option value="awarded">Awarded</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Deadline</label><input type="text" id="cf-deadline" placeholder="March 31, 2026" /></div>
+                <div class="form-field"><label>Icon (emoji)</label><input type="text" id="cf-icon" placeholder="🌿" /></div>
+                <div class="form-field"><label>Badge (image path)</label><input type="text" id="cf-badge" placeholder="images/Awards Badges/awards-badges-pngs/yard-of-the-month.png" /></div>
+                <div class="form-field"><label>Banner Color</label>
+                  <select id="cf-banner">
+                    <option value="banner-green">Green</option><option value="banner-forest">Forest</option>
+                    <option value="banner-gold">Gold</option><option value="banner-gold-warm">Gold Warm</option>
+                    <option value="banner-amber">Amber</option><option value="banner-purple">Purple</option>
+                    <option value="banner-blue">Blue</option><option value="banner-navy">Navy</option>
+                    <option value="banner-teal">Teal</option><option value="banner-sky">Sky</option>
+                    <option value="banner-crimson">Crimson</option><option value="banner-bronze">Bronze</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Prize</label><input type="text" id="cf-prize" /></div>
+              </div>
+              <div class="form-field form-full" style="margin-bottom:14px;"><label>Description</label><textarea id="cf-desc" class="tall"></textarea></div>
+              <div class="btn-row">
+                <button class="btn btn-primary" onclick="submitContestForm()">💾 Save</button>
+                <button class="btn btn-secondary" onclick="cancelContestForm()">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Winners subtab -->
+          <div id="awards-winners-panel" style="display:none;">
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="openWinnerForm(null)">+ Add Winner</button>
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Award</th><th>Winner</th><th>Period</th><th>Actions</th></tr></thead>
+                <tbody id="winners-tbody"><tr><td colspan="4" class="admin-loading">Loading…</td></tr></tbody>
+              </table>
+            </div>
+            <div class="admin-form" id="winner-form" style="display:none;">
+              <h3>Winner Details</h3>
+              <div class="form-grid-2" style="margin-bottom:14px;">
+                <div class="form-field"><label>Award Name *</label><input type="text" id="wf-award" /></div>
+                <div class="form-field"><label>Winner Name *</label><input type="text" id="wf-winner" /></div>
+                <div class="form-field"><label>Period</label><input type="text" id="wf-period" placeholder="April 2026" /></div>
+                <div class="form-field"><label>Year</label><input type="number" id="wf-year" placeholder="2026" /></div>
+                <div class="form-field"><label>Icon (emoji)</label><input type="text" id="wf-icon" placeholder="🌿" /></div>
+                <div class="form-field"><label>Badge filename</label><input type="text" id="wf-badge" placeholder="yard-of-the-month" /></div>
+                <div class="form-field"><label>Banner Color</label><input type="text" id="wf-banner" placeholder="banner-green" /></div>
+                <div class="form-field"><label>Prize</label><input type="text" id="wf-prize" /></div>
+                <div class="form-field"><label>Google Drive Photo ID</label><input type="text" id="wf-photo" placeholder="Leave blank for silhouette" /></div>
+              </div>
+              <div class="form-field form-full" style="margin-bottom:10px;"><label>Blurb (1–3 sentences)</label><textarea id="wf-blurb"></textarea></div>
+              <div class="form-field form-full" style="margin-bottom:10px;"><label>Quote 1</label><input type="text" id="wf-q1" /></div>
+              <div class="form-field form-full" style="margin-bottom:10px;"><label>Quote 2</label><input type="text" id="wf-q2" /></div>
+              <div class="form-field form-full" style="margin-bottom:14px;"><label>Quote 3</label><input type="text" id="wf-q3" /></div>
+              <div class="btn-row">
+                <button class="btn btn-primary" onclick="submitWinnerForm()">💾 Save</button>
+                <button class="btn btn-secondary" onclick="cancelWinnerForm()">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Winner Prep subtab -->
+          <div id="awards-prep-panel" style="display:none;">
+            <p style="font-size:0.88rem; color:var(--muted); margin-bottom:16px;">
+              These rows were auto-generated from nomination submissions. Review and promote the best candidates to the Winners tab.
+            </p>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Award</th><th>Nominee</th><th>Nominator</th><th>Blurb</th><th>Actions</th></tr></thead>
+                <tbody id="prep-tbody"><tr><td colspan="5" class="admin-loading">Loading…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ══════════════════════════════════════════════════
+             ANNOUNCEMENTS PANEL
+        ══════════════════════════════════════════════════ -->
+        <div class="admin-panel" id="panel-announcements">
+          <div class="admin-page-title">Announcements</div>
+          <div class="admin-page-subtitle">Manage announcements shown on the homepage. Only Published items are visible to the public.</div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="openAnnouncementForm(null)">+ Add Announcement</button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Date</th><th>Title</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="announcements-tbody"><tr><td colspan="4" class="admin-loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="admin-form" id="announcement-form" style="display:none;">
+            <h3 id="af-title-label">New Announcement</h3>
+            <input type="hidden" id="af-id" />
+            <div class="form-grid-3" style="margin-bottom:14px;">
+              <div class="form-field"><label>Day *</label><input type="text" id="af-day" placeholder="21" /></div>
+              <div class="form-field"><label>Month *</label><input type="text" id="af-month" placeholder="Mar 2026" /></div>
+              <div class="form-field">
+                <label>Published</label>
+                <div class="toggle-wrap" style="margin-top:8px;">
+                  <label class="toggle"><input type="checkbox" id="af-published" /><span class="toggle-slider"></span></label>
+                  <span class="toggle-label">Published</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-field form-full" style="margin-bottom:14px;"><label>Title *</label><input type="text" id="af-title" /></div>
+            <div class="form-field form-full" style="margin-bottom:14px;"><label>Body *</label><textarea id="af-body" class="tall"></textarea></div>
+            <div class="form-grid-2" style="margin-bottom:14px;">
+              <div class="form-field"><label>Link URL (optional)</label><input type="text" id="af-link" placeholder="signup.html" /></div>
+              <div class="form-field"><label>Link Text (optional)</label><input type="text" id="af-link-text" placeholder="Sign Up Now →" /></div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="submitAnnouncementForm()">💾 Save</button>
+              <button class="btn btn-secondary" onclick="cancelAnnouncementForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ══════════════════════════════════════════════════
+             MEMORIES PANEL
+        ══════════════════════════════════════════════════ -->
+        <div class="admin-panel" id="panel-memories">
+          <div class="admin-page-title">Memory Submissions</div>
+          <div class="admin-page-subtitle">Approve, edit, or remove submitted photos from the memory scrapbook. Only Approved items appear in the public gallery.</div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Date</th><th>Uploader</th><th>Event</th><th>Caption</th><th>Photos</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="memories-tbody"><tr><td colspan="7" class="admin-loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+
+        <!-- ══════════════════════════════════════════════════
+             BULLETIN BOARD PANEL
+        ══════════════════════════════════════════════════ -->
+        <div class="admin-panel" id="panel-bulletin">
+          <div class="admin-page-title">Bulletin Board</div>
+          <div class="admin-page-subtitle">Approve, edit, or remove community bulletin board posts.</div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Date</th><th>Name</th><th>Category</th><th>Title</th><th>Photos</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="bulletin-tbody"><tr><td colspan="7" class="admin-loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+
+          <!-- Inline edit form -->
+          <div class="admin-form" id="bulletin-edit-form" style="display:none;">
+            <h3>Edit Post</h3>
+            <input type="hidden" id="bef-rowid" />
+            <div class="form-field form-full" style="margin-bottom:14px;"><label>Category</label>
+              <select id="bef-cat">
+                <option>General</option><option>For Sale</option><option>Lost &amp; Found</option>
+                <option>Service Recommendation</option><option>Events</option><option>Announcements</option>
+              </select>
+            </div>
+            <div class="form-field form-full" style="margin-bottom:14px;"><label>Title</label><input type="text" id="bef-title" /></div>
+            <div class="form-field form-full" style="margin-bottom:14px;"><label>Content</label><textarea id="bef-content" class="tall"></textarea></div>
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="submitBulletinEdit()">💾 Save</button>
+              <button class="btn btn-secondary" onclick="cancelBulletinEdit()">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ══════════════════════════════════════════════════
+             LINKS PANEL
+        ══════════════════════════════════════════════════ -->
+        <div class="admin-panel" id="panel-links">
+          <div class="admin-page-title">Links</div>
+          <div class="admin-page-subtitle">Manage the resource links shown on the Links page.</div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="openLinkForm(null)">+ Add Link</button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Category</th><th>Title</th><th>URL</th><th>Actions</th></tr></thead>
+              <tbody id="links-tbody"><tr><td colspan="4" class="admin-loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="admin-form" id="link-form" style="display:none;">
+            <h3 id="lf-title-label">New Link</h3>
+            <input type="hidden" id="lf-id" />
+            <div class="form-grid-2" style="margin-bottom:14px;">
+              <div class="form-field"><label>Category *</label><input type="text" id="lf-cat" placeholder="Community Portal" /></div>
+              <div class="form-field"><label>Icon (emoji)</label><input type="text" id="lf-icon" placeholder="🔗" /></div>
+              <div class="form-field form-full"><label>Title *</label><input type="text" id="lf-title" /></div>
+              <div class="form-field form-full"><label>Description</label><textarea id="lf-desc"></textarea></div>
+              <div class="form-field form-full"><label>URL *</label><input type="url" id="lf-url" placeholder="https://…" /></div>
+              <div class="form-field"><label>URL Label (optional)</label><input type="text" id="lf-label" placeholder="goenumerate.com" /></div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="submitLinkForm()">💾 Save</button>
+              <button class="btn btn-secondary" onclick="cancelLinkForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ══════════════════════════════════════════════════
+             DOCUMENTS PANEL
+        ══════════════════════════════════════════════════ -->
+        <div class="admin-panel" id="panel-documents">
+          <div class="admin-page-title">Documents</div>
+          <div class="admin-page-subtitle">Manage downloadable documents shown on the Documents page.</div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="openDocForm(null)">+ Add Document</button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Category</th><th>Title</th><th>URL</th><th>Actions</th></tr></thead>
+              <tbody id="docs-tbody"><tr><td colspan="4" class="admin-loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="admin-form" id="doc-form" style="display:none;">
+            <h3 id="df-title-label">New Document</h3>
+            <input type="hidden" id="df-id" />
+            <div class="form-grid-2" style="margin-bottom:14px;">
+              <div class="form-field"><label>Category *</label><input type="text" id="df-cat" placeholder="Neighborhood Documents — Click to Download" /></div>
+              <div class="form-field"><label>Icon (emoji)</label><input type="text" id="df-icon" placeholder="📄" /></div>
+              <div class="form-field form-full"><label>Title *</label><input type="text" id="df-title" /></div>
+              <div class="form-field form-full"><label>Description</label><textarea id="df-desc"></textarea></div>
+              <div class="form-field form-full"><label>URL *</label><input type="url" id="df-url" placeholder="https://…" /></div>
+              <div class="form-field"><label>URL Label (optional)</label><input type="text" id="df-label" /></div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="submitDocForm()">💾 Save</button>
+              <button class="btn btn-secondary" onclick="cancelDocForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ══════════════════════════════════════════════════
+             SETTINGS PANEL
+        ══════════════════════════════════════════════════ -->
+        <div class="admin-panel" id="panel-settings">
+          <div class="admin-page-title">Settings</div>
+          <div class="admin-page-subtitle">Update passwords and admin contact information.</div>
+
+          <!-- Change Admin Password -->
+          <div class="settings-card">
+            <h3>🔐 Admin Password</h3>
+            <p style="font-size:0.85rem; color:var(--muted); margin-bottom:16px;">
+              This is the password used to log in to this admin page. After changing it, you will be logged out.
+            </p>
+            <div class="form-grid-2">
+              <div class="form-field">
+                <label>New Admin Password</label>
+                <input type="password" id="new-admin-pass" placeholder="New password" />
+              </div>
+              <div class="form-field">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirm-admin-pass" placeholder="Repeat password" />
+              </div>
+            </div>
+            <button class="btn btn-primary" style="margin-top:14px;" onclick="changeAdminPassword()">Update Admin Password</button>
+          </div>
+
+          <!-- Change Dashboard Password -->
+          <div class="settings-card">
+            <h3>📊 Dashboard Password</h3>
+            <p style="font-size:0.85rem; color:var(--muted); margin-bottom:16px;">
+              This is the password used by the Event Dashboard admin view (Overview, Volunteers, Supplies, etc.).
+            </p>
+            <div class="form-field" style="max-width:300px;">
+              <label>New Dashboard Password</label>
+              <input type="password" id="new-dashboard-pass" placeholder="New password" />
+            </div>
+            <button class="btn btn-primary" style="margin-top:14px;" onclick="changeDashboardPassword()">Update Dashboard Password</button>
+          </div>
+
+          <!-- Admin Contact Info -->
+          <div class="settings-card">
+            <h3>📧 Organizer Contact Info</h3>
+            <p style="font-size:0.85rem; color:var(--muted); margin-bottom:16px;">
+              Used in sign-up notification emails and the site footer.
+            </p>
+            <div class="form-grid-2">
+              <div class="form-field"><label>Organizer Name</label><input type="text" id="cfg-org-name" /></div>
+              <div class="form-field"><label>Organizer Email</label><input type="email" id="cfg-org-email" /></div>
+              <div class="form-field"><label>Organizer Phone</label><input type="tel" id="cfg-org-phone" /></div>
+            </div>
+            <button class="btn btn-primary" style="margin-top:14px;" onclick="saveOrgInfo()">Save Contact Info</button>
+          </div>
+        </div>
+
+
+      </div><!-- end .admin-content -->
+    </div><!-- end .admin-body -->
+  </div><!-- end #admin-ui -->
+
+
+  <!-- ── CONFIRMATION MODAL ─────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="confirm-modal">
+    <div class="modal-card">
+      <div class="modal-icon" id="modal-icon">⚠️</div>
+      <div class="modal-title" id="modal-title">Are you sure?</div>
+      <div class="modal-body"  id="modal-body"></div>
+      <div class="modal-actions">
+        <button class="btn btn-danger"     id="modal-confirm-btn" onclick="modalConfirm()">Confirm</button>
+        <button class="btn btn-secondary"  onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOAST CONTAINER ────────────────────────────────────── -->
+  <div id="toast-container"></div>
+
+
+  <script>
+    // ============================================================
+    //  ✏️  CONFIG — paste your Google Apps Script Web App URL here
+    // ============================================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylyN2ypYEab79HD_I1V8k1gNZp3nME5DolD_UrTkzzCBo3pezvUWxzjSTytWeqc_pYHg/exec";
+    // ============================================================
+
+    let ADMIN_KEY = "";          // Set after successful login
+    let modalCallback = null;    // Set before showing modal
+    let currentEventId = null;   // For editing existing events
+
+    // ── LOGIN / AUTH ──────────────────────────────────────────
+    function doLogin() {
+      const pw  = document.getElementById("login-password").value;
+      const err = document.getElementById("login-error");
+      const card= document.getElementById("login-card");
+      if (!pw) { err.textContent = "Please enter a password."; return; }
+
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ action: "validateAdmin", password: pw }).toString(),
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.valid) {
+          ADMIN_KEY = pw;
+          sessionStorage.setItem("adminKey", pw);
+          document.getElementById("login-screen").style.display = "none";
+          document.getElementById("admin-ui").style.display = "block";
+          loadCurrentPanel();
+          loadSettings();
+        } else {
+          err.textContent = "Incorrect password. Please try again.";
+          card.classList.remove("shake");
+          void card.offsetWidth; // reflow
+          card.classList.add("shake");
+        }
+      })
+      .catch(() => {
+        err.textContent = "Could not reach server. Check your connection.";
+      });
+    }
+
+    function doLogout() {
+      sessionStorage.removeItem("adminKey");
+      ADMIN_KEY = "";
+      document.getElementById("login-screen").style.display = "flex";
+      document.getElementById("admin-ui").style.display = "none";
+      document.getElementById("login-password").value = "";
+    }
+
+    // Restore session on page load
+    window.addEventListener("load", function() {
+      const saved = sessionStorage.getItem("adminKey");
+      if (saved) {
+        // Re-validate the saved key
+        fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ action: "validateAdmin", password: saved }).toString(),
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.valid) {
+            ADMIN_KEY = saved;
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("admin-ui").style.display = "block";
+            loadCurrentPanel();
+            loadSettings();
+          }
+        })
+        .catch(() => {});
+      }
+    });
+
+    // ── PANEL NAVIGATION ──────────────────────────────────────
+    let currentPanel = "events";
+
+    function showPanel(name) {
+      currentPanel = name;
+      document.querySelectorAll(".admin-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".sidebar-nav-item").forEach(i => i.classList.remove("active"));
+      document.getElementById("panel-" + name).classList.add("active");
+      document.querySelector('[data-panel="' + name + '"]').classList.add("active");
+      loadCurrentPanel();
+    }
+
+    function loadCurrentPanel() {
+      if      (currentPanel === "events")        loadEvents();
+      else if (currentPanel === "awards")        { loadContests(); loadWinners(); loadWinnerPrep(); }
+      else if (currentPanel === "announcements") loadAnnouncements();
+      else if (currentPanel === "memories")      loadMemories();
+      else if (currentPanel === "bulletin")      loadBulletin();
+      else if (currentPanel === "links")         loadLinks();
+      else if (currentPanel === "documents")     loadDocuments();
+    }
+
+    // ── API HELPERS ───────────────────────────────────────────
+    async function apiGet(action, extra) {
+      const params = new URLSearchParams({ action, adminKey: ADMIN_KEY, ...(extra || {}) });
+      const res = await fetch(SCRIPT_URL + "?" + params.toString());
+      return res.json();
+    }
+
+    async function apiPost(action, data) {
+      const body = new URLSearchParams({ action, adminKey: ADMIN_KEY });
+      if (data) body.set("data", JSON.stringify(data));
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+      });
+      return res.json();
+    }
+
+    async function apiPostSimple(params) {
+      params.adminKey = ADMIN_KEY;
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(params).toString(),
+      });
+      return res.json();
+    }
+
+    // ── TOAST ─────────────────────────────────────────────────
+    function toast(msg, type) {
+      const el = document.createElement("div");
+      el.className = "toast " + (type || "");
+      el.textContent = msg;
+      document.getElementById("toast-container").appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    // ── MODAL ─────────────────────────────────────────────────
+    function showModal(icon, title, body, onConfirm) {
+      document.getElementById("modal-icon").textContent = icon;
+      document.getElementById("modal-title").textContent = title;
+      document.getElementById("modal-body").textContent  = body;
+      document.getElementById("confirm-modal").classList.remove("hidden");
+      modalCallback = onConfirm;
+    }
+    function closeModal() {
+      document.getElementById("confirm-modal").classList.add("hidden");
+      modalCallback = null;
+    }
+    function modalConfirm() {
+      closeModal();
+      if (modalCallback) modalCallback();
+    }
+
+    // ── ESCAPE HTML ───────────────────────────────────────────
+    function esc(s) {
+      return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    // ── STATUS BADGE ──────────────────────────────────────────
+    function badge(val) {
+      val = String(val||"").toLowerCase();
+      return `<span class="badge badge-${val}">${esc(val)}</span>`;
+    }
+
+
+    // ====================================================
+    //  EVENTS
+    // ====================================================
+    let eventsData = [];
+
+    async function loadEvents() {
+      const tbody = document.getElementById("events-tbody");
+      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
+      try {
+        const data = await apiGet("allEventsAdmin");
+        eventsData = data.events || [];
+        renderEventsTable(eventsData);
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger);padding:20px;">${esc(e.message)}</td></tr>`;
+      }
+    }
+
+    function renderEventsTable(events) {
+      const tbody = document.getElementById("events-tbody");
+      if (!events.length) {
+        tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📅</div><p>No events yet.</p></div></td></tr>';
+        return;
+      }
+      tbody.innerHTML = events.map(ev => `
+        <tr>
+          <td><strong>${esc(ev.eventName)}</strong><br><small style="color:var(--muted)">${esc(ev.eventId)}</small></td>
+          <td>${esc(ev.eventDate)}</td>
+          <td>${badge(ev.status)}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="openEventForm('${esc(ev.eventId)}')">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteEvent('${esc(ev.eventId)}','${esc(ev.eventName)}')">Delete</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    function openEventForm(eventId) {
+      currentEventId = eventId;
+      const form = document.getElementById("event-form");
+      form.style.display = "block";
+      form.scrollIntoView({ behavior: "smooth" });
+
+      if (!eventId) {
+        document.getElementById("event-form-title").textContent = "New Event";
+        clearEventForm();
+        return;
+      }
+
+      document.getElementById("event-form-title").textContent = "Edit Event";
+      const ev = eventsData.find(e => e.eventId === eventId);
+      if (!ev) return;
+
+      document.getElementById("ef-name").value        = ev.eventName        || "";
+      document.getElementById("ef-id").value          = ev.eventId          || "";
+      document.getElementById("ef-date").value        = ev.eventDate        || "";
+      document.getElementById("ef-time").value        = ev.eventTime        || "";
+      document.getElementById("ef-signup-open").value = ev.signUpsOpenDate  || "";
+      document.getElementById("ef-status").value      = ev.status           || "Tentative";
+      document.getElementById("ef-color").value       = ev.bannerColorClass || "card-color-1";
+      document.getElementById("ef-emoji").value       = ev.emojiRow         || "";
+      document.getElementById("ef-adjective").value   = ev.headlineAdjective|| "";
+      document.getElementById("ef-loc-name").value    = ev.locationName     || "";
+      document.getElementById("ef-loc-addr").value    = ev.locationAddress  || "";
+      document.getElementById("ef-ics-start").value   = ev.icsStart         || "";
+      document.getElementById("ef-ics-end").value     = ev.icsEnd           || "";
+      document.getElementById("ef-short").value       = ev.shortDescription || "";
+      document.getElementById("ef-medium").value      = ev.mediumDescription|| "";
+      document.getElementById("ef-long").value        = ev.longDescription  || "";
+      document.getElementById("ef-org-name").value    = ev.organizerName    || "";
+      document.getElementById("ef-org-email").value   = ev.organizerEmail   || "";
+      document.getElementById("ef-org-phone").value   = ev.organizerPhone   || "";
+      document.getElementById("ef-org-addr").value    = ev.organizerAddress || "";
+      document.getElementById("ef-org-contact").value = ev.organizerContact || "Email";
+
+      // Fetch roles + items for this event
+      apiGet("nextEvent").then(() => {}); // trigger init
+      // Load via allEventsAdmin which includes full event objects
+      loadEventRolesAndItems(eventId);
+    }
+
+    async function loadEventRolesAndItems(eventId) {
+      // We need to re-fetch full event data including roles and items
+      // Use the public nextEvent endpoint — but we need a specific event
+      // So we load fresh from allEventsAdmin and merge
+      // For simplicity, call getEvent action
+      try {
+        const data = await fetch(SCRIPT_URL + "?" + new URLSearchParams({ action: "allEventsAdmin", adminKey: ADMIN_KEY })).then(r=>r.json());
+        // Roles and items are only in the nextEvent response for the active event
+        // For full editing of any event, load via nextEvent action if it's next, else show empty
+        renderVolRolesFromData([]);
+        renderDonationCatsFromData([]);
+      } catch (e) {}
+    }
+
+    function clearEventForm() {
+      ["ef-name","ef-id","ef-date","ef-time","ef-signup-open","ef-emoji","ef-adjective",
+       "ef-loc-name","ef-loc-addr","ef-ics-start","ef-ics-end","ef-short","ef-medium","ef-long",
+       "ef-org-name","ef-org-email","ef-org-phone","ef-org-addr"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("ef-status").value       = "Tentative";
+      document.getElementById("ef-color").value        = "card-color-1";
+      document.getElementById("ef-org-contact").value  = "Email";
+      renderVolRolesFromData([]);
+      renderDonationCatsFromData([]);
+    }
+
+    function cancelEventForm() {
+      document.getElementById("event-form").style.display = "none";
+      currentEventId = null;
+    }
+
+    function autoSlug() {
+      if (currentEventId) return; // don't auto-overwrite when editing
+      const name = document.getElementById("ef-name").value;
+      document.getElementById("ef-id").value = name.replace(/[^a-zA-Z0-9]/g,"").replace(/\s/g,"");
+    }
+
+    // Volunteer roles dynamic rows
+    function renderVolRolesFromData(roles) {
+      const list = document.getElementById("vol-roles-list");
+      list.innerHTML = "";
+      (roles||[]).forEach(r => addVolRole(r.label, r.detail));
+    }
+
+    function addVolRole(label, detail) {
+      const div = document.createElement("div");
+      div.className = "dynamic-row vol-role-row";
+      div.innerHTML = `
+        <input type="text" placeholder="Role name" value="${esc(label||'')}" class="vol-label" />
+        <input type="text" placeholder="Short description" value="${esc(detail||'')}" class="vol-detail" />
+        <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>`;
+      document.getElementById("vol-roles-list").appendChild(div);
+    }
+
+    // Donation categories dynamic
+    function renderDonationCatsFromData(cats) {
+      const cont = document.getElementById("donation-cats-list");
+      cont.innerHTML = "";
+      (cats||[]).forEach(cat => addDonationCategory(cat.category, cat.items));
+    }
+
+    function addDonationCategory(catName, items) {
+      const div = document.createElement("div");
+      div.className = "category-block donation-cat-block";
+      div.innerHTML = `
+        <div class="category-block-header">
+          <input type="text" placeholder="Category name" value="${esc(catName||'')}" class="cat-name-input" />
+          <button class="remove-btn" onclick="this.closest('.donation-cat-block').remove()">✕ Remove Category</button>
+        </div>
+        <div class="donation-items-list dynamic-list"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addDonationItem(this)">+ Add Item</button>`;
+      document.getElementById("donation-cats-list").appendChild(div);
+      const itemsList = div.querySelector(".donation-items-list");
+      (items||[]).forEach(item => addDonationItem(null, item.label, item.needed, itemsList));
+    }
+
+    function addDonationItem(btn, label, needed, listEl) {
+      const list = listEl || btn.previousElementSibling;
+      const div = document.createElement("div");
+      div.className = "dynamic-row donation-item-row";
+      div.innerHTML = `
+        <input type="text"   placeholder="Item label" value="${esc(label||'')}" class="item-label-input" style="flex:2" />
+        <input type="number" placeholder="Needed qty" value="${needed!==null&&needed!==undefined?needed:''}" class="item-needed-input" style="flex:1;max-width:100px;" />
+        <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>`;
+      list.appendChild(div);
+    }
+
+    function collectVolRoles() {
+      return Array.from(document.querySelectorAll(".vol-role-row")).map(row => ({
+        label:  row.querySelector(".vol-label").value.trim(),
+        detail: row.querySelector(".vol-detail").value.trim(),
+      })).filter(r => r.label);
+    }
+
+    function collectDonationItems() {
+      return Array.from(document.querySelectorAll(".donation-cat-block")).map(block => ({
+        category: block.querySelector(".cat-name-input").value.trim(),
+        items: Array.from(block.querySelectorAll(".donation-item-row")).map(row => ({
+          label:  row.querySelector(".item-label-input").value.trim(),
+          needed: row.querySelector(".item-needed-input").value !== "" ?
+                  Number(row.querySelector(".item-needed-input").value) : null,
+        })).filter(i => i.label),
+      })).filter(c => c.category);
+    }
+
+    async function submitEventForm() {
+      const data = {
+        eventId:            document.getElementById("ef-id").value.trim(),
+        eventName:          document.getElementById("ef-name").value.trim(),
+        status:             document.getElementById("ef-status").value,
+        eventDate:          document.getElementById("ef-date").value,
+        eventTime:          document.getElementById("ef-time").value.trim(),
+        signUpsOpenDate:    document.getElementById("ef-signup-open").value,
+        shortDescription:   document.getElementById("ef-short").value.trim(),
+        mediumDescription:  document.getElementById("ef-medium").value.trim(),
+        longDescription:    document.getElementById("ef-long").value.trim(),
+        emojiRow:           document.getElementById("ef-emoji").value.trim(),
+        headlineAdjective:  document.getElementById("ef-adjective").value.trim(),
+        locationName:       document.getElementById("ef-loc-name").value.trim(),
+        locationAddress:    document.getElementById("ef-loc-addr").value.trim(),
+        bannerColorClass:   document.getElementById("ef-color").value,
+        icsStart:           document.getElementById("ef-ics-start").value.trim(),
+        icsEnd:             document.getElementById("ef-ics-end").value.trim(),
+        organizerName:      document.getElementById("ef-org-name").value.trim(),
+        organizerAddress:   document.getElementById("ef-org-addr").value.trim(),
+        organizerPhone:     document.getElementById("ef-org-phone").value.trim(),
+        organizerEmail:     document.getElementById("ef-org-email").value.trim(),
+        organizerContact:   document.getElementById("ef-org-contact").value,
+        volunteerRoles:     collectVolRoles(),
+        donationItems:      collectDonationItems(),
+      };
+      if (!data.eventId || !data.eventName) { toast("Event ID and Name are required.", "error"); return; }
+      try {
+        const res = await apiPost("saveEvent", data);
+        if (res.success) {
+          toast("Event saved!", "success");
+          cancelEventForm();
+          loadEvents();
+        } else { toast("Save failed: " + (res.error||""), "error"); }
+      } catch (e) { toast("Error: " + e.message, "error"); }
+    }
+
+    function confirmDeleteEvent(eventId, eventName) {
+      showModal("🗑️","Delete Event","Delete \"" + eventName + "\"? This also removes its volunteer roles and donation items.",
+        async () => {
+          await apiPostSimple({ action: "deleteEvent", eventId });
+          toast("Event deleted.", "success");
+          loadEvents();
+        });
+    }
+
+    async function confirmArchive() {
+      showModal("⚠️","Archive Sign-Ups",
+        "This will copy the current Signups sheet to a permanent archive and reset it for the next event. This cannot be undone.",
+        async () => {
+          try {
+            const res = await apiPostSimple({ action: "archiveSignups" });
+            if (res.success) toast("Archived as \"" + res.archivedAs + "\". Next event: " + (res.nextEventId||"none"), "success");
+            else toast("Archive failed.", "error");
+          } catch (e) { toast("Error: " + e.message, "error"); }
+        });
+    }
+
+
+    // ====================================================
+    //  AWARD CONTESTS
+    // ====================================================
+    let contestsData = [];
+
+    function setAwardsSubtab(sub, btn) {
+      document.querySelectorAll(".subtab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("awards-contests-panel").style.display = sub === "contests" ? "block" : "none";
+      document.getElementById("awards-winners-panel").style.display  = sub === "winners"  ? "block" : "none";
+      document.getElementById("awards-prep-panel").style.display     = sub === "prep"     ? "block" : "none";
+    }
+
+    async function loadContests() {
+      const tbody = document.getElementById("contests-tbody");
+      tbody.innerHTML = '<tr><td colspan="5" class="admin-loading">Loading…</td></tr>';
+      try {
+        const data = await apiGet("allAwardContests");
+        contestsData = data.contests || [];
+        renderContestsTable(contestsData);
+      } catch (e) { tbody.innerHTML = `<tr><td colspan="5">Error: ${esc(e.message)}</td></tr>`; }
+    }
+
+    function renderContestsTable(contests) {
+      const tbody = document.getElementById("contests-tbody");
+      if (!contests.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🏆</div><p>No contests yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = contests.map(c => `
+        <tr>
+          <td>${esc(c["Award Name"]||c.awardName||"")}</td>
+          <td>${esc(c["Category"]||c.category||"")}</td>
+          <td>${esc(c["Period"]||c.period||"")}</td>
+          <td>${badge(c["Status"]||c.status||"")}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="openContestForm('${esc(c["Contest ID"]||c.contestId||"")}')">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteContest('${esc(c["Contest ID"]||c.contestId||"")}')">Delete</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    function openContestForm(contestId) {
+      const form = document.getElementById("contest-form");
+      form.style.display = "block";
+      form.scrollIntoView({ behavior: "smooth" });
+      if (!contestId) {
+        document.getElementById("contest-form-title").textContent = "New Contest";
+        ["cf-name","cf-id","cf-period","cf-deadline","cf-icon","cf-badge","cf-prize","cf-desc"].forEach(id => document.getElementById(id).value="");
+        return;
+      }
+      document.getElementById("contest-form-title").textContent = "Edit Contest";
+      const c = contestsData.find(x => (x["Contest ID"]||x.contestId) === contestId);
+      if (!c) return;
+      document.getElementById("cf-name").value     = c["Award Name"]   || c.awardName    || "";
+      document.getElementById("cf-id").value       = c["Contest ID"]   || c.contestId    || "";
+      document.getElementById("cf-cat").value      = c["Category"]     || c.category     || "Community";
+      document.getElementById("cf-period").value   = c["Period"]       || c.period       || "";
+      document.getElementById("cf-status").value   = c["Status"]       || c.status       || "open";
+      document.getElementById("cf-deadline").value = c["Deadline"]     || c.deadline     || "";
+      document.getElementById("cf-icon").value     = c["Icon"]         || c.icon         || "";
+      document.getElementById("cf-badge").value    = c["Badge"]        || c.badge        || "";
+      document.getElementById("cf-banner").value   = c["Banner Color"] || c.bannerColor  || "banner-green";
+      document.getElementById("cf-prize").value    = c["Prize"]        || c.prize        || "";
+      document.getElementById("cf-desc").value     = c["Description"]  || c.description  || "";
+    }
+
+    function cancelContestForm() { document.getElementById("contest-form").style.display = "none"; }
+
+    function autoContestId() {
+      const name = document.getElementById("cf-name").value;
+      document.getElementById("cf-id").value = name.replace(/[^a-zA-Z0-9]/g,"");
+    }
+
+    async function submitContestForm() {
+      const data = {
+        contestId:   document.getElementById("cf-id").value.trim(),
+        icon:        document.getElementById("cf-icon").value.trim(),
+        badge:       document.getElementById("cf-badge").value.trim(),
+        bannerColor: document.getElementById("cf-banner").value,
+        awardName:   document.getElementById("cf-name").value.trim(),
+        category:    document.getElementById("cf-cat").value,
+        period:      document.getElementById("cf-period").value.trim(),
+        status:      document.getElementById("cf-status").value,
+        description: document.getElementById("cf-desc").value.trim(),
+        deadline:    document.getElementById("cf-deadline").value.trim(),
+        prize:       document.getElementById("cf-prize").value.trim(),
+      };
+      if (!data.contestId || !data.awardName) { toast("Contest ID and Award Name required.", "error"); return; }
+      const res = await apiPost("saveAwardContest", data);
+      if (res.success) { toast("Contest saved!", "success"); cancelContestForm(); loadContests(); }
+      else toast("Error: " + (res.error||""), "error");
+    }
+
+    function confirmDeleteContest(contestId) {
+      showModal("🗑️","Delete Contest","Delete this award contest?", async () => {
+        await apiPostSimple({ action: "deleteAwardContest", contestId });
+        toast("Contest deleted.", "success");
+        loadContests();
+      });
+    }
+
+
+    // ====================================================
+    //  WINNERS
+    // ====================================================
+    let winnersData = [];
+
+    async function loadWinners() {
+      const tbody = document.getElementById("winners-tbody");
+      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
+      const data = await apiGet("allWinners");
+      winnersData = data.winners || [];
+      if (!winnersData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">🥇</div><p>No winners yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = winnersData.map(w => `
+        <tr>
+          <td>${esc(w.award||"")}</td>
+          <td>${esc(w.winner||"")}</td>
+          <td>${esc(w.period||"")}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="openWinnerForm('${esc((w.award||"")+"||"+(w.period||""))}')">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteWinner('${esc(w.award||"")}','${esc(w.period||"")}')">Delete</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    function openWinnerForm(key) {
+      const form = document.getElementById("winner-form");
+      form.style.display = "block";
+      form.scrollIntoView({ behavior: "smooth" });
+      if (!key) { ["wf-award","wf-winner","wf-period","wf-year","wf-icon","wf-badge","wf-banner","wf-prize","wf-photo","wf-blurb","wf-q1","wf-q2","wf-q3"].forEach(id => document.getElementById(id).value=""); return; }
+      const parts = key.split("||");
+      const w = winnersData.find(x => x.award===parts[0] && x.period===parts[1]);
+      if (!w) return;
+      document.getElementById("wf-award").value  = w.award  || "";
+      document.getElementById("wf-winner").value = w.winner || "";
+      document.getElementById("wf-period").value = w.period || "";
+      document.getElementById("wf-year").value   = w.year   || "";
+      document.getElementById("wf-icon").value   = w.icon   || "";
+      document.getElementById("wf-badge").value  = w.badge  || "";
+      document.getElementById("wf-banner").value = w.bannerColor || "";
+      document.getElementById("wf-prize").value  = w.prize  || "";
+      document.getElementById("wf-photo").value  = w.photoId|| "";
+      document.getElementById("wf-blurb").value  = w.blurb  || "";
+      document.getElementById("wf-q1").value     = w.quote1 || "";
+      document.getElementById("wf-q2").value     = w.quote2 || "";
+      document.getElementById("wf-q3").value     = w.quote3 || "";
+    }
+
+    function cancelWinnerForm() { document.getElementById("winner-form").style.display = "none"; }
+
+    async function submitWinnerForm() {
+      const data = {
+        award:       document.getElementById("wf-award").value.trim(),
+        winner:      document.getElementById("wf-winner").value.trim(),
+        period:      document.getElementById("wf-period").value.trim(),
+        year:        document.getElementById("wf-year").value.trim(),
+        icon:        document.getElementById("wf-icon").value.trim(),
+        badge:       document.getElementById("wf-badge").value.trim(),
+        bannerColor: document.getElementById("wf-banner").value.trim(),
+        prize:       document.getElementById("wf-prize").value.trim(),
+        photoId:     document.getElementById("wf-photo").value.trim(),
+        blurb:       document.getElementById("wf-blurb").value.trim(),
+        quote1:      document.getElementById("wf-q1").value.trim(),
+        quote2:      document.getElementById("wf-q2").value.trim(),
+        quote3:      document.getElementById("wf-q3").value.trim(),
+      };
+      const res = await apiPost("saveWinner", data);
+      if (res.success) { toast("Winner saved!", "success"); cancelWinnerForm(); loadWinners(); }
+      else toast("Error: " + (res.error||""), "error");
+    }
+
+    function confirmDeleteWinner(award, period) {
+      showModal("🗑️","Delete Winner","Remove this winner entry?", async () => {
+        await apiPostSimple({ action: "deleteWinner", winnerId: award + "|" + period });
+        toast("Winner deleted.", "success");
+        loadWinners();
+      });
+    }
+
+
+    // ====================================================
+    //  WINNER PREP
+    // ====================================================
+    async function loadWinnerPrep() {
+      const tbody = document.getElementById("prep-tbody");
+      tbody.innerHTML = '<tr><td colspan="5" class="admin-loading">Loading…</td></tr>';
+      const data = await apiGet("winnerPrep");
+      const prep = data.prep || [];
+      if (!prep.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📋</div><p>No winner prep rows yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = prep.map((row, i) => `
+        <tr>
+          <td>${esc(row.award||row["award"]||"")}</td>
+          <td>${esc(row.winner||row["winner"]||"")}</td>
+          <td>${esc(row["Nominator Name"]||"")}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc((row.blurb||row["blurb"]||"").substring(0,80))}</td>
+          <td><button class="btn btn-success btn-sm" onclick="promotePrep(${i+2})">Promote to Winners</button></td>
+        </tr>`).join("");
+    }
+
+    async function promotePrep(rowId) {
+      const res = await apiPostSimple({ action: "promoteWinnerPrep", rowId });
+      if (res.success) { toast("Promoted to Winners!", "success"); loadWinnerPrep(); loadWinners(); }
+      else toast("Error: " + (res.error||""), "error");
+    }
+
+
+    // ====================================================
+    //  ANNOUNCEMENTS
+    // ====================================================
+    let announcementsData = [];
+
+    async function loadAnnouncements() {
+      const tbody = document.getElementById("announcements-tbody");
+      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
+      const data = await apiGet("allAnnouncementsAdmin");
+      announcementsData = data.announcements || [];
+      if (!announcementsData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📢</div><p>No announcements yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = announcementsData.map(a => `
+        <tr>
+          <td>${esc(a.day)} ${esc(a.month)}</td>
+          <td>${esc(a.title)}</td>
+          <td>${badge(a.published==="Y"?"published":"draft")}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="openAnnouncementForm('${esc(a.id)}')">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteAnnouncement('${esc(a.id)}','${esc(a.title)}')">Delete</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    function openAnnouncementForm(id) {
+      const form = document.getElementById("announcement-form");
+      form.style.display = "block";
+      form.scrollIntoView({ behavior: "smooth" });
+      if (!id) {
+        document.getElementById("af-title-label").textContent = "New Announcement";
+        document.getElementById("af-id").value = "";
+        ["af-day","af-month","af-title","af-body","af-link","af-link-text"].forEach(x=>document.getElementById(x).value="");
+        document.getElementById("af-published").checked = true;
+        return;
+      }
+      document.getElementById("af-title-label").textContent = "Edit Announcement";
+      const a = announcementsData.find(x => String(x.id) === String(id));
+      if (!a) return;
+      document.getElementById("af-id").value        = a.id       || "";
+      document.getElementById("af-day").value       = a.day      || "";
+      document.getElementById("af-month").value     = a.month    || "";
+      document.getElementById("af-title").value     = a.title    || "";
+      document.getElementById("af-body").value      = a.body     || "";
+      document.getElementById("af-link").value      = a.link     || "";
+      document.getElementById("af-link-text").value = a.linkText || "";
+      document.getElementById("af-published").checked = a.published === "Y";
+    }
+
+    function cancelAnnouncementForm() { document.getElementById("announcement-form").style.display = "none"; }
+
+    async function submitAnnouncementForm() {
+      const data = {
+        id:        document.getElementById("af-id").value.trim() || null,
+        day:       document.getElementById("af-day").value.trim(),
+        month:     document.getElementById("af-month").value.trim(),
+        title:     document.getElementById("af-title").value.trim(),
+        body:      document.getElementById("af-body").value.trim(),
+        link:      document.getElementById("af-link").value.trim(),
+        linkText:  document.getElementById("af-link-text").value.trim(),
+        published: document.getElementById("af-published").checked ? "Y" : "N",
+      };
+      if (!data.title || !data.body) { toast("Title and body are required.", "error"); return; }
+      const res = await apiPost("saveAnnouncement", data);
+      if (res.success) { toast("Announcement saved!", "success"); cancelAnnouncementForm(); loadAnnouncements(); }
+      else toast("Error: " + (res.error||""), "error");
+    }
+
+    function confirmDeleteAnnouncement(id, title) {
+      showModal("🗑️","Delete Announcement","Delete \"" + title + "\"?", async () => {
+        await apiPostSimple({ action: "deleteAnnouncement", id });
+        toast("Announcement deleted.", "success");
+        loadAnnouncements();
+      });
+    }
+
+
+    // ====================================================
+    //  MEMORIES
+    // ====================================================
+    async function loadMemories() {
+      const tbody = document.getElementById("memories-tbody");
+      tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading…</td></tr>';
+      const data = await apiGet("allMemories");
+      const memories = data.memories || [];
+      if (!memories.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📷</div><p>No memories submitted yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = memories.map(m => `
+        <tr>
+          <td>${esc(m.date)}</td>
+          <td>${esc(m.uploader)}</td>
+          <td>${esc(m.event)}</td>
+          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.caption)}</td>
+          <td>
+            <div class="thumb-grid">
+              ${(m.photoIds||[]).slice(0,3).map(id => `<img src="https://drive.google.com/thumbnail?id=${esc(id)}&sz=w70" onerror="this.style.display='none'" />`).join("")}
+            </div>
+          </td>
+          <td>${badge(m.approved==="Y"?"approved":"pending")}</td>
+          <td>
+            ${m.approved!=="Y" ? `<button class="btn btn-success btn-sm" onclick="approveMemory(${m.rowId})">Approve</button>` : ""}
+            <button class="btn btn-danger btn-sm" onclick="confirmDeleteMemory(${m.rowId})">Delete</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    async function approveMemory(rowId) {
+      const res = await apiPostSimple({ action: "approveMemory", rowId });
+      if (res.success) { toast("Memory approved!", "success"); loadMemories(); }
+      else toast("Error.", "error");
+    }
+
+    function confirmDeleteMemory(rowId) {
+      showModal("🗑️","Delete Memory","Permanently delete this memory submission and remove it from the gallery?", async () => {
+        await apiPostSimple({ action: "deleteMemory", rowId });
+        toast("Memory deleted.", "success");
+        loadMemories();
+      });
+    }
+
+
+    // ====================================================
+    //  BULLETIN BOARD
+    // ====================================================
+    async function loadBulletin() {
+      const tbody = document.getElementById("bulletin-tbody");
+      tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading…</td></tr>';
+      const data = await apiGet("allBulletinPosts");
+      const posts = data.posts || [];
+      if (!posts.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><p>No posts yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = posts.map(p => `
+        <tr>
+          <td>${esc(p.date)}</td>
+          <td>${esc(p.name)}</td>
+          <td>${esc(p.category)}</td>
+          <td>${esc(p.title)}</td>
+          <td>
+            <div class="thumb-grid">
+              ${(p.photoIds||[]).slice(0,2).map(id => `<img src="https://drive.google.com/thumbnail?id=${esc(id)}&sz=w70" onerror="this.style.display='none'" />`).join("")}
+            </div>
+          </td>
+          <td>${badge(p.approved==="Y"?"approved":"pending")}</td>
+          <td>
+            ${p.approved!=="Y" ? `<button class="btn btn-success btn-sm" onclick="approveBulletin(${p.rowId})">Approve</button>` : ""}
+            <button class="btn btn-secondary btn-sm" onclick="openBulletinEdit(${p.rowId},'${esc(p.category)}','${esc(p.title)}','${esc(p.content).replace(/'/g,"&#39;")}')">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteBulletin(${p.rowId})">Delete</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    async function approveBulletin(rowId) {
+      const res = await apiPostSimple({ action: "approveBulletinPost", rowId });
+      if (res.success) { toast("Post approved!", "success"); loadBulletin(); }
+      else toast("Error.", "error");
+    }
+
+    function openBulletinEdit(rowId, cat, title, content) {
+      const form = document.getElementById("bulletin-edit-form");
+      form.style.display = "block";
+      form.scrollIntoView({ behavior: "smooth" });
+      document.getElementById("bef-rowid").value  = rowId;
+      document.getElementById("bef-cat").value    = cat;
+      document.getElementById("bef-title").value  = title;
+      document.getElementById("bef-content").value= content;
+    }
+
+    function cancelBulletinEdit() { document.getElementById("bulletin-edit-form").style.display = "none"; }
+
+    async function submitBulletinEdit() {
+      const data = {
+        rowId:    parseInt(document.getElementById("bef-rowid").value),
+        category: document.getElementById("bef-cat").value,
+        title:    document.getElementById("bef-title").value.trim(),
+        content:  document.getElementById("bef-content").value.trim(),
+      };
+      const res = await apiPost("editBulletinPost", data);
+      if (res.success) { toast("Post updated!", "success"); cancelBulletinEdit(); loadBulletin(); }
+      else toast("Error.", "error");
+    }
+
+    function confirmDeleteBulletin(rowId) {
+      showModal("🗑️","Delete Post","Permanently delete this bulletin board post?", async () => {
+        await apiPostSimple({ action: "deleteBulletinPost", rowId });
+        toast("Post deleted.", "success");
+        loadBulletin();
+      });
+    }
+
+
+    // ====================================================
+    //  LINKS
+    // ====================================================
+    let linksData = [];
+
+    async function loadLinks() {
+      const tbody = document.getElementById("links-tbody");
+      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
+      const data = await apiGet("allLinks");
+      linksData = data.links || [];
+      if (!linksData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">🔗</div><p>No links yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = linksData.map(l => `
+        <tr>
+          <td>${esc(l.Category||l.category||"")}</td>
+          <td>${esc(l.Title||l.title||"")}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="${esc(l.URL||l.url||"")}" target="_blank">${esc(l.URL||l.url||"")}</a></td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="openLinkForm('${esc(l.ID||l.id||"")}')">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteLink('${esc(l.ID||l.id||"")}')">Delete</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    function openLinkForm(id) {
+      const form = document.getElementById("link-form");
+      form.style.display = "block";
+      form.scrollIntoView({ behavior: "smooth" });
+      if (!id) {
+        document.getElementById("lf-title-label").textContent = "New Link";
+        document.getElementById("lf-id").value = "";
+        ["lf-cat","lf-icon","lf-title","lf-desc","lf-url","lf-label"].forEach(x=>document.getElementById(x).value="");
+        return;
+      }
+      document.getElementById("lf-title-label").textContent = "Edit Link";
+      const l = linksData.find(x => String(x.ID||x.id) === String(id));
+      if (!l) return;
+      document.getElementById("lf-id").value    = l.ID          || l.id          || "";
+      document.getElementById("lf-cat").value   = l.Category    || l.category    || "";
+      document.getElementById("lf-icon").value  = l.Icon        || l.icon        || "";
+      document.getElementById("lf-title").value = l.Title       || l.title       || "";
+      document.getElementById("lf-desc").value  = l.Description || l.description || "";
+      document.getElementById("lf-url").value   = l.URL         || l.url         || "";
+      document.getElementById("lf-label").value = l["URL Label"]|| l.urlLabel    || "";
+    }
+
+    function cancelLinkForm() { document.getElementById("link-form").style.display = "none"; }
+
+    async function submitLinkForm() {
+      const data = {
+        id:          document.getElementById("lf-id").value.trim() || null,
+        category:    document.getElementById("lf-cat").value.trim(),
+        icon:        document.getElementById("lf-icon").value.trim(),
+        title:       document.getElementById("lf-title").value.trim(),
+        description: document.getElementById("lf-desc").value.trim(),
+        url:         document.getElementById("lf-url").value.trim(),
+        urlLabel:    document.getElementById("lf-label").value.trim(),
+      };
+      if (!data.title || !data.url) { toast("Title and URL are required.", "error"); return; }
+      const res = await apiPost("saveLink", data);
+      if (res.success) { toast("Link saved!", "success"); cancelLinkForm(); loadLinks(); }
+      else toast("Error.", "error");
+    }
+
+    function confirmDeleteLink(id) {
+      showModal("🗑️","Delete Link","Delete this link?", async () => {
+        await apiPostSimple({ action: "deleteLink", id });
+        toast("Link deleted.", "success");
+        loadLinks();
+      });
+    }
+
+
+    // ====================================================
+    //  DOCUMENTS
+    // ====================================================
+    let docsData = [];
+
+    async function loadDocuments() {
+      const tbody = document.getElementById("docs-tbody");
+      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
+      const data = await apiGet("allDocuments");
+      docsData = data.documents || [];
+      if (!docsData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📄</div><p>No documents yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = docsData.map(d => `
+        <tr>
+          <td>${esc(d.Category||d.category||"")}</td>
+          <td>${esc(d.Title||d.title||"")}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="${esc(d.URL||d.url||"")}" target="_blank">${esc(d.URL||d.url||"")}</a></td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="openDocForm('${esc(d.ID||d.id||"")}')">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteDoc('${esc(d.ID||d.id||"")}')">Delete</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    function openDocForm(id) {
+      const form = document.getElementById("doc-form");
+      form.style.display = "block";
+      form.scrollIntoView({ behavior: "smooth" });
+      if (!id) {
+        document.getElementById("df-title-label").textContent = "New Document";
+        document.getElementById("df-id").value = "";
+        ["df-cat","df-icon","df-title","df-desc","df-url","df-label"].forEach(x=>document.getElementById(x).value="");
+        return;
+      }
+      document.getElementById("df-title-label").textContent = "Edit Document";
+      const d = docsData.find(x => String(x.ID||x.id) === String(id));
+      if (!d) return;
+      document.getElementById("df-id").value    = d.ID          || d.id          || "";
+      document.getElementById("df-cat").value   = d.Category    || d.category    || "";
+      document.getElementById("df-icon").value  = d.Icon        || d.icon        || "";
+      document.getElementById("df-title").value = d.Title       || d.title       || "";
+      document.getElementById("df-desc").value  = d.Description || d.description || "";
+      document.getElementById("df-url").value   = d.URL         || d.url         || "";
+      document.getElementById("df-label").value = d["URL Label"]|| d.urlLabel    || "";
+    }
+
+    function cancelDocForm() { document.getElementById("doc-form").style.display = "none"; }
+
+    async function submitDocForm() {
+      const data = {
+        id:          document.getElementById("df-id").value.trim() || null,
+        category:    document.getElementById("df-cat").value.trim(),
+        icon:        document.getElementById("df-icon").value.trim(),
+        title:       document.getElementById("df-title").value.trim(),
+        description: document.getElementById("df-desc").value.trim(),
+        url:         document.getElementById("df-url").value.trim(),
+        urlLabel:    document.getElementById("df-label").value.trim(),
+      };
+      if (!data.title || !data.url) { toast("Title and URL are required.", "error"); return; }
+      const res = await apiPost("saveDocument", data);
+      if (res.success) { toast("Document saved!", "success"); cancelDocForm(); loadDocuments(); }
+      else toast("Error.", "error");
+    }
+
+    function confirmDeleteDoc(id) {
+      showModal("🗑️","Delete Document","Delete this document entry?", async () => {
+        await apiPostSimple({ action: "deleteDocument", id });
+        toast("Document deleted.", "success");
+        loadDocuments();
+      });
+    }
+
+
+    // ====================================================
+    //  SETTINGS
+    // ====================================================
+    async function loadSettings() {
+      try {
+        const data = await apiGet("getConfig");
+        document.getElementById("cfg-org-name").value  = data["Organizer Name"]  || "";
+        document.getElementById("cfg-org-email").value = data["Organizer Email"] || "";
+        document.getElementById("cfg-org-phone").value = data["Organizer Phone"] || "";
+      } catch(e) {}
+    }
+
+    async function changeAdminPassword() {
+      const np = document.getElementById("new-admin-pass").value;
+      const cp = document.getElementById("confirm-admin-pass").value;
+      if (!np) { toast("Enter a new password.", "error"); return; }
+      if (np !== cp) { toast("Passwords do not match.", "error"); return; }
+      const res = await apiPost("updateConfig", { "Admin Password": np });
+      if (res.success) {
+        toast("Admin password updated. Please log in again.", "warning");
+        ADMIN_KEY = np;
+        sessionStorage.setItem("adminKey", np);
+        document.getElementById("new-admin-pass").value    = "";
+        document.getElementById("confirm-admin-pass").value = "";
+      } else toast("Error saving.", "error");
+    }
+
+    async function changeDashboardPassword() {
+      const np = document.getElementById("new-dashboard-pass").value;
+      if (!np) { toast("Enter a new password.", "error"); return; }
+      const res = await apiPost("updateConfig", { "Dashboard Password": np });
+      if (res.success) { toast("Dashboard password updated!", "success"); document.getElementById("new-dashboard-pass").value = ""; }
+      else toast("Error saving.", "error");
+    }
+
+    async function saveOrgInfo() {
+      const data = {
+        "Organizer Name":  document.getElementById("cfg-org-name").value.trim(),
+        "Organizer Email": document.getElementById("cfg-org-email").value.trim(),
+        "Organizer Phone": document.getElementById("cfg-org-phone").value.trim(),
+      };
+      const res = await apiPost("updateConfig", data);
+      if (res.success) toast("Contact info saved!", "success");
+      else toast("Error saving.", "error");
+    }
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ============================================================
+     File:        signup.html
+     Purpose:     Generic community event sign-up form.
+                  Fetches the next upcoming event from Google Sheets
+                  via the Apps Script web app URL and dynamically
+                  populates all event details, volunteer roles, and
+                  donation items. Submits responses back to the same
+                  script, which saves them to the Signups sheet and
+                  sends the organizer a notification email.
+     Config:      Set SCRIPT_URL below to your deployed web app URL.
+     Styles:      signup-styles.css
+     ============================================================ -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="page-title">Community Sign-Up — Pendleton Plantation</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="signup-styles.css" />
+</head>
+
+<body>
+
+  <!-- ── NAVIGATION BAR ───────────────────────────────────────── -->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+    <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links">
+      <li class="nav-has-dropdown">
+        <a href="index.html">Home <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="index.html#awards">Awards</a></li>
+          <li><a href="index.html#events">Events</a></li>
+          <li><a href="index.html#memories">Memories</a></li>
+          <li><a href="index.html#announcements">Announcements</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="awards.html">Awards <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="awards.html#competitions">🏆 Active Competitions</a></li>
+          <li><a href="awards.html#winners">🥇 Past Winners</a></li>
+          <li><a href="nominations.html">📝 Nominate a Neighbor</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="events.html" class="nav-active">Events <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="dashboard.html">📊 Event Dashboard</a></li>
+          <li><a href="signup.html" class="nav-active">📋 Event Sign-Up</a></li>
+          <li><a href="events.html#Easter">🐣 Easter Egg Hunt</a></li>
+          <li><a href="events.html#IceCreamSocial">🍦 Ice Cream Social</a></li>
+          <li><a href="events.html#July4th">🎆 4th of July</a></li>
+          <li><a href="events.html#ShrimpBoil">🦐 Shrimp Boil</a></li>
+          <li><a href="events.html#TrunkOrTreat">🎃 Trunk or Treat</a></li>
+          <li><a href="events.html#HolidayLights">✨ Holiday Lights</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="memories.html">Memories <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="memories.html">📷 Memory Scrapbook</a></li>
+          <li><a href="submit-memory.html">✍️ Share a Memory</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="bulletin-board.html">Bulletin Board <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="bulletin-board.html">📋 View Board</a></li>
+          <li><a href="post-to-board.html">📝 Post to Board</a></li>
+        </ul>
+      </li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+      <li><a href="admin.html">Admin</a></li>
+    </ul>
+  </nav>
+
+
+  <!-- ── PAGE WRAPPER ─────────────────────────────────────────── -->
+  <div class="page-wrapper">
+
+    <!-- ── LOADING STATE ────────────────────────────────────── -->
+    <div id="loading-state" class="header" style="text-align:center; padding:60px 20px;">
+      <div class="egg-row" style="font-size:2rem; animation:float 2s ease-in-out infinite;">⏳</div>
+      <h1 style="font-size:1.6rem; margin-top:16px;">Loading event details…</h1>
+      <p class="subtitle">Fetching the latest information from the community calendar.</p>
+    </div>
+
+    <!-- ── NO EVENT STATE ───────────────────────────────────── -->
+    <div id="no-event-state" class="header" style="display:none; text-align:center; padding:60px 20px;">
+      <div class="egg-row" style="font-size:2.5rem;">🌸</div>
+      <h1 style="font-size:1.6rem; margin-top:16px;">No Upcoming Events</h1>
+      <p class="subtitle">There are no events currently scheduled for sign-up. Check back soon — more neighborhood fun is always in the works!</p>
+      <a href="index.html" style="display:inline-block; margin-top:24px; padding:12px 28px; background:var(--primary, #2c3d2e); color:#fff; border-radius:30px; text-decoration:none; font-size:0.9rem;">← Back to Home</a>
+    </div>
+
+    <!-- ── MAIN CONTENT (shown after event loads) ───────────── -->
+    <div id="main-content" style="display:none;">
+
+      <!-- Page header: emoji row, headline, subtitle -->
+      <div class="header">
+        <div class="egg-row" id="emoji-row"></div>
+        <h1 id="page-heading"></h1>
+        <p class="subtitle" id="page-subtitle"></p>
+      </div>
+
+      <!-- Event meta pill tags: date, time, location -->
+      <div class="event-meta" id="event-meta"></div>
+
+      <!-- Event description / schedule -->
+      <div class="description" id="page-description"></div>
+
+      <!-- ── FORM CARD ──────────────────────────────────────── -->
+      <div class="card">
+
+        <div id="form-content">
+          <form id="signup-form">
+
+            <!-- ── SECTION 1: ABOUT YOU ─────────────────────── -->
+            <div class="section-label">🌷 About You</div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>First Name <span class="req">*</span></label>
+                <input type="text" id="first_name" placeholder="Jane" required />
+              </div>
+              <div class="field">
+                <label>Last Name <span class="req">*</span></label>
+                <input type="text" id="last_name" placeholder="Smith" required />
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Email Address <span class="req">*</span></label>
+              <input type="email" id="email" placeholder="you@email.com" required />
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Phone (optional)</label>
+                <input type="tel" id="phone" placeholder="(864) 555-0123" />
+              </div>
+              <div class="field">
+                <label>Street / Address</label>
+                <input type="text" id="address" placeholder="123 Maple Lane" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label>How did you hear about this event? (optional)</label>
+              <select id="heard_about">
+                <option value="">Select one…</option>
+                <option value="Facebook / Social Media">Facebook / Social Media</option>
+                <option value="A neighbor told me">A neighbor told me</option>
+                <option value="HOA website">HOA website</option>
+                <option value="Email or newsletter">Email or newsletter</option>
+                <option value="Flyer or yard sign">Flyer or yard sign</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Special skills or resources you'd like to offer? (optional)</label>
+              <input type="text" id="special_skills" placeholder="e.g., I have a truck, I'm a baker, I speak Spanish…" />
+            </div>
+
+            <div class="field">
+              <label>Stay connected (optional)</label>
+              <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
+                <label style="display:flex; align-items:center; gap:10px; font-weight:400; cursor:pointer;">
+                  <input type="checkbox" id="opt_in_events" />
+                  Keep me in the loop about future community events
+                </label>
+                <label style="display:flex; align-items:center; gap:10px; font-weight:400; cursor:pointer;">
+                  <input type="checkbox" id="opt_in_newsletter" />
+                  Sign me up for the neighborhood newsletter
+                </label>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+
+            <!-- ── SECTION 2: ATTENDING? ──────────────────────── -->
+            <div class="section-label" id="section-attending"></div>
+
+            <div class="field">
+              <label>Will you attend the event? <span class="req">*</span></label>
+              <select id="attending" required>
+                <option value="" disabled selected>Select one…</option>
+                <option value="Yes, we'll be there!">Yes, we'll be there! 🎉</option>
+                <option value="No, but I still want to help">No, but I still want to help</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Who's coming?</label>
+              <div class="age-bracket-row">
+                <div class="age-bracket">
+                  <span class="age-bracket-label">Adults</span>
+                  <input type="number" id="num_adults" min="0" max="50" placeholder="0" />
+                </div>
+                <div class="age-bracket">
+                  <span class="age-bracket-label">Ages 0–3</span>
+                  <input type="number" id="children_0_3" min="0" max="20" placeholder="0" />
+                </div>
+                <div class="age-bracket">
+                  <span class="age-bracket-label">Ages 4–8</span>
+                  <input type="number" id="children_4_8" min="0" max="20" placeholder="0" />
+                </div>
+                <div class="age-bracket">
+                  <span class="age-bracket-label">Ages 9+</span>
+                  <input type="number" id="children_9_plus" min="0" max="20" placeholder="0" />
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Potluck item you plan to bring (optional)</label>
+              <input type="text" id="potluck_item" placeholder="e.g., Pasta salad, lemonade, fruit tray…" />
+            </div>
+
+            <div class="divider"></div>
+
+
+            <!-- ── SECTION 3: VOLUNTEER ROLES ─────────────────── -->
+            <div class="section-label" id="section-volunteer"></div>
+            <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px;">Check everything you'd be willing to
+              help with — Teamwork makes the dream work! (That's what I've heard at least. 😆)</p>
+            <div class="checkbox-grid" id="volunteer-grid"></div>
+            <div class="divider"></div>
+
+
+            <!-- ── SECTION 4: DONATIONS ───────────────────────── -->
+            <div class="section-label" id="section-donate"></div>
+            <p style="font-size:0.88rem; color:var(--soft-text); margin-bottom:16px;">Select what you're able to
+              contribute — every little bit helps!</p>
+            <div class="checkbox-grid" id="donate-grid"></div>
+
+            <div class="field">
+              <label>Anything else you'd like to donate?</label>
+              <input type="text" id="other_donation" placeholder="e.g., I have a folding table you can borrow…" />
+            </div>
+
+            <div class="field">
+              <label>Cash or prize donation? (optional)</label>
+              <input type="text" id="cash_donation" placeholder="e.g., $20 via Venmo, gift card for the prize table…" />
+              <p style="font-size:0.82rem; color:var(--soft-text); margin-top:4px;">We'll follow up with payment details
+                after you submit. Any excess funds go toward future community events.</p>
+            </div>
+
+            <div class="divider"></div>
+
+
+            <!-- ── SECTION 5: NOTES ───────────────────────────── -->
+            <div class="section-label">💬 Anything Else?</div>
+            <div class="field">
+              <label>Questions, notes, or ideas</label>
+              <textarea id="notes"
+                placeholder="e.g., My daughter has a nut allergy — will there be safe options?"></textarea>
+            </div>
+
+            <div class="divider"></div>
+
+
+            <!-- ── SECTION 6: LOOKUP PASSWORD ────────────────── -->
+            <div class="section-label">🔑 Sign-Up Lookup (optional)</div>
+            <div class="field">
+              <label>Create a lookup password (optional)</label>
+              <input type="text" id="lookup_password" placeholder="e.g., sunshine42" autocomplete="off" />
+              <p style="font-size:0.82rem; color:var(--soft-text); margin-top:4px;">
+                Set a short password so you can view your sign-up details later on the
+                <a href="dashboard.html" style="color:inherit;">Event Dashboard</a> under "My Sign-Up".
+                Leave blank if you don't need this.
+              </p>
+            </div>
+
+
+            <!-- ── SUBMIT ──────────────────────────────────────── -->
+            <div class="submit-area">
+              <button type="submit" class="submit-btn" id="submit-btn"></button>
+              <div class="error-msg" id="error-msg">
+                Something went wrong — please try again or contact your organizer directly.
+              </div>
+              <p class="fine-print">Your info is only used to coordinate this event.<br />
+                Questions? Contact <a id="contact-link" href="#"></a>.</p>
+            </div>
+
+          </form>
+        </div><!-- end #form-content -->
+
+
+        <!-- ── SUCCESS MESSAGE ─────────────────────────────── -->
+        <div class="success-msg" id="success-msg">
+          <div class="big-emoji" id="success-emoji"></div>
+          <h2>You're in — thank you!</h2>
+          <p id="success-message"></p>
+          <button class="submit-btn" onclick="downloadICS()" style="margin-top:18px;">
+            📅 Add to My Calendar
+          </button>
+        </div>
+
+      </div><!-- end .card -->
+
+      <!-- Page footer -->
+      <div class="footer" id="page-footer"></div>
+
+    </div><!-- end #main-content -->
+
+  </div><!-- end .page-wrapper -->
+
+
+  <script>
+
+    // ============================================================
+    //  ✏️  CONFIG — paste your Google Apps Script Web App URL here
+    // ============================================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylyN2ypYEab79HD_I1V8k1gNZp3nME5DolD_UrTkzzCBo3pezvUWxzjSTytWeqc_pYHg/exec";
+    // ============================================================
+
+
+    // Holds the loaded event data from the API
+    let EVENT = null;
+
+
+    // ── LOAD EVENT ON PAGE START ──────────────────────────────
+    (async function loadEvent() {
+      try {
+        const res  = await fetch(SCRIPT_URL + "?action=nextEvent");
+        const data = await res.json();
+
+        if (!data.event) {
+          // No upcoming event found
+          document.getElementById("loading-state").style.display = "none";
+          document.getElementById("no-event-state").style.display = "block";
+          return;
+        }
+
+        EVENT = data.event;
+        populatePage(EVENT);
+        buildVolunteerGrid(EVENT.volunteerRoles || []);
+        buildDonationGrid(EVENT.donationItems || []);
+        setupAccordions();
+        fetchCounts();
+
+        document.getElementById("loading-state").style.display = "none";
+        document.getElementById("main-content").style.display = "block";
+
+      } catch (err) {
+        // If fetch fails show a friendly error
+        document.getElementById("loading-state").innerHTML =
+          '<div class="egg-row" style="font-size:2rem;">⚠️</div>' +
+          '<h1 style="font-size:1.4rem; margin-top:16px;">Unable to load event</h1>' +
+          '<p class="subtitle">Please refresh the page or try again in a moment.</p>';
+      }
+    })();
+
+
+    // ── POPULATE PAGE FROM EVENT DATA ─────────────────────────
+    function populatePage(ev) {
+      // Format the event date for display
+      const dateDisplay = formatEventDate(ev.eventDate);
+
+      document.title = ev.eventName + " — Sign Up to Help!";
+      document.getElementById("emoji-row").textContent    = ev.emojiRow || "";
+      document.getElementById("page-heading").innerHTML   =
+        "Help Make Our<br /><em>" + escHtml(ev.eventName) + "</em> " + escHtml(ev.headlineAdjective || "Amazing");
+      document.getElementById("page-subtitle").textContent =
+        "We're bringing the neighborhood together — and we'd love your help! " +
+        "Sign up below to volunteer, donate supplies, or just let us know you're coming.";
+      document.getElementById("page-description").innerHTML = ev.longDescription || "";
+      document.getElementById("section-attending").textContent = "🎉 Are You Coming?";
+      document.getElementById("section-volunteer").textContent = "🙋 Volunteer Roles";
+      document.getElementById("section-donate").textContent    = "🎁 Donations";
+      document.getElementById("submit-btn").textContent        = "Count Me In! 🎉";
+      document.getElementById("page-footer").innerHTML =
+        "Organized by <strong>your HOA community</strong> &nbsp;·&nbsp; " + escHtml(ev.eventName);
+      document.getElementById("success-emoji").textContent     = "🎉";
+      document.getElementById("success-message").innerHTML     =
+        "We can't wait to connect with you!<br />We're so grateful for neighbors like you.";
+
+      const contactEmail = ev.organizerEmail || "mandyvaliquette00@gmail.com";
+      const contactLink  = document.getElementById("contact-link");
+      contactLink.href        = "mailto:" + contactEmail;
+      contactLink.textContent = contactEmail;
+
+      // Build meta pill tags
+      const locationLine = ev.locationName +
+        (ev.locationAddress ? "<br>" + escHtml(ev.locationAddress) : "");
+      document.getElementById("event-meta").innerHTML =
+        `<div class="meta-tag"><span>📅</span> ${escHtml(dateDisplay)}</div>
+         <div class="meta-tag"><span>🕙</span> ${escHtml(ev.eventTime || "Time TBD")}</div>
+         <div class="meta-tag"><span>📍</span> ${locationLine}</div>`;
+    }
+
+    function formatEventDate(dateStr) {
+      if (!dateStr) return "Date TBD";
+      try {
+        // Treat YYYY-MM-DD as local date (append T00:00 to avoid UTC offset issues)
+        const d = new Date(dateStr + "T00:00:00");
+        return d.toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+      } catch (e) { return dateStr; }
+    }
+
+
+    // ── BUILD VOLUNTEER CHECKBOXES ────────────────────────────
+    function buildVolunteerGrid(roles) {
+      document.getElementById("volunteer-grid").innerHTML = roles.map(r => `
+        <label class="checkbox-item">
+          <input type="checkbox" name="volunteer" value="${escAttr(r.label)}" />
+          <div class="item-label" data-item="${escAttr(r.label)}">
+            <strong>${escHtml(r.label)}</strong>${r.detail ? " — " + escHtml(r.detail) : ""}
+          </div>
+        </label>`).join("");
+    }
+
+
+    // ── BUILD DONATION ACCORDIONS ─────────────────────────────
+    function buildDonationGrid(categories) {
+      document.getElementById("donate-grid").innerHTML = categories.map(cat => `
+        <div class="donate-category accordion-header">
+          ${escHtml(cat.category)} <span class="accordion-icon">▼</span>
+        </div>
+        <div class="donate-qty-list accordion-content">
+          ${(cat.items || []).map(d => `
+            <div class="donate-item" data-donate-item="${escAttr(d.label)}"
+                 data-needed="${d.needed !== null && d.needed !== undefined ? d.needed : ''}">
+              <div class="donate-item-top">
+                <div class="donate-item-name">${escHtml(d.label)}</div>
+                <div class="donate-item-qty">
+                  <span class="qty-label">Qty</span>
+                  <input type="number" class="qty-input" min="0" max="999" placeholder="0"
+                         data-donate="${escAttr(d.label)}" />
+                </div>
+              </div>
+              ${d.needed !== null && d.needed !== undefined ? `
+                <div class="item-stats">
+                  <div class="item-stat"><div class="item-stat-val">${d.needed}</div><div class="item-stat-label">Total Needed</div></div>
+                  <div class="item-stat"><div class="item-stat-val zero" data-pledged-val>–</div><div class="item-stat-label">Pledged</div></div>
+                  <div class="item-stat" data-remaining-stat><div class="item-stat-val" data-remaining-val>–</div><div class="item-stat-label">Remaining</div></div>
+                </div>` : ''}
+            </div>`).join("")}
+        </div>`).join("");
+    }
+
+
+    // ── ACCORDION TOGGLE ─────────────────────────────────────
+    function setupAccordions() {
+      document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+          header.classList.toggle('active');
+          const content = header.nextElementSibling;
+          content.classList.toggle('open');
+          content.style.maxHeight = content.classList.contains('open')
+            ? content.scrollHeight + "px" : null;
+        });
+      });
+    }
+
+
+    // ── FETCH LIVE SIGN-UP COUNTS ─────────────────────────────
+    async function fetchCounts() {
+      try {
+        const res  = await fetch(SCRIPT_URL);
+        const data = await res.json();
+
+        // Update volunteer badges
+        document.querySelectorAll(".item-label[data-item]").forEach(el => {
+          const key     = el.getAttribute("data-item");
+          const pledged = data.volunteerCounts ? (data.volunteerCounts[key] || 0) : 0;
+          const badge   = document.createElement("span");
+          badge.className = "item-count" + (pledged === 0 ? " count-zero" : "");
+          badge.textContent = pledged === 0 ? "Be the first!" :
+                              pledged === 1 ? "1 signed up"  : pledged + " signed up";
+          el.appendChild(badge);
+        });
+
+        // Update donation stats
+        document.querySelectorAll(".donate-item[data-donate-item]").forEach(el => {
+          const key        = el.getAttribute("data-donate-item");
+          const neededAttr = el.getAttribute("data-needed");
+          const pledged    = data.donationCounts ? (data.donationCounts[key] || 0) : 0;
+          const pledgedEl  = el.querySelector("[data-pledged-val]");
+          if (!pledgedEl) return;
+          const needed       = parseInt(neededAttr) || 0;
+          const remaining    = Math.max(0, needed - pledged);
+          const remainingVal = el.querySelector("[data-remaining-val]");
+          const remainingStat= el.querySelector("[data-remaining-stat]");
+          pledgedEl.textContent = pledged;
+          pledgedEl.className   = "item-stat-val" + (pledged === 0 ? " zero" : "");
+          remainingVal.textContent = remaining;
+          remainingStat.className  = "item-stat" + (remaining === 0 ? " met" : "");
+        });
+      } catch (_) {
+        // Counts are nice-to-have; fail silently
+      }
+    }
+
+
+    // ── FORM SUBMISSION ───────────────────────────────────────
+    document.getElementById("signup-form").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      if (!EVENT) return;
+
+      const btn      = document.getElementById("submit-btn");
+      const errorMsg = document.getElementById("error-msg");
+      errorMsg.style.display = "none";
+
+      const volunteerChecked = Array.from(
+        document.querySelectorAll('input[name="volunteer"]:checked')
+      ).map(cb => cb.value);
+
+      const donateEntries = [];
+      document.querySelectorAll(".qty-input[data-donate]").forEach(input => {
+        const qty = parseInt(input.value) || 0;
+        if (qty > 0) donateEntries.push(input.getAttribute("data-donate") + ": " + qty);
+      });
+
+      const children_0_3    = parseInt(document.getElementById("children_0_3").value)    || 0;
+      const children_4_8    = parseInt(document.getElementById("children_4_8").value)    || 0;
+      const children_9_plus = parseInt(document.getElementById("children_9_plus").value) || 0;
+
+      const payload = new URLSearchParams({
+        first_name:        document.getElementById("first_name").value.trim(),
+        last_name:         document.getElementById("last_name").value.trim(),
+        email:             document.getElementById("email").value.trim(),
+        phone:             document.getElementById("phone").value.trim(),
+        address:           document.getElementById("address").value.trim(),
+        attending:         document.getElementById("attending").value,
+        num_adults:        document.getElementById("num_adults").value,
+        num_children:      children_0_3 + children_4_8 + children_9_plus,
+        children_0_3:      children_0_3,
+        children_4_8:      children_4_8,
+        children_9_plus:   children_9_plus,
+        potluck_item:      document.getElementById("potluck_item").value.trim(),
+        volunteer_roles:   volunteerChecked.length ? volunteerChecked.join(", ") : "None selected",
+        donation_items:    donateEntries.length    ? donateEntries.join(", ")    : "None selected",
+        other_donation:    document.getElementById("other_donation").value.trim(),
+        notes:             document.getElementById("notes").value.trim(),
+        heard_about:       document.getElementById("heard_about").value,
+        special_skills:    document.getElementById("special_skills").value.trim(),
+        opt_in_events:     document.getElementById("opt_in_events").checked     ? "Yes" : "No",
+        opt_in_newsletter: document.getElementById("opt_in_newsletter").checked ? "Yes" : "No",
+        cash_donation:     document.getElementById("cash_donation").value.trim(),
+        lookup_password:   document.getElementById("lookup_password").value.trim(),
+        event:             EVENT.eventName,
+      });
+
+      btn.textContent = "Sending… 🌸";
+      btn.disabled    = true;
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method:  "POST",
+          mode:    "no-cors",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body:    payload.toString(),
+        });
+        document.getElementById("form-content").style.display = "none";
+        document.getElementById("success-msg").style.display  = "block";
+      } catch (err) {
+        btn.textContent = "Count Me In! 🎉";
+        btn.disabled    = false;
+        errorMsg.style.display = "block";
+      }
+    });
+
+
+    // ── ICS CALENDAR DOWNLOAD ─────────────────────────────────
+    function downloadICS() {
+      if (!EVENT) return;
+      const uid = Date.now() + "@pendletonplantation.com";
+      const ics = [
+        "BEGIN:VCALENDAR", "VERSION:2.0",
+        "PRODID:-//Pendleton Plantation//EN",
+        "BEGIN:VEVENT",
+        "UID:" + uid,
+        "DTSTART:" + (EVENT.icsStart || ""),
+        "DTEND:"   + (EVENT.icsEnd   || ""),
+        "SUMMARY:" + EVENT.eventName,
+        "LOCATION:" + EVENT.locationName + (EVENT.locationAddress ? ", " + EVENT.locationAddress : ""),
+        "DESCRIPTION:Join us for " + EVENT.eventName + " at Pendleton Plantation!",
+        "END:VEVENT", "END:VCALENDAR",
+      ].join("\r\n");
+      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href     = URL.createObjectURL(blob);
+      a.download = EVENT.eventName.replace(/\s+/g, "-") + ".ics";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+
+    // ── HELPERS ───────────────────────────────────────────────
+    function escHtml(str) {
+      return String(str || "")
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+    function escAttr(str) {
+      return String(str || "").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+
+    // ── HAMBURGER MENU ────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+      const hamburger = document.querySelector('.nav-hamburger');
+      const navLinks  = document.querySelector('.nav-links');
+      if (hamburger && navLinks) {
+        hamburger.addEventListener('click', () => {
+          const isOpen = navLinks.classList.toggle('open');
+          hamburger.classList.toggle('open', isOpen);
+          hamburger.setAttribute('aria-expanded', isOpen);
+          document.body.style.overflow = isOpen ? 'hidden' : '';
+        });
+        navLinks.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', () => {
+            navLinks.classList.remove('open');
+            hamburger.classList.remove('open');
+            hamburger.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+          });
+        });
+      }
+      document.querySelectorAll('.nav-has-dropdown > a').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+          if (window.innerWidth <= 1100) {
+            e.preventDefault();
+            link.parentElement.classList.toggle('open');
+          }
+        });
+      });
+    });
+
+  </script>
+</body>
+</html>

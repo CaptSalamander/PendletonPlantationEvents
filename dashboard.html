@@ -81,30 +81,55 @@
       </li>
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
+      <li><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
 
   <!-- ── PAGE HERO ──────────────────────────────────────────── -->
   <div class="dash-hero">
-    <p class="section-eyebrow">✦ &nbsp; Easter Egg Hunt 2025 &nbsp; ✦</p>
+    <p class="section-eyebrow" id="dash-eyebrow">✦ &nbsp; Neighborhood Events &nbsp; ✦</p>
     <h1 class="section-title">Sign-Up <em>Dashboard</em></h1>
     <div class="section-rule"></div>
     <div class="dash-meta">
-      <span class="last-updated" id="last-updated">Loading…</span>
-      <button class="refresh-btn" id="refresh-btn" onclick="loadDashboard()">↻ Refresh</button>
+      <span class="last-updated" id="last-updated"></span>
+      <button class="refresh-btn" id="refresh-btn" onclick="loadDashboard()" hidden>↻ Refresh</button>
+      <button class="refresh-btn" id="admin-login-btn" onclick="showAdminLogin()" style="margin-left:12px">🔐 Admin Login</button>
+      <button class="refresh-btn" id="admin-logout-btn" onclick="doAdminLogout()" style="margin-left:12px;display:none">↩ Log Out</button>
+    </div>
+    <!-- Archive button — admin only -->
+    <div id="archive-area" style="display:none;margin-top:16px;">
+      <button class="refresh-btn" onclick="confirmArchive()" style="background:rgba(180,60,60,0.18);border-color:rgba(180,60,60,0.4);color:#c97070;">
+        📦 Archive Sign-Ups &amp; Advance to Next Event
+      </button>
+    </div>
+  </div>
+
+  <!-- Admin login modal -->
+  <div id="admin-login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:none;align-items:center;justify-content:center;">
+    <div style="background:#1e2a1e;border:1px solid rgba(201,168,76,0.3);border-radius:12px;padding:32px;max-width:340px;width:90%;text-align:center;">
+      <p style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:#c9a84c;margin:0 0 6px">Dashboard Admin</p>
+      <p style="font-size:0.8rem;color:rgba(240,235,220,0.6);margin:0 0 20px">Enter the dashboard password to view all sign-up data.</p>
+      <input id="admin-pw-input" type="password" placeholder="Dashboard password"
+             style="width:100%;box-sizing:border-box;padding:10px 14px;border-radius:8px;border:1px solid rgba(201,168,76,0.3);background:rgba(255,255,255,0.06);color:#f0ebdc;font-size:0.9rem;margin-bottom:12px;"
+             onkeydown="if(event.key==='Enter'){submitAdminLogin();}" />
+      <div id="admin-pw-error" style="color:#c97070;font-size:0.78rem;margin-bottom:10px;display:none">Incorrect password. Please try again.</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button onclick="submitAdminLogin()" style="padding:8px 22px;border-radius:8px;background:#c9a84c;color:#1a2614;border:none;font-weight:600;cursor:pointer;">Log In</button>
+        <button onclick="closeAdminLogin()" style="padding:8px 22px;border-radius:8px;background:transparent;color:#c9a84c;border:1px solid rgba(201,168,76,0.4);cursor:pointer;">Cancel</button>
+      </div>
     </div>
   </div>
 
   <!-- ── TAB BAR ────────────────────────────────────────────── -->
   <div class="dash-tabs-bar">
     <div class="dash-tabs">
-      <button class="dash-tab active" data-tab="overview" onclick="setTab('overview')">Overview</button>
-      <button class="dash-tab" data-tab="volunteers" onclick="setTab('volunteers')">Volunteers</button>
-      <button class="dash-tab" data-tab="supplies" onclick="setTab('supplies')">Supplies</button>
-      <button class="dash-tab" data-tab="shopping" onclick="setTab('shopping')">Shopping List</button>
-      <button class="dash-tab" data-tab="potluck" onclick="setTab('potluck')">Potluck</button>
-      <button class="dash-tab" data-tab="attendees" onclick="setTab('attendees')">Attendees</button>
-      <button class="dash-tab" data-tab="lookup" onclick="setTab('lookup')">My Sign-Up</button>
+      <button class="dash-tab admin-only" data-tab="overview" onclick="setTab('overview')" style="display:none">Overview</button>
+      <button class="dash-tab admin-only" data-tab="volunteers" onclick="setTab('volunteers')" style="display:none">Volunteers</button>
+      <button class="dash-tab admin-only" data-tab="supplies" onclick="setTab('supplies')" style="display:none">Supplies</button>
+      <button class="dash-tab admin-only" data-tab="shopping" onclick="setTab('shopping')" style="display:none">Shopping List</button>
+      <button class="dash-tab admin-only" data-tab="potluck" onclick="setTab('potluck')" style="display:none">Potluck</button>
+      <button class="dash-tab admin-only" data-tab="attendees" onclick="setTab('attendees')" style="display:none">Attendees</button>
+      <button class="dash-tab active" data-tab="lookup" onclick="setTab('lookup')">My Sign-Up</button>
     </div>
   </div>
 
@@ -131,8 +156,8 @@
     //  ✏️  CONFIG — update these when reusing for a different event
     // ============================================================
 
-    // Google Apps Script web app URL (same endpoint for POST and GET).
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylyN2ypYEab79HD_I1V8k1gNZp3nME5DolD_UrTkzzCBo3pezvUWxzjSTytWeqc_pYHg/exec";
+    // Google Apps Script web app URL — update after redeploying.
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxfLH4a-m-tqM9b2EMeHEjEhCjJrP_fVZ_7hO7n74sSKMkFoAjAmjm_zOYSJfqh8MrI/exec";
 
     // Expected attendance for the "Estimated vs Actual" section.
     const ESTIMATED_ADULTS = 40;
@@ -270,15 +295,22 @@
     //  STATE
     // ============================================================
     let dashData = null;
-    let currentTab = 'overview';
+    let currentTab = 'lookup';   // Default to lookup tab; admin required for others
+    let isAdmin = false;          // Set true after admin login
+    let dashAdminKey = '';        // Stored dashboard password after validation
+
     let volFilter = 'all';
     let supFilter = 'all';
     let supSort = 'remaining';
     let volSortCol = {};   // { "Role Name": "name" | "email" | "phone" }
     let volSortDir = {};   // { "Role Name": "asc" | "desc" }
+
     let lookupQuery = '';
-    let lookupResults = null;   // null = not searched yet, [] = searched but no results
+    let lookupPassword = '';        // Optional lookup password set by attendee at sign-up
+    let lookupResults = null;       // null = not searched yet, [] = searched but no results
+    let lookupLocked = false;       // true when server returns { locked: true }
     let lookupLoading = false;
+
     let attendeesSort = 'name';
     let attendeesSortDir = 'asc';
     let shopName = '';
@@ -290,9 +322,103 @@
 
 
     // ============================================================
+    //  ADMIN LOGIN / LOGOUT
+    // ============================================================
+    function showAdminLogin() {
+      const modal = document.getElementById('admin-login-modal');
+      modal.style.display = 'flex';
+      const inp = document.getElementById('admin-pw-input');
+      if (inp) { inp.value = ''; inp.focus(); }
+      document.getElementById('admin-pw-error').style.display = 'none';
+    }
+
+    function closeAdminLogin() {
+      document.getElementById('admin-login-modal').style.display = 'none';
+    }
+
+    async function submitAdminLogin() {
+      const inp = document.getElementById('admin-pw-input');
+      const pw = inp ? inp.value.trim() : '';
+      if (!pw) return;
+      const errEl = document.getElementById('admin-pw-error');
+      errEl.style.display = 'none';
+
+      try {
+        const fd = new FormData();
+        fd.append('action', 'validateDashboard');
+        fd.append('password', pw);
+        const res = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.valid) {
+          isAdmin = true;
+          dashAdminKey = pw;
+          sessionStorage.setItem('dash_admin_key', pw);
+          closeAdminLogin();
+          updateAdminUI();
+          // Now load the dashboard data if not yet loaded
+          if (!dashData) loadDashboard();
+          else { setTab('overview'); }
+        } else {
+          errEl.style.display = 'block';
+        }
+      } catch (e) {
+        errEl.textContent = 'Could not connect. Try again.';
+        errEl.style.display = 'block';
+      }
+    }
+
+    function doAdminLogout() {
+      isAdmin = false;
+      dashAdminKey = '';
+      sessionStorage.removeItem('dash_admin_key');
+      updateAdminUI();
+      setTab('lookup');
+    }
+
+    function updateAdminUI() {
+      // Show/hide admin-only tabs
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = isAdmin ? '' : 'none';
+      });
+      // Show/hide admin login/logout buttons
+      const loginBtn = document.getElementById('admin-login-btn');
+      const logoutBtn = document.getElementById('admin-logout-btn');
+      const refreshBtn = document.getElementById('refresh-btn');
+      const archiveArea = document.getElementById('archive-area');
+      if (loginBtn) loginBtn.style.display = isAdmin ? 'none' : '';
+      if (logoutBtn) logoutBtn.style.display = isAdmin ? '' : 'none';
+      if (refreshBtn) refreshBtn.hidden = !isAdmin;
+      if (archiveArea) archiveArea.style.display = isAdmin ? '' : 'none';
+    }
+
+    async function confirmArchive() {
+      if (!confirm('Archive current sign-ups and advance to the next event?\n\nThis will:\n• Copy the current Signups sheet to an archive sheet\n• Reset the Signups sheet for the next event\n\nThis cannot be undone.')) return;
+      try {
+        const fd = new FormData();
+        fd.append('action', 'archiveSignups');
+        fd.append('adminKey', dashAdminKey);
+        const res = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) {
+          alert(`Archived! Archived as: ${data.archivedAs || 'previous event'}\nNext event: ${data.nextEventId || '(none found)'}`);
+          loadDashboard();
+        } else {
+          alert('Archive failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Archive failed: ' + e.message);
+      }
+    }
+
+
+    // ============================================================
     //  TAB + FILTER SWITCHING
     // ============================================================
     function setTab(tab) {
+      // Guard: non-admin cannot switch to admin-only tabs
+      const adminTabs = ['overview','volunteers','supplies','shopping','potluck','attendees'];
+      if (!isAdmin && adminTabs.includes(tab)) return;
+
       currentTab = tab;
       document.querySelectorAll('.dash-tab').forEach(b =>
         b.classList.toggle('active', b.dataset.tab === tab)
@@ -324,7 +450,7 @@
       const btn = document.getElementById('refresh-btn');
       const ts = document.getElementById('last-updated');
 
-      btn.disabled = true;
+      if (btn) btn.disabled = true;
       body.innerHTML = '<div class="dash-loading">Loading sign-up data…</div>';
 
       try {
@@ -332,17 +458,48 @@
         const data = await res.json();
         if (data.error) throw new Error(data.error);
         dashData = data;
+
+        // Update hero eyebrow with event name if provided
+        if (data.eventName) {
+          const eyebrow = document.getElementById('dash-eyebrow');
+          if (eyebrow) eyebrow.textContent = '✦  ' + data.eventName + '  ✦';
+        }
+
+        // Use API-provided volunteer roles if present (map label → name, keep needed from fallback)
+        if (data.volunteerRoles && data.volunteerRoles.length > 0) {
+          const existingMap = {};
+          VOLUNTEER_ROLES.forEach(r => { existingMap[r.name] = r.needed; });
+          VOLUNTEER_ROLES.length = 0;
+          data.volunteerRoles.forEach(r => {
+            VOLUNTEER_ROLES.push({ name: r.label || r.name || r, needed: existingMap[r.label || r.name || r] || 0 });
+          });
+        }
+
+        // Use API-provided donation categories if present
+        if (data.donationCategories && data.donationCategories.length > 0) {
+          DONATION_CATEGORIES.length = 0;
+          data.donationCategories.forEach(cat => {
+            DONATION_CATEGORIES.push({
+              category: cat.category || cat,
+              items: (cat.items || []).map(item => ({
+                label: item.label || item,
+                needed: item.needed != null ? Number(item.needed) : null,
+              }))
+            });
+          });
+        }
+
         renderTab();
         const d = new Date(data.lastUpdated);
-        ts.textContent = 'Last refreshed: ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (ts) ts.textContent = 'Last refreshed: ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       } catch (err) {
         body.innerHTML = `<div class="dash-error">
           Could not load data. Make sure the script is deployed and try refreshing.<br>
           <small style="opacity:0.6">${err.message}</small>
         </div>`;
-        ts.textContent = '—';
+        if (ts) ts.textContent = '—';
       } finally {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
       }
     }
 
@@ -901,6 +1058,21 @@
 
       if (lookupLoading) {
         resultsHtml = '<div class="lookup-status">Searching…</div>';
+      } else if (lookupLocked) {
+        // Server returned { locked: true } — ask for the lookup password
+        const wrongPw = lookupPassword.length > 0;
+        resultsHtml = `
+          <div class="lookup-status" style="text-align:left;max-width:420px;margin:0 auto;">
+            <p style="margin:0 0 10px">A lookup password was set for this sign-up. Enter it below to view your details.</p>
+            ${wrongPw ? `<p style="color:#c97070;margin:0 0 10px;font-size:0.83rem;">✗ Incorrect password. Please try again.</p>` : ''}
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <input class="lookup-input" id="lookup-pw-input" type="password"
+                     placeholder="Your lookup password"
+                     autocomplete="off" style="flex:1;"
+                     onkeydown="if(event.key==='Enter'){performLookupWithPassword();event.preventDefault();}" />
+              <button class="lookup-btn" onclick="performLookupWithPassword()">Submit</button>
+            </div>
+          </div>`;
       } else if (lookupResults === null) {
         // Not searched yet — show nothing
       } else if (lookupResults.length === 0) {
@@ -919,6 +1091,7 @@
       return `
         <div class="lookup-intro">
           <p>Type your first and/or last name to see your sign-up details.</p>
+          <p style="font-size:0.78rem;opacity:0.6;margin-top:4px;">If you set a lookup password when you signed up, you'll be asked to enter it.</p>
         </div>
         <form class="lookup-form" onsubmit="performLookup(); return false;">
           <input  class="lookup-input"
@@ -1010,6 +1183,8 @@
       if (!input) return;
       lookupQuery = input.value.trim();
       lookupResults = null;
+      lookupLocked = false;
+      lookupPassword = '';
       if (!lookupQuery) { renderTab(); return; }
 
       lookupLoading = true;
@@ -1019,15 +1194,54 @@
         const url = SCRIPT_URL + '?action=lookup&name=' + encodeURIComponent(lookupQuery);
         const res = await fetch(url);
         const data = await res.json();
-        lookupResults = data.results || [];
+        if (data.locked) {
+          lookupLocked = true;
+          lookupResults = null;
+        } else {
+          lookupLocked = false;
+          lookupResults = data.results || [];
+        }
       } catch (err) {
         lookupResults = [];
       } finally {
         lookupLoading = false;
         renderTab();
-        // Restore the typed value after re-render
         const inp = document.getElementById('lookup-input');
         if (inp) inp.value = lookupQuery;
+      }
+    }
+
+    // Called after user enters a lookup password.
+    async function performLookupWithPassword() {
+      const pwInput = document.getElementById('lookup-pw-input');
+      if (!pwInput) return;
+      lookupPassword = pwInput.value.trim();
+      if (!lookupPassword) return;
+
+      lookupLoading = true;
+      renderTab();
+
+      try {
+        const url = SCRIPT_URL + '?action=lookup&name=' + encodeURIComponent(lookupQuery)
+                    + '&lookup_password=' + encodeURIComponent(lookupPassword);
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.locked) {
+          lookupLocked = true;   // Wrong password
+          lookupResults = null;
+        } else {
+          lookupLocked = false;
+          lookupResults = data.results || [];
+        }
+      } catch (err) {
+        lookupResults = [];
+      } finally {
+        lookupLoading = false;
+        renderTab();
+        const inp = document.getElementById('lookup-input');
+        if (inp) inp.value = lookupQuery;
+        const pw2 = document.getElementById('lookup-pw-input');
+        if (pw2 && lookupLocked) pw2.value = lookupPassword;
       }
     }
 
@@ -1091,7 +1305,28 @@
     // ============================================================
     //  INIT
     // ============================================================
-    loadDashboard();
+
+    // Restore admin session from sessionStorage
+    (async function initAdminSession() {
+      const saved = sessionStorage.getItem('dash_admin_key');
+      if (saved) {
+        try {
+          const fd = new FormData();
+          fd.append('action', 'validateDashboard');
+          fd.append('password', saved);
+          const res = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
+          const data = await res.json();
+          if (data.valid) {
+            isAdmin = true;
+            dashAdminKey = saved;
+            updateAdminUI();
+          } else {
+            sessionStorage.removeItem('dash_admin_key');
+          }
+        } catch (e) { /* silent — admin stays logged out */ }
+      }
+      loadDashboard();
+    })();
 
     // ── Hamburger nav ──
     const hamburger = document.querySelector('.nav-hamburger');

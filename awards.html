@@ -80,6 +80,7 @@
       </li>
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
+      <li><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
 
@@ -206,35 +207,19 @@
   //      or a competition changes status.
   // ============================================================
 
-  // ── WINNERS — loaded from Google Sheet ───────────────────────
-  // Winners are pulled automatically from the "Winners" tab of the
-  // shared Google Sheet. To update winners, edit the sheet — no
-  // code changes needed.
-  //
-  // Sheet columns (row 1 = headers, exact spelling required):
-  //   icon        → Emoji  e.g.  🌿
-  //   badge       → Badge filename only  e.g.  yard-of-the-month
-  //   bannerColor → CSS class  e.g.  banner-green
-  //   award       → Award name  e.g.  Yard of the Month
-  //   period      → Display period  e.g.  March 2026
-  //   year        → Numeric year  e.g.  2026
-  //   winner      → Winner's full name
-  //   photoId     → Google Drive file ID for winner photo (leave blank for silhouette)
-  //   prize       → Prize description (leave blank to hide)
-  //   blurb       → 1–3 sentence write-up
-  //   quote1      → Optional nomination quote
-  //   quote2      → Optional nomination quote
-  //   quote3      → Optional nomination quote
-  //
-  // ✏️  Paste your Google Sheet ID below (the long string in the URL).
-  //     The sheet must be shared as "Anyone with the link can view"
-  //     AND published to the web (File → Share → Publish to web → Winners sheet → CSV).
-  const WINNERS_SHEET_ID = 'YOUR_SHEET_ID_HERE';
+  // ── SCRIPT URL (Google Apps Script Web App) ──────────────────
+  // Used to fetch competitions dynamically. Winners still use the
+  // published CSV URL below.
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxfLH4a-m-tqM9b2EMeHEjEhCjJrP_fVZ_7hO7n74sSKMkFoAjAmjm_zOYSJfqh8MrI/exec";
+
+  // ── WINNERS — loaded from Google Sheet (published CSV) ───────
+  const WINNERS_SHEET_ID = '17SlocYPigWSV3PL1e8d93WSTkz-Tzb01NeQQ9eIRKCs';
   const WINNERS_SHEET_URL =
     `https://docs.google.com/spreadsheets/d/${WINNERS_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Winners`;
 
 
-  // ── ACTIVE COMPETITIONS ───────────────────────────────────────
+  // ── ACTIVE COMPETITIONS (FALLBACK) ───────────────────────────
+  // Shown immediately and if the API fetch fails.
   // Each object is one card in the Active Competitions section.
   //   icon:        Emoji fallback if badge image fails to load.
   //   badge:       Path to award badge PNG. Available badges:
@@ -266,7 +251,7 @@
   //   description: A short paragraph describing the award / current status.
   //   deadline:    Nomination deadline string. Leave "" to omit.
   //   prize:       Prize description. Leave "" to omit.
-  const competitions = [
+  const FALLBACK_COMPETITIONS = [
     {
       icon: "🌿",
       badge: "images/Awards%20Badges/awards-badges-pngs/yard-of-the-month.png",
@@ -492,8 +477,25 @@
   const STATUS_LABEL  = { open: 'Nominations Open', soon: 'Coming Soon', voting: 'Voting Open', deliberating: 'Under Review', awarded: 'Winner Announced' };
 
 
+  // ── MAP API CONTEST OBJECT → local format ─────────────────
+  function apiContestToLocal(c) {
+    return {
+      icon:        c["Icon"]         || c.icon        || "🏆",
+      badge:       c["Badge"]        || c.badge        || "",
+      bannerColor: c["Banner Color"] || c.bannerColor  || "banner-gold",
+      award:       c["Award Name"]   || c.award        || "",
+      category:    c["Category"]     || c.category     || "",
+      period:      c["Period"]       || c.period       || "",
+      status:      (c["Status"]      || c.status       || "soon").toLowerCase(),
+      description: c["Description"]  || c.description  || "",
+      deadline:    c["Deadline"]     || c.deadline     || "",
+      prize:       c["Prize"]        || c.prize        || "",
+    };
+  }
+
+
   // ── RENDER COMPETITIONS ────────────────────────────────────
-  (function renderCompetitions() {
+  function renderCompetitions(competitions) {
     const list            = document.getElementById('competitions-list');
     const empty           = document.getElementById('comp-empty');
     const filtersEl       = document.getElementById('comp-filters');
@@ -563,7 +565,22 @@
     });
 
     applyFilters();
-  })();
+  }
+
+  // Render fallback immediately, then try to replace with live data.
+  renderCompetitions(FALLBACK_COMPETITIONS);
+
+  if (SCRIPT_URL) {
+    fetch(SCRIPT_URL + "?action=allAwardContests")
+      .then(r => r.json())
+      .then(data => {
+        const list = data.contests || data;
+        if (Array.isArray(list) && list.length > 0) {
+          renderCompetitions(list.map(apiContestToLocal));
+        }
+      })
+      .catch(() => { /* fallback already showing */ });
+  }
 
 
   // ── BUILD A SINGLE COMPETITION CARD ───────────────────────

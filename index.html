@@ -45,6 +45,10 @@
   <!-- Font Awesome icon library — loaded for potential icon use.
        NOTE: The free kit URL below may expire; replace with your own kit URL if needed. -->
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+  <!-- Supabase JS client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -109,6 +113,7 @@
       </li>
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
+      <li><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
 
@@ -267,8 +272,8 @@
           <div class="cc-sub">mandyvaliquette00@gmail.com</div>
         </a>
 
-        <!-- Card 2: Link to the Easter Egg Hunt sign-up page. -->
-        <a href="signup-page-easter.html" class="contact-card">
+        <!-- Card 2: Link to the event sign-up page. -->
+        <a href="signup.html" class="contact-card">
           <div class="cc-icon">📋</div>
           <div class="cc-title">Event Sign-Ups</div>
           <div class="cc-sub">Volunteer &amp; donate</div>
@@ -290,8 +295,8 @@
         </a>
       </div>
 
-      <!-- Prominent Easter Egg Hunt sign-up CTA button at the bottom of the contact section. -->
-      <a href="signup-page-easter.html" class="btn-primary">Sign Up for the Easter Egg Hunt →</a>
+      <!-- Prominent event sign-up CTA button at the bottom of the contact section. -->
+      <a href="signup.html" class="btn-primary">Sign Up for an Event →</a>
     </div>
   </section>
 
@@ -317,6 +322,9 @@
   //  No HTML structure needs to be changed — just update the
   //  data in these arrays and the page rebuilds automatically.
   // ============================================================
+
+  // Data is loaded from Supabase (supabase-config.js). Fallback arrays
+  // below are shown immediately and remain if Supabase is unavailable.
 
 
   // ── SPECIAL RECOGNITION AWARDS ──────────────────────────────
@@ -351,13 +359,14 @@
   //   desc:        A short description of the event.
   //   link:        URL the card links to when clicked.
   //   linkText:    The text of the "see more" link at the bottom of the card.
-  const events = [
+  // Fallback events — shown immediately and if the API fetch fails.
+  const FALLBACK_EVENTS = [
     {
       emoji: "🥚", colorClass: "card-color-1",
       statusLabel: "Sign-Ups Open", statusClass: "status-open",
       date: "March 21, 2026", time: "10:00 AM – 1:00 PM", name: "Easter Egg Hunt",
       desc: "A fun-filled day for the whole family! We'll have egg hunts for different age groups, crafts, potluck snacks/lunch, and a photobooth. Volunteers and donations are still needed — sign up to help or just RSVP to join the fun!",
-      link: "signup-page-easter.html", linkText: "Sign Up Now",
+      link: "signup.html", linkText: "Sign Up Now",
     },
     {
       emoji: "🍨", colorClass: "card-color-2",
@@ -398,12 +407,9 @@
 
 
   // ── NEIGHBORHOOD MEMORIES (PHOTOS) ────────────────────────────
-  // The homepage teaser grid shows the 6 most recently submitted
-  // photos fetched live from Google Sheets via the Apps Script URL
-  // below. If the fetch fails, the static fallback photos are shown.
-  //
-  // ✏️  Paste your submit-memory-script.gs Web App URL here:
-  const MEMORY_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVAlddIDr2eRgolc-A4v5OviKhIfaiqXnuCONA9uJ71HjAeDjiprfRZDD-ZAcfzWc4_g/exec";
+  // The homepage teaser grid shows the 6 most recently approved
+  // photos fetched from Supabase (public_memories view).
+  // If the fetch fails, the static fallback photos are shown.
 
   // Static fallback photos shown before the fetch completes or if it fails.
   const staticPhotos = [
@@ -417,17 +423,13 @@
 
 
   // ── HOA ANNOUNCEMENTS ─────────────────────────────────────────
-  // Each object is one announcement row in the Announcements section.
-  //   day:   Day of month as a string (e.g., "21"). Displayed large on the left.
-  //   month: Month abbreviation + year (e.g., "Apr 2026"). Shown below the day.
-  //   title: Bold announcement title.
-  //   body:  Full announcement body text.
-  const announcements = [
+  // Fallback announcements — shown immediately and if the API fetch fails.
+  const FALLBACK_ANNOUNCEMENTS = [
     {
       day: "21", month: "Mar 2026",
       title: "Easter Egg Hunt — Sign-Ups Now Open!",
       body: "We're hosting our first neighborhood Easter egg hunt on March 21st! We're looking for volunteers, candy donations, and plastic egg donations. Fill out the sign-up form to let us know how you'd like to help — or just RSVP to join the fun.",
-      link: "signup-page-easter.html", linkText: "Sign Up Now →",
+      link: "signup.html", linkText: "Sign Up Now →",
     },
     {
       day: "01", month: "Mar 2026",
@@ -447,6 +449,48 @@
   //  The code below reads the arrays above and builds all
   //  the HTML for the dynamic page sections.
   // ============================================================
+
+  // ── HELPER: map Supabase event row → display card object ─────
+  function apiEventToCard(ev) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eventDate = ev.event_date ? new Date(ev.event_date + "T00:00:00") : null;
+    const isPast = eventDate && eventDate < today;
+    const isConfirmed = ev.status === "Confirmed";
+
+    let statusLabel, statusClass, link, linkText;
+    if (isPast) {
+      statusLabel = "Past Event"; statusClass = "status-closed";
+      link = "#events"; linkText = "See Memories";
+    } else if (isConfirmed) {
+      statusLabel = "Sign-Ups Open"; statusClass = "status-open";
+      link = "signup.html"; linkText = "Sign Up Now";
+    } else {
+      statusLabel = "Coming Soon"; statusClass = "status-soon";
+      link = "#events"; linkText = "Details Coming Soon";
+    }
+
+    // Format event_date as "Month D, YYYY"
+    let dateStr = ev.event_date || "";
+    if (eventDate && !isNaN(eventDate)) {
+      dateStr = eventDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    }
+
+    // Extract first emoji from emoji_row (e.g. "🐰 🥚 🌸" → "🐰")
+    const emoji = (ev.emoji_row || "🎉").trim().split(/\s+/)[0] || "🎉";
+
+    return {
+      emoji,
+      colorClass: ev.banner_color_class || "card-color-1",
+      statusLabel, statusClass,
+      date: dateStr,
+      time: ev.event_time || "",
+      name: ev.event_name || "",
+      desc: ev.short_description || "",
+      link, linkText,
+    };
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
 
     // ── HAMBURGER MENU TOGGLE ────────────────────────────────
@@ -505,28 +549,34 @@
 
 
     // ── RENDER EVENTS ────────────────────────────────────────
-    // Build HTML for each event card and inject into #events-grid.
+    // renderEvents() builds cards from an array and injects into #events-grid.
     const eventsGrid = document.getElementById("events-grid");
-    if (eventsGrid) {
-      eventsGrid.innerHTML = events.map(e => `
-      <!-- The entire card is a clickable anchor linking to the event page or anchor. -->
+    function renderEvents(eventList) {
+      if (!eventsGrid) return;
+      eventsGrid.innerHTML = eventList.map(e => `
       <a href="${e.link}" class="event-card">
-        <!-- Colored top banner with the emoji and status badge. -->
         <div class="event-card-top ${e.colorClass}">
           ${e.emoji}
           <span class="event-status ${e.statusClass}">${e.statusLabel}</span>
         </div>
-        <!-- Card body: date, time, name, description, and "see more" link. -->
         <div class="event-card-body">
-          <!-- Date and optional time, e.g., "March 21, 2026 · 10:00 AM – 1:00 PM". -->
           <div class="event-date">${e.date}${e.time ? `<span class="event-time"> · ${e.time}</span>` : ""}</div>
           <div class="event-name">${e.name}</div>
           <div class="event-desc">${e.desc}</div>
-          <!-- Link text at the bottom of the card, e.g., "Sign Up Now →". -->
           <div class="event-link">${e.linkText}</div>
         </div>
       </a>`).join("");
     }
+
+    // Render fallback immediately, then replace with live data from Supabase.
+    renderEvents(FALLBACK_EVENTS);
+
+    supabase.from('events').select('*').order('event_date')
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          renderEvents(data.map(apiEventToCard));
+        }
+      });
 
 
     // ── RENDER PHOTOS ────────────────────────────────────────
@@ -551,47 +601,49 @@
     // Start with static photos immediately so the grid is never empty.
     renderPhotoGrid(staticPhotos);
 
-    // Attempt to fetch live submitted photos and replace the grid.
-    if (MEMORY_SCRIPT_URL && MEMORY_SCRIPT_URL !== "PASTE_YOUR_MEMORY_SCRIPT_URL_HERE") {
-      fetch(MEMORY_SCRIPT_URL)
-        .then(r => r.json())
-        .then(data => {
-          if (!data.submissions || data.submissions.length === 0) return;
-
-          // Flatten all photos from all submissions into a single list,
-          // newest submission first (already sorted by doGet).
-          const dynamic = [];
-          data.submissions.forEach(sub => {
-            sub.photoIds.forEach(id => {
-              dynamic.push({ src: driveThumb(id), alt: sub.event });
-            });
+    // Fetch the 6 most recent approved memory photos from Supabase.
+    supabase.from('public_memories').select('photo_urls, event_name')
+      .order('submitted_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error || !data || data.length === 0) return;
+        const dynamic = [];
+        data.forEach(mem => {
+          if (!mem.photo_urls) return;
+          mem.photo_urls.forEach(url => {
+            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match) dynamic.push({ src: driveThumb(match[1]), alt: mem.event_name || "" });
           });
-
-          // Show only the 6 most recent photos on the homepage teaser.
-          if (dynamic.length > 0) renderPhotoGrid(dynamic.slice(0, 6));
-        })
-        .catch(() => {
-          // Fetch failed — static fallback is already showing, do nothing.
         });
-    }
+        if (dynamic.length > 0) renderPhotoGrid(dynamic.slice(0, 6));
+      });
 
 
     // ── RENDER ANNOUNCEMENTS ─────────────────────────────────
-    // Build HTML for the announcements list and inject into #announce-list.
+    // renderAnnouncements() builds HTML from an array and injects into #announce-list.
     const announceList = document.getElementById("announce-list");
-    if (announceList) {
-      announceList.innerHTML = announcements.map(a => `
+    function renderAnnouncements(list) {
+      if (!announceList) return;
+      announceList.innerHTML = list.map(a => `
       <div class="announce-item">
-        <!-- Left column: large day number with month below. -->
         <div class="announce-date">${a.day}<span>${a.month}</span></div>
-        <!-- Right column: announcement title and body text. -->
         <div>
           <div class="announce-title">${a.title}</div>
           <div class="announce-body">${a.body}</div>
-          ${a.link ? `<a href="${a.link}" class="announce-link">${a.linkText || "Learn More →"}</a>` : ""}
+          ${a.link ? `<a href="${a.link}" class="announce-link">${a.link_text || a.linkText || "Learn More →"}</a>` : ""}
         </div>
       </div>`).join("");
     }
+
+    // Render fallback immediately, then replace with live data from Supabase.
+    renderAnnouncements(FALLBACK_ANNOUNCEMENTS);
+
+    supabase.from('announcements').select('*').eq('published', true)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          renderAnnouncements(data);
+        }
+      });
 
   });
 </script>

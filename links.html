@@ -32,6 +32,10 @@
 
   <!-- Link card grid layout styles (category headers, cards, hover effects). -->
   <link rel="stylesheet" href="links-styles.css" />
+
+  <!-- Supabase JS client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -93,6 +97,7 @@
       </li>
       <li><a href="links.html" class="nav-active">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
+      <li><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
 
@@ -133,23 +138,10 @@
   <script>
 
     // ============================================================
-    //  ✏️  EDIT YOUR LINKS HERE
-    //  Add, remove, or reorder items freely.
-    //
-    //  Each category has:
-    //    label:    Section header text shown above the card group.
-    //    links:    Array of link card objects.
-    //
-    //  Each link card object:
-    //    icon:     Emoji shown on the left of the card.
-    //    title:    Bold card heading.
-    //    desc:     Short description sentence or two.
-    //    url:      The full URL the card links to (opens in a new tab).
-    //    urlLabel: Short display text shown at the bottom of the card
-    //              (e.g., "goenumerate.com"). Can be omitted.
+    //  FALLBACK LINKS — shown immediately and if the API fetch fails.
     // ============================================================
 
-    const categories = [
+    const FALLBACK_CATEGORIES = [
       {
         // Account & Payments — links to log in and pay HOA dues.
         label: "Account & Payments",
@@ -313,39 +305,56 @@
     ];
 
     // ============================================================
-    //  Rendering — no edits needed below this line
-    //  Reads the categories array above and generates the full
-    //  HTML for the link cards, then inserts it into #links-content.
+    //  Rendering
     // ============================================================
 
-    // Get the container element where the rendered cards will be placed.
     const container = document.getElementById("links-content");
 
-    // Build the HTML for each category and its links, then set it all at once.
-    container.innerHTML = categories.map(cat => `
-      <div class="link-category">
-        <!-- Category section label (e.g., "Account & Payments"). -->
-        <div class="category-label">${cat.label}</div>
+    function renderLinks(categories) {
+      container.innerHTML = categories.map(cat => `
+        <div class="link-category">
+          <div class="category-label">${cat.label}</div>
+          <div class="link-grid">
+            ${cat.links.map(link => `
+              <a href="${link.url}" class="link-card" target="_blank" rel="noopener noreferrer">
+                <div class="link-card-icon">${link.icon}</div>
+                <div class="link-card-body">
+                  <div class="link-card-title">${link.title}</div>
+                  <div class="link-card-desc">${link.desc}</div>
+                  ${link.urlLabel ? `<div class="link-card-url">${link.urlLabel}</div>` : ""}
+                </div>
+              </a>`).join("")}
+          </div>
+        </div>`).join("");
+    }
 
-        <!-- Responsive grid of link cards for this category. -->
-        <div class="link-grid">
-          ${cat.links.map(link => `
-            <!-- Each card is an anchor that opens the URL in a new tab.
-                 rel="noopener noreferrer" is a security best practice
-                 that prevents the new tab from accessing this page's window object. -->
-            <a href="${link.url}" class="link-card" target="_blank" rel="noopener noreferrer">
-              <!-- Emoji icon on the left side. -->
-              <div class="link-card-icon">${link.icon}</div>
+    // Helper: group a flat Supabase links array into categories structure.
+    function groupByCategory(items) {
+      const map = {};
+      const order = [];
+      items.forEach(item => {
+        const cat = item.category || "Other";
+        if (!map[cat]) { map[cat] = []; order.push(cat); }
+        map[cat].push({
+          icon:     item.icon        || "🔗",
+          title:    item.title       || "",
+          desc:     item.description || "",
+          url:      item.url         || "#",
+          urlLabel: item.url_label   || "",
+        });
+      });
+      return order.map(cat => ({ label: cat, links: map[cat] }));
+    }
 
-              <!-- Text column: title, description, and domain label. -->
-              <div class="link-card-body">
-                <div class="link-card-title">${link.title}</div>
-                <div class="link-card-desc">${link.desc}</div>
-                <div class="link-card-url">${link.urlLabel}</div>
-              </div>
-            </a>`).join("")}
-        </div>
-      </div>`).join("");
+    // Render fallback immediately, then replace with live data from Supabase.
+    renderLinks(FALLBACK_CATEGORIES);
+
+    supabase.from('links').select('*').order('sort_order')
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          renderLinks(groupByCategory(data));
+        }
+      });
 
     // ── HAMBURGER MENU ────────────────────────────────────────
     const hamburger = document.querySelector('.nav-hamburger');

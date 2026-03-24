@@ -36,6 +36,10 @@
 
   <!-- Links/documents card layout styles (link-category, link-card, link-grid). -->
   <link rel="stylesheet" href="links-styles.css" />
+
+  <!-- Supabase JS client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -97,6 +101,7 @@
       </li>
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html" class="nav-active">Documents</a></li>
+      <li><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
 
@@ -136,17 +141,10 @@
   <script>
 
     // ============================================================
-    //  ✏️  EDIT YOUR LINKS HERE
-    //  Each category has a label and an array of document links.
-    //  Each link object supports these fields:
-    //    icon:     Emoji displayed on the left of the card.
-    //    title:    Bold heading shown on the card.
-    //    desc:     One or two sentence description of the document.
-    //    url:      The full URL — opens in a new browser tab when clicked.
-    //    urlLabel: (Optional) Short display text shown at the bottom of the card.
+    //  FALLBACK DOCUMENTS — shown immediately and if the API fetch fails.
     // ============================================================
 
-    const categories = [
+    const FALLBACK_CATEGORIES = [
       {
         // Category label shown as a section header above the document list.
         label: "Neighborhood Documents — Click to Download",
@@ -211,36 +209,55 @@
     ];
 
     // ============================================================
-    //  Rendering — no edits needed below this line
-    //  This block reads the categories array above and builds the
-    //  link card HTML, then injects it into #links-content.
+    //  Rendering
     // ============================================================
 
-    // Get a reference to the container div where the links will be inserted.
     const container = document.getElementById("links-content");
 
-    // Build the HTML by mapping over categories and their links, then set it.
-    container.innerHTML = categories.map(cat => `
-      <div class="link-category">
-        <!-- Category section header label. -->
-        <div class="category-label">${cat.label}</div>
+    function renderDocs(categories) {
+      container.innerHTML = categories.map(cat => `
+        <div class="link-category">
+          <div class="category-label">${cat.label}</div>
+          <div class="link-grid">
+            ${cat.links.map(link => `
+              <a href="${link.url}" class="link-card" target="_blank" rel="noopener noreferrer">
+                <div class="link-card-icon">${link.icon}</div>
+                <div class="link-card-body">
+                  <div class="link-card-title">${link.title}</div>
+                  <div class="link-card-desc">${link.desc}</div>
+                  ${link.urlLabel ? `<div class="link-card-url">${link.urlLabel}</div>` : ""}
+                </div>
+              </a>`).join("")}
+          </div>
+        </div>`).join("");
+    }
 
-        <!-- Grid of link cards for this category. -->
-        <div class="link-grid">
-          ${cat.links.map(link => `
-            <!-- Each link opens in a new tab with noopener for security. -->
-            <a href="${link.url}" class="link-card" target="_blank" rel="noopener noreferrer">
-              <!-- Emoji icon on the left of the card. -->
-              <div class="link-card-icon">${link.icon}</div>
+    function groupByCategory(items) {
+      const map = {};
+      const order = [];
+      items.forEach(item => {
+        const cat = item.category || "Other";
+        if (!map[cat]) { map[cat] = []; order.push(cat); }
+        map[cat].push({
+          icon:     item.icon        || "📄",
+          title:    item.title       || "",
+          desc:     item.description || "",
+          url:      item.url         || "#",
+          urlLabel: item.url_label   || "",
+        });
+      });
+      return order.map(cat => ({ label: cat, links: map[cat] }));
+    }
 
-              <!-- Text body: title and description. -->
-              <div class="link-card-body">
-                <div class="link-card-title">${link.title}</div>
-                <div class="link-card-desc">${link.desc}</div>
-              </div>
-            </a>`).join("")}
-        </div>
-      </div>`).join("");
+    // Render fallback immediately, then replace with live data from Supabase.
+    renderDocs(FALLBACK_CATEGORIES);
+
+    supabase.from('documents').select('*').order('sort_order')
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          renderDocs(groupByCategory(data));
+        }
+      });
 
     // ── HAMBURGER MENU ────────────────────────────────────────
     const hamburger = document.querySelector('.nav-hamburger');
