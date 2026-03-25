@@ -3,12 +3,9 @@
 
 <!-- ============================================================
      File:        events.html
-     Purpose:     Neighborhood Events hub page. Each community event
-                  has its own section with description, date/time,
-                  and links to sign-up or details pages.
-                  Anchor IDs match the nav dropdown links:
-                    #Easter, #IceCreamSocial, #July4th,
-                    #ShrimpBoil, #TrunkOrTreat, #HolidayLights
+     Purpose:     Neighborhood Events hub page. Events are loaded
+                  dynamically from Supabase. Anchor IDs match event.id
+                  from the events table (e.g. #EasterEggHunt2026).
      Styles:      index-styles.css (global), events-styles.css
      ============================================================ -->
 
@@ -23,6 +20,8 @@
 
   <link rel="stylesheet" href="index-styles.css" />
   <link rel="stylesheet" href="events-styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -100,248 +99,19 @@
 
 
   <!-- ── QUICK-NAV ────────────────────────────────────────────-->
-  <nav class="events-quicknav" aria-label="Jump to event">
-    <div class="events-quicknav-inner">
-      <a href="#Easter">🐣 Easter Egg Hunt</a>
-      <a href="#IceCreamSocial">🍦 Ice Cream Social</a>
-      <a href="#July4th">🎆 4th of July</a>
-      <a href="#ShrimpBoil">🦐 Shrimp Boil</a>
-      <a href="#TrunkOrTreat">🎃 Trunk or Treat</a>
-      <a href="#HolidayLights">✨ Holiday Lights</a>
+  <nav class="events-quicknav" aria-label="Jump to event" id="events-quicknav">
+    <div class="events-quicknav-inner" id="quicknav-inner">
+      <!-- Populated dynamically from Supabase -->
     </div>
   </nav>
 
 
   <!-- ── EVENT SECTIONS ───────────────────────────────────────-->
-  <div class="events-wrapper">
-
-
-    <!-- ── EASTER EGG HUNT ──────────────────────────────────-->
-    <section class="event-section" id="Easter">
-      <div class="event-card-full">
-
-        <div class="event-banner banner-green">
-          <div class="event-banner-left">
-            <div class="event-emoji-large">🐣</div>
-            <div>
-              <div class="event-banner-title">Easter Egg Hunt</div>
-              <div class="event-banner-date">March 21, 2026 &nbsp;·&nbsp; 10:00 AM – 1:00 PM</div>
-            </div>
-          </div>
-          <span class="event-status-badge badge-open">Sign-Ups Open</span>
-        </div>
-
-        <div class="event-body">
-          <p class="event-description">
-            A fun-filled spring morning for the whole family! We'll have egg hunts split by age group so every child
-            gets a fair shot, plus crafts, potluck snacks, and a community photobooth. This is one of our favorite
-            neighborhood traditions — come join the fun, meet your neighbors, and make some memories.
-            Volunteers and donations are still needed. Sign up to help set up, hide eggs, or bring a dish to share.
-          </p>
-
-          <ul class="event-details-list">
-            <li><span class="detail-label">Date</span> March 21, 2026</li>
-            <li><span class="detail-label">Time</span> 10:00 AM – 1:00 PM</li>
-            <li><span class="detail-label">Where</span> Pendleton Plantation neighborhood</li>
-            <li><span class="detail-label">Ages</span> All ages welcome</li>
-          </ul>
-
-          <div class="event-actions">
-            <a href="signup.html" class="btn-event-primary">Sign Up Now →</a>
-            <a href="signup.html" class="btn-event-outline">Volunteer / Donate</a>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ── ICE CREAM SOCIAL ──────────────────────────────────-->
-    <section class="event-section" id="IceCreamSocial">
-      <div class="event-card-full">
-
-        <div class="event-banner banner-blue">
-          <div class="event-banner-left">
-            <div class="event-emoji-large">🍦</div>
-            <div>
-              <div class="event-banner-title">Ice Cream Social</div>
-              <div class="event-banner-date">May 2026</div>
-            </div>
-          </div>
-          <span class="event-status-badge badge-soon">Coming Soon</span>
-        </div>
-
-        <div class="event-body">
-          <p class="event-description">
-            A sweet kick-off to summer! Join your neighbors by the pool for ice cream, cold drinks, and good
-            conversation. Whether you've lived here for years or just moved in, the Ice Cream Social is a perfect
-            low-key way to connect with the community. Details and exact date coming soon.
-          </p>
-
-          <ul class="event-details-list">
-            <li><span class="detail-label">Date</span> May 2026 — exact date TBD</li>
-            <li><span class="detail-label">Where</span> Pendleton Plantation pool area</li>
-            <li><span class="detail-label">Ages</span> All welcome</li>
-          </ul>
-
-          <div class="event-actions">
-            <p class="event-coming-soon-note">Check back for sign-up details as the date approaches.</p>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ── 4TH OF JULY ──────────────────────────────────────-->
-    <section class="event-section" id="July4th">
-      <div class="event-card-full">
-
-        <div class="event-banner banner-red">
-          <div class="event-banner-left">
-            <div class="event-emoji-large">🎆</div>
-            <div>
-              <div class="event-banner-title">4th of July Block Party</div>
-              <div class="event-banner-date">July 4, 2026</div>
-            </div>
-          </div>
-          <span class="event-status-badge badge-soon">Coming Soon</span>
-        </div>
-
-        <div class="event-body">
-          <p class="event-description">
-            Celebrate Independence Day the neighborhood way — food, lawn games, music, and community spirit.
-            We'll fire up the grills, set out the lawn chairs, and enjoy a summer evening together.
-            Plans and volunteer opportunities will be posted here as the date approaches.
-          </p>
-
-          <ul class="event-details-list">
-            <li><span class="detail-label">Date</span> July 4, 2026</li>
-            <li><span class="detail-label">Where</span> Pendleton Plantation neighborhood</li>
-            <li><span class="detail-label">Ages</span> All welcome</li>
-          </ul>
-
-          <div class="event-actions">
-            <p class="event-coming-soon-note">Details and sign-ups coming soon.</p>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ── SHRIMP BOIL ───────────────────────────────────────-->
-    <section class="event-section" id="ShrimpBoil">
-      <div class="event-card-full">
-
-        <div class="event-banner banner-teal">
-          <div class="event-banner-left">
-            <div class="event-emoji-large">🦐</div>
-            <div>
-              <div class="event-banner-title">Shrimp Boil</div>
-              <div class="event-banner-date">Summer 2026</div>
-            </div>
-          </div>
-          <span class="event-status-badge badge-soon">Coming Soon</span>
-        </div>
-
-        <div class="event-body">
-          <p class="event-description">
-            A classic Low Country tradition right here in the neighborhood. Shrimp, corn, potatoes, sausage — the
-            works. Bring a side dish, bring your appetite, and enjoy a warm summer evening with good food and even
-            better neighbors. Date and details to be announced.
-          </p>
-
-          <ul class="event-details-list">
-            <li><span class="detail-label">Date</span> Summer 2026 — exact date TBD</li>
-            <li><span class="detail-label">Where</span> Pendleton Plantation neighborhood</li>
-            <li><span class="detail-label">Bring</span> A side dish to share</li>
-          </ul>
-
-          <div class="event-actions">
-            <p class="event-coming-soon-note">Details and sign-ups coming soon.</p>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ── TRUNK OR TREAT ────────────────────────────────────-->
-    <section class="event-section" id="TrunkOrTreat">
-      <div class="event-card-full">
-
-        <div class="event-banner banner-orange">
-          <div class="event-banner-left">
-            <div class="event-emoji-large">🎃</div>
-            <div>
-              <div class="event-banner-title">Halloween Trunk or Treat</div>
-              <div class="event-banner-date">October 2026</div>
-            </div>
-          </div>
-          <span class="event-status-badge badge-soon">Coming Soon</span>
-        </div>
-
-        <div class="event-body">
-          <p class="event-description">
-            A safe, spooky, and fun Halloween tradition for the little ones of Pendleton Plantation. Decorate your
-            car trunk and hand out candy to costumed trick-or-treaters right here in the neighborhood — no dark
-            streets, no strangers. Costume contests, prizes, and neighborhood spirit guaranteed.
-          </p>
-
-          <ul class="event-details-list">
-            <li><span class="detail-label">Date</span> October 2026 — exact date TBD</li>
-            <li><span class="detail-label">Where</span> Pendleton Plantation neighborhood</li>
-            <li><span class="detail-label">Ages</span> All ages welcome</li>
-          </ul>
-
-          <div class="event-actions">
-            <p class="event-coming-soon-note">Details and sign-ups coming soon.</p>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ── HOLIDAY LIGHTS ────────────────────────────────────-->
-    <section class="event-section" id="HolidayLights">
-      <div class="event-card-full">
-
-        <div class="event-banner banner-gold">
-          <div class="event-banner-left">
-            <div class="event-emoji-large">✨</div>
-            <div>
-              <div class="event-banner-title">Holiday Lights Contest</div>
-              <div class="event-banner-date">December 2026</div>
-            </div>
-          </div>
-          <span class="event-status-badge badge-soon">Coming Soon</span>
-        </div>
-
-        <div class="event-body">
-          <p class="event-description">
-            Deck the halls and compete for bragging rights as the best-decorated home on the block! Residents vote
-            for their favorite displays and winners are announced in the community. A festive way to spread holiday
-            cheer and bring a little sparkle to the neighborhood. Details to follow.
-          </p>
-
-          <ul class="event-details-list">
-            <li><span class="detail-label">Date</span> December 2026</li>
-            <li><span class="detail-label">How</span> Decorate your home, neighbors vote</li>
-            <li><span class="detail-label">Prizes</span> TBD</li>
-          </ul>
-
-          <div class="event-actions">
-            <p class="event-coming-soon-note">Details coming as the season approaches.</p>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-
-  </div><!-- /.events-wrapper -->
+  <div class="events-wrapper" id="events-list">
+    <div style="text-align:center;padding:60px 20px;color:rgba(240,235,220,0.5);font-family:'Jost',sans-serif;">
+      Loading events…
+    </div>
+  </div>
 
 
   <!-- ── FOOTER ───────────────────────────────────────────────-->
@@ -354,6 +124,130 @@
   </footer>
 
 </body>
+
+<script>
+  // ============================================================
+  //  EVENTS PAGE — loads events from Supabase and renders them.
+  //  Each event section uses id = event.id for anchor links.
+  //  Status badge: sign-ups are shown as open when today >= signups_open_date.
+  // ============================================================
+
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Formats an ISO date (YYYY-MM-DD) to "Month D, YYYY".
+  function fmtDate(iso) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  // Returns the appropriate status badge HTML for an event.
+  function statusBadge(ev) {
+    if (ev.status === 'Cancelled') return '<span class="event-status-badge badge-cancelled">Cancelled</span>';
+    const today = new Date().toISOString().slice(0, 10);
+    if (ev.signups_open_date && ev.signups_open_date <= today) {
+      return '<span class="event-status-badge badge-open">Sign-Ups Open</span>';
+    }
+    if (ev.status === 'Confirmed') return '<span class="event-status-badge badge-soon">Confirmed</span>';
+    return '<span class="event-status-badge badge-soon">Coming Soon</span>';
+  }
+
+  // Builds the date/time display string for the banner subtitle.
+  function bannerDate(ev) {
+    if (!ev.event_date) return '';
+    let s = fmtDate(ev.event_date);
+    if (ev.event_time) s += ' &nbsp;·&nbsp; ' + esc(ev.event_time);
+    return s;
+  }
+
+  // Builds the details list (date, time, location) from event fields.
+  function detailsList(ev) {
+    const items = [];
+    if (ev.event_date) items.push(`<li><span class="detail-label">Date</span> ${fmtDate(ev.event_date)}</li>`);
+    if (ev.event_time) items.push(`<li><span class="detail-label">Time</span> ${esc(ev.event_time)}</li>`);
+    if (ev.location_name) {
+      const loc = ev.location_address ? `${esc(ev.location_name)}, ${esc(ev.location_address)}` : esc(ev.location_name);
+      items.push(`<li><span class="detail-label">Where</span> ${loc}</li>`);
+    }
+    return items.length ? `<ul class="event-details-list">${items.join('')}</ul>` : '';
+  }
+
+  // Renders the CTA buttons or "coming soon" note based on sign-up status.
+  function actionButtons(ev) {
+    const today = new Date().toISOString().slice(0, 10);
+    const open  = ev.signups_open_date && ev.signups_open_date <= today && ev.status !== 'Cancelled';
+    if (open) {
+      return `
+        <a href="signup.html?event=${esc(ev.id)}" class="btn-event-primary">Sign Up Now →</a>
+        <a href="signup.html?event=${esc(ev.id)}" class="btn-event-outline">Volunteer / Donate</a>`;
+    }
+    if (ev.status === 'Cancelled') return '<p class="event-coming-soon-note">This event has been cancelled.</p>';
+    return '<p class="event-coming-soon-note">Details and sign-ups coming soon.</p>';
+  }
+
+  // Renders one full event section card.
+  function renderEvent(ev) {
+    const emoji      = esc(ev.emoji_row || '📅');
+    const bannerClass = esc(ev.banner_color_class || 'banner-green');
+    const desc       = esc(ev.medium_description || ev.short_description || '');
+    return `
+      <section class="event-section" id="${esc(ev.id)}">
+        <div class="event-card-full">
+          <div class="event-banner ${bannerClass}">
+            <div class="event-banner-left">
+              <div class="event-emoji-large">${emoji}</div>
+              <div>
+                <div class="event-banner-title">${esc(ev.event_name)}</div>
+                <div class="event-banner-date">${bannerDate(ev)}</div>
+              </div>
+            </div>
+            ${statusBadge(ev)}
+          </div>
+          <div class="event-body">
+            ${desc ? `<p class="event-description">${desc}</p>` : ''}
+            ${detailsList(ev)}
+            <div class="event-actions">${actionButtons(ev)}</div>
+          </div>
+        </div>
+      </section>`;
+  }
+
+  // Loads all non-draft events from Supabase, renders the list and quick-nav.
+  async function loadEvents() {
+    const list     = document.getElementById('events-list');
+    const quicknav = document.getElementById('quicknav-inner');
+    try {
+      const { data, error } = await db.from("events")
+        .select("*")
+        .neq("status", "Draft")
+        .order("event_date", { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      const events = data || [];
+      if (!events.length) {
+        list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:rgba(240,235,220,0.5);font-family:\'Jost\',sans-serif;">No events found.</div>';
+        return;
+      }
+      list.innerHTML     = events.map(renderEvent).join('');
+      quicknav.innerHTML = events.map(ev =>
+        `<a href="#${esc(ev.id)}">${esc(ev.emoji_row || '')} ${esc(ev.event_name)}</a>`
+      ).join('');
+    } catch (e) {
+      list.innerHTML = `<div style="text-align:center;padding:60px 20px;color:rgba(240,235,220,0.5);font-family:'Jost',sans-serif;">Could not load events. Please try refreshing.</div>`;
+    }
+  }
+
+  loadEvents();
+
+  // If page was loaded with a hash anchor, scroll to it after events render.
+  if (location.hash) {
+    setTimeout(() => {
+      const el = document.querySelector(location.hash);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 600);
+  }
+</script>
 
 <script>
   // ── NAV: HAMBURGER TOGGLE ──────────────────────────────────
