@@ -3,18 +3,22 @@
 
 <!-- ============================================================
      File:        submit-memory.html
-     Purpose:     Lets any resident upload photos from a
-                  neighborhood event so they can be featured in
-                  the Memories section on the homepage.
-                  Collects uploader name, email, event name, an
-                  optional caption/message, and up to 10 photos.
-                  Photos are sent as base64 JSON to a Google Apps
-                  Script web app which saves them to Drive and
-                  e-mails the organizer.
-     Script:      Uses the same nominations-script endpoint but
-                  photos go to the same Drive folder. A dedicated
-                  script (submit-memory-script.gs) is included for
-                  a clean separation if preferred.
+     Purpose:     Lets any resident upload photos from a neighborhood
+                  event so they can be featured in the Memories
+                  gallery on the homepage.
+
+     Submission flow (two steps):
+       1. POST full payload (including base64 photos) to GAS
+          (submit-memory-script.gs). GAS uploads photos to Drive
+          and sends the notification email, then returns
+          { success: true, photoUrls: [...] }.
+       2. Browser inserts the memory record into Supabase
+          (memories table) with the Drive photo URLs attached.
+          Records start as approved = false; admin approves in
+          the admin portal before they appear publicly.
+
+     Scripts:     submit-memory-script.gs (GAS — photo upload + email)
+                  supabase-config.js       (shared Supabase client)
      Styles:      submit-memory-styles.css
      ============================================================ -->
 
@@ -28,6 +32,8 @@
     rel="stylesheet" />
 
   <link rel="stylesheet" href="submit-memory-styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -63,12 +69,12 @@
         <a href="events.html">Events <span class="nav-caret">▾</span></a>
         <ul class="nav-dropdown">
           <li><a href="dashboard.html">📊 Event Dashboard</a></li>
-          <li><a href="events.html#Easter">🐣 Easter Egg Hunt</a></li>
-          <li><a href="events.html#IceCreamSocial">🍦 Ice Cream Social</a></li>
-          <li><a href="events.html#July4th">🎆 4th of July</a></li>
-          <li><a href="events.html#ShrimpBoil">🦐 Shrimp Boil</a></li>
-          <li><a href="events.html#TrunkOrTreat">🎃 Trunk or Treat</a></li>
-          <li><a href="events.html#HolidayLights">✨ Holiday Lights</a></li>
+          <li><a href="events.html#EasterEggHunt2026">🐣 Easter Egg Hunt</a></li>
+          <li><a href="events.html#IceCreamSocial2026">🍦 Ice Cream Social</a></li>
+          <li><a href="events.html#July4th2026">🎆 4th of July</a></li>
+          <li><a href="events.html#ShrimpBoil2026">🦐 Shrimp Boil</a></li>
+          <li><a href="events.html#TrunkOrTreat2026">🎃 Trunk or Treat</a></li>
+          <li><a href="events.html#HolidayLights2026">✨ Holiday Lights</a></li>
         </ul>
       </li>
       <li class="nav-has-dropdown">
@@ -228,18 +234,20 @@
   <script>
 
     // ============================================================
-    //  ✏️  CONFIG
+    //  ✏️  CONFIG — only edit this section when updating the form.
     // ============================================================
 
-    // Google Apps Script Web App URL.
-    // Deploy submit-memory-script.gs and paste the URL here.
+    // ── Google Apps Script Web App URL ────────────────────────
+    // submit-memory-script.gs — handles photo upload to Drive and
+    // sends the organizer notification email.
+    // Returns: { success: true, photoUrls: ["https://drive.google.com/..."] }
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVAlddIDr2eRgolc-A4v5OviKhIfaiqXnuCONA9uJ71HjAeDjiprfRZDD-ZAcfzWc4_g/exec";
 
     const MAX_PHOTOS = 10;
     const MAX_FILE_BYTES = 8 * 1024 * 1024;  // 8 MB
 
     // ============================================================
-    //  End of config
+    //  End of config — no edits needed below this line.
     // ============================================================
 
 
@@ -431,35 +439,57 @@
         return;
       }
 
-      // ── Build payload & POST ──────────────────────────────
-      overlayStatus.textContent = "Submitting… 🌿";
-
-      const payload = {
-        uploader_name: firstName + " " + lastName,
-        email,
-        event_name: eventName,
-        caption,
-        photos: photosPayload,
-      };
-
+      // ── Step 1: POST to GAS — upload photos + send email ──
+      // GAS returns { success: true, photoUrls: [...] }.
+      // Not using no-cors so we can read the photo URLs from the response.
+      overlayStatus.textContent = "Uploading photos… 📸";
+      let photoUrls = [];
       try {
-        await fetch(SCRIPT_URL, {
+        const gasRes  = await fetch(SCRIPT_URL, {
           method: "POST",
-          mode: "no-cors",
           headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            uploader_name: firstName + " " + lastName,
+            email:         email,
+            event_name:    eventName,
+            caption:       caption,
+            photos:        photosPayload,
+          }),
         });
+        const gasData = await gasRes.json();
+        if (gasData.photoUrls) photoUrls = gasData.photoUrls;
+      } catch (gasErr) {
+        // GAS failure should not block the Supabase insert.
+        // Photos simply won't be attached, but the record is still saved.
+        console.warn("GAS photo upload / email failed:", gasErr);
+      }
+
+      // ── Step 2: Insert into Supabase ──────────────────────
+      // approved defaults to false; admin approves in the admin portal.
+      overlayStatus.textContent = "Saving… 🌿";
+      try {
+        const { error: memErr } = await db
+          .from("memories")
+          .insert({
+            uploader_name: firstName + " " + lastName,
+            email:         email,
+            event_name:    eventName,
+            caption:       caption || null,
+            photo_urls:    photoUrls.length ? photoUrls : null,
+          });
+        if (memErr) throw memErr;
 
         overlay.classList.remove("visible");
         document.getElementById("form-content").style.display = "none";
         document.getElementById("success-msg").style.display = "block";
 
-      } catch (_) {
+      } catch (err) {
         overlay.classList.remove("visible");
         btn.disabled = false;
         errorMsg.textContent =
           "Something went wrong — please try again or contact mandyvaliquette00@gmail.com.";
         errorMsg.style.display = "block";
+        console.error("Memory Supabase error:", err);
       }
     });
 

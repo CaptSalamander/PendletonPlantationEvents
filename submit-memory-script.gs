@@ -3,161 +3,64 @@
 //  Purpose:     Google Apps Script backend for the Submit a
 //               Memory photo-upload page (submit-memory.html).
 //
+//  Role (post-Supabase migration):
+//    • Upload supporting photos to Google Drive (in a sub-folder
+//      named after the event so they stay organised).
+//    • Return the Drive share URLs in the response.
+//    • Send a notification email to the organizer.
+//    • Data is now stored in Supabase (memories table) by the
+//      browser client — this script no longer writes to any sheet.
+//
 //  How to use:
-//    1. Create a new Google Sheet (or use any existing one).
-//    2. Go to Extensions → Apps Script.
-//    3. Paste this entire file into the editor.
-//    4. Click "Deploy" → "New deployment" → "Web app".
-//    5. Set "Execute as" = Me, "Who has access" = Anyone.
-//    6. Copy the Web App URL and paste it into submit-memory.html
-//       as the value of SCRIPT_URL.
+//    1. Open script editor (Extensions → Apps Script in any sheet).
+//    2. Paste this file, replacing any existing code.
+//    3. Deploy → New deployment → Web app.
+//       Execute as: Me   |   Who has access: Anyone
+//    4. Paste the Web App URL into submit-memory.html as SCRIPT_URL.
+//    5. Redeploy (Manage deployments → New version) after any change.
 // ============================================================
 
 
 // ── CONFIGURATION ───────────────────────────────────────────
+// Notification email — receives a copy of every memory submission.
 var NOTIFICATION_EMAIL = "mandyvaliquette00@gmail.com";
-var SHEET_NAME         = "Memory Submissions";
-
-// Google Spreadsheet ID — update this if you want submissions
-// saved to a different sheet than the nominations sheet.
-var SPREADSHEET_ID     = "17SlocYPigWSV3PL1e8d93WSTkz-Tzb01NeQQ9eIRKCs";
 
 // Google Drive folder where photos are saved.
-var DRIVE_FOLDER_ID    = "1QomHI0yaJJvMsQVH7llYxRdZHkc3N3gt";
-
-var HEADERS = [
-  "Timestamp",
-  "Uploader Name",
-  "Email",
-  "Event Name",
-  "Caption / Message",
-  "Photo URLs",
-  "Approved",   // "Y" = visible in gallery, "N" = pending admin approval
-];
-
-
-// ── doGet ────────────────────────────────────────────────────
-// Called by index.html and memories.html to fetch all memory
-// submissions as JSON so photos can be displayed dynamically.
-//
-// Returns:
-//   { submissions: [ { date, uploader, event, caption, photoIds: [] }, … ] }
-//
-// photoIds are the raw Google Drive file IDs extracted from the
-// stored share URLs. The front-end converts them to displayable
-// image URLs:
-//   Thumbnail : https://drive.google.com/thumbnail?id=FILE_ID&sz=w600
-//   Full-size : https://drive.google.com/thumbnail?id=FILE_ID&sz=w1600
-function doGet() {
-  var output = ContentService.createTextOutput();
-  output.setMimeType(ContentService.MimeType.JSON);
-
-  try {
-    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-    var sheet = ss.getSheetByName(SHEET_NAME);
-
-    // If the sheet doesn't exist yet (no submissions) return empty list.
-    if (!sheet) {
-      output.setContent(JSON.stringify({ submissions: [] }));
-      return output;
-    }
-
-    // ── Migrate: add "Approved" column if missing ─────────────
-    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    var approvedCol = headers.indexOf("Approved");
-    if (approvedCol === -1) {
-      // Add header in the next available column
-      var newCol = sheet.getLastColumn() + 1;
-      sheet.getRange(1, newCol).setValue("Approved");
-      // Set all existing data rows to "Y" so they remain visible
-      var lastRow = sheet.getLastRow();
-      if (lastRow > 1) {
-        sheet.getRange(2, newCol, lastRow - 1, 1).setValue("Y");
-      }
-      approvedCol = newCol - 1;  // 0-based index
-    }
-
-    var rows = sheet.getDataRange().getValues();
-    var submissions = [];
-
-    for (var i = 1; i < rows.length; i++) {
-      var row       = rows[i];
-      var timestamp = row[0];   // Column A — Timestamp (Date object)
-      var uploader  = row[1];   // Column B — Uploader Name
-      // row[2] is Email — intentionally omitted from public response.
-      var eventName = row[3];   // Column D — Event Name
-      var caption   = row[4];   // Column E — Caption / Message
-      var urlsRaw   = row[5];   // Column F — Photo URLs (newline-separated)
-      var approved  = String(row[approvedCol] || "").trim().toUpperCase();
-
-      // Only return rows approved by admin.
-      if (approved !== "Y") continue;
-
-      // Extract Drive file IDs from stored share URLs.
-      // URL format: https://drive.google.com/file/d/FILE_ID/view?…
-      var photoIds = [];
-      if (urlsRaw && urlsRaw !== "No photos") {
-        urlsRaw.toString().split("\n").forEach(function (url) {
-          var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-          if (match) photoIds.push(match[1]);
-        });
-      }
-
-      // Skip rows with no usable photos.
-      if (photoIds.length === 0) continue;
-
-      submissions.push({
-        date:     timestamp ? new Date(timestamp).toISOString() : "",
-        uploader: uploader  || "",
-        event:    eventName || "Community Event",
-        caption:  caption   || "",
-        photoIds: photoIds,
-      });
-    }
-
-    // Newest submissions first.
-    submissions.sort(function (a, b) {
-      return new Date(b.date) - new Date(a.date);
-    });
-
-    output.setContent(JSON.stringify({ submissions: submissions }));
-
-  } catch (err) {
-    Logger.log("doGet error: " + err);
-    output.setContent(JSON.stringify({ submissions: [], error: err.toString() }));
-  }
-
-  return output;
-}
+// Folder URL: https://drive.google.com/drive/folders/1QomHI0yaJJvMsQVH7llYxRdZHkc3N3gt
+var DRIVE_FOLDER_ID = "1QomHI0yaJJvMsQVH7llYxRdZHkc3N3gt";
 
 
 // ── doPost ───────────────────────────────────────────────────
 // Receives JSON from submit-memory.html with these keys:
 //   uploader_name, email, event_name, caption,
 //   photos: [{ name, mimeType, base64 }, …]
+//
+// Returns: { success: true, photoUrls: [...] }
+//       or { success: false, error: "..." }
 function doPost(e) {
   var output = ContentService.createTextOutput();
   output.setMimeType(ContentService.MimeType.JSON);
 
   try {
-    var data = JSON.parse(e.postData.contents);
+    var data   = JSON.parse(e.postData.contents);
+    var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
 
-    // ── Upload photos to Drive ───────────────────────────
+    // ── Upload photos to Drive ───────────────────────────────
+    // Photos go into a sub-folder named after the event so they
+    // stay organised and are easy to find in Drive.
     var photoUrls = [];
-    var folder    = DriveApp.getFolderById(DRIVE_FOLDER_ID);
 
     if (data.photos && data.photos.length > 0) {
-      // Create a sub-folder named after the event so photos stay organised.
-      var eventLabel   = (data.event_name || "Memory").replace(/[\/\\:*?"<>|]/g, "-");
-      var subFolder;
-      var existing = folder.getFoldersByName(eventLabel);
-      subFolder = existing.hasNext() ? existing.next() : folder.createFolder(eventLabel);
+      var eventLabel = (data.event_name || "Memory").replace(/[\/\\:*?"<>|]/g, "-");
+      var existing   = folder.getFoldersByName(eventLabel);
+      var subFolder  = existing.hasNext() ? existing.next() : folder.createFolder(eventLabel);
 
       data.photos.forEach(function (photo) {
         try {
           var decoded = Utilities.base64Decode(photo.base64);
           var blob    = Utilities.newBlob(decoded, photo.mimeType, photo.name);
           var file    = subFolder.createFile(blob);
+          // Anyone with the link can view — needed for gallery display.
           file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
           photoUrls.push(file.getUrl());
         } catch (photoErr) {
@@ -166,33 +69,7 @@ function doPost(e) {
       });
     }
 
-    // ── Get or create the Memory Submissions sheet ───────
-    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-    var sheet = ss.getSheetByName(SHEET_NAME);
-
-    if (!sheet) {
-      sheet = ss.insertSheet(SHEET_NAME);
-      sheet.appendRow(HEADERS);
-      sheet.getRange(1, 1, 1, HEADERS.length)
-           .setFontWeight("bold")
-           .setBackground("#5a7a5a")
-           .setFontColor("#ffffff");
-      sheet.setFrozenRows(1);
-    }
-
-    // ── Append the row ───────────────────────────────────
-    // New submissions start as Approved = "N" (pending admin review).
-    sheet.appendRow([
-      new Date(),
-      data.uploader_name || "",
-      data.email         || "",
-      data.event_name    || "",
-      data.caption       || "",
-      photoUrls.length ? photoUrls.join("\n") : "No photos",
-      "N",
-    ]);
-
-    // ── Notify organizer ─────────────────────────────────
+    // ── Send notification email ──────────────────────────────
     var subject =
       "📸 New Memory Submission: " + (data.event_name || "Neighborhood Event") +
       " from " + (data.uploader_name || "a neighbor");
@@ -204,19 +81,17 @@ function doPost(e) {
       "Email: " + (data.email         || "—") + "\n\n" +
       "══ EVENT ═══════════════════════════════\n" +
       (data.event_name || "—") + "\n\n" +
-      "══ CAPTION / MESSAGE ════════════════════\n" +
+      "══ CAPTION / MESSAGE ═══════════════════\n" +
       (data.caption || "(none)") + "\n\n" +
-      "══ PHOTOS ═══════════════════════════════\n" +
+      "══ PHOTOS ══════════════════════════════\n" +
       (photoUrls.length
         ? photoUrls.map(function (u, i) { return "Photo " + (i + 1) + ": " + u; }).join("\n")
         : "No photos uploaded") +
-      "\n\n" +
-      "View all submissions:\n" +
-      "https://docs.google.com/spreadsheets/d/" + SPREADSHEET_ID;
+      "\n\n(Memory record saved to Supabase — view in admin portal.)";
 
     MailApp.sendEmail(NOTIFICATION_EMAIL, subject, body);
 
-    output.setContent(JSON.stringify({ success: true }));
+    output.setContent(JSON.stringify({ success: true, photoUrls: photoUrls }));
 
   } catch (err) {
     Logger.log("Memory submission error: " + err);
