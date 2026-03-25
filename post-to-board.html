@@ -7,9 +7,19 @@
                   post to the Community Bulletin Board. Collects
                   poster name, email, phone, street address (for
                   resident verification), category, title, message,
-                  and optional photos. Posts are held for HOA review
-                  before appearing on bulletin-board.html.
-     Script:      bulletin-board-script.gs
+                  and optional photos. Posts start as approved = false
+                  and are approved by admin via the admin portal.
+
+     Submission flow (two steps):
+       1. POST full payload (including base64 photos) to GAS
+          (bulletin-board-script.gs). GAS uploads photos to Drive
+          and sends the notification email, then returns
+          { success: true, photoUrls: [...] }.
+       2. Browser inserts the post into Supabase (bulletin_posts
+          table) with the Drive photo URLs attached.
+
+     Scripts:     bulletin-board-script.gs (GAS — photo upload + email)
+                  supabase-config.js        (shared Supabase client)
      Styles:      post-to-board-styles.css
      ============================================================ -->
 
@@ -23,6 +33,8 @@
     rel="stylesheet" />
 
   <link rel="stylesheet" href="post-to-board-styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -58,12 +70,12 @@
         <a href="events.html">Events <span class="nav-caret">▾</span></a>
         <ul class="nav-dropdown">
           <li><a href="dashboard.html">📊 Event Dashboard</a></li>
-          <li><a href="events.html#Easter">🐣 Easter Egg Hunt</a></li>
-          <li><a href="events.html#IceCreamSocial">🍦 Ice Cream Social</a></li>
-          <li><a href="events.html#July4th">🎆 4th of July</a></li>
-          <li><a href="events.html#ShrimpBoil">🦐 Shrimp Boil</a></li>
-          <li><a href="events.html#TrunkOrTreat">🎃 Trunk or Treat</a></li>
-          <li><a href="events.html#HolidayLights">✨ Holiday Lights</a></li>
+          <li><a href="events.html#EasterEggHunt2026">🐣 Easter Egg Hunt</a></li>
+          <li><a href="events.html#IceCreamSocial2026">🍦 Ice Cream Social</a></li>
+          <li><a href="events.html#July4th2026">🎆 4th of July</a></li>
+          <li><a href="events.html#ShrimpBoil2026">🦐 Shrimp Boil</a></li>
+          <li><a href="events.html#TrunkOrTreat2026">🎃 Trunk or Treat</a></li>
+          <li><a href="events.html#HolidayLights2026">✨ Holiday Lights</a></li>
         </ul>
       </li>
       <li class="nav-has-dropdown">
@@ -256,13 +268,20 @@
   <script>
 
     // ============================================================
-    //  CONFIG — paste your deployed bulletin-board-script.gs
-    //  Web App URL here after deploying.
+    //  ✏️  CONFIG — only edit this section when updating the form.
     // ============================================================
+
+    // ── Google Apps Script Web App URL ────────────────────────
+    // bulletin-board-script.gs — handles photo upload to Drive
+    // and sends the organizer notification email.
+    // Returns: { success: true, photoUrls: ["https://drive.google.com/..."] }
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwHnFBD_MtB3gEvZ5zv0Ll0-zXcvOViXz1PJ1I38rbjAAVY3exHcUSIGyed6omGxZ1G8A/exec";
 
     const MAX_PHOTOS = 5;
     const MAX_FILE_BYTES = 8 * 1024 * 1024;   // 8 MB
+
+    // ============================================================
+    //  End of config — no edits needed below this line.
     // ============================================================
 
 
@@ -467,43 +486,70 @@
         return;
       }
 
-      // ── Build payload & POST ──────────────────────────────
-      overlayStatus.textContent = "Submitting… 🏘️";
-
       const showPhone = document.getElementById("show_phone").checked;
       const showEmail = document.getElementById("show_email").checked;
 
-      const payload = {
-        name: firstName + " " + lastName,
-        email,
-        phone,
-        address,
-        category,
-        title,
-        content,
-        showPhone,
-        showEmail,
-        photos: photosPayload,
-      };
-
+      // ── Step 1: POST to GAS — upload photos + send email ──
+      // GAS returns { success: true, photoUrls: [...] }.
+      // Not using no-cors so we can read the photo URLs from the response.
+      overlayStatus.textContent = selectedFiles.length > 0 ? "Uploading photos… 📸" : "Submitting…";
+      let photoUrls = [];
       try {
-        await fetch(SCRIPT_URL, {
+        const gasRes  = await fetch(SCRIPT_URL, {
           method: "POST",
-          mode: "no-cors",
           headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            name:       firstName + " " + lastName,
+            email:      email,
+            phone:      phone,
+            address:    address,
+            category:   category,
+            title:      title,
+            content:    content,
+            show_phone: showPhone,
+            show_email: showEmail,
+            photos:     photosPayload,
+          }),
         });
+        const gasData = await gasRes.json();
+        if (gasData.photoUrls) photoUrls = gasData.photoUrls;
+      } catch (gasErr) {
+        // GAS failure should not block the Supabase insert.
+        // Photos simply won't be attached, but the post is still saved.
+        console.warn("GAS photo upload / email failed:", gasErr);
+      }
+
+      // ── Step 2: Insert into Supabase ──────────────────────
+      // approved defaults to false; admin approves in the admin portal.
+      overlayStatus.textContent = "Saving… 🏘️";
+      try {
+        const { error: postErr } = await db
+          .from("bulletin_posts")
+          .insert({
+            poster_name: firstName + " " + lastName,
+            email:       email,
+            phone:       phone   || null,
+            address:     address,
+            category:    category,
+            title:       title,
+            content:     content,
+            photo_urls:  photoUrls.length ? photoUrls : null,
+            show_phone:  showPhone,
+            show_email:  showEmail,
+          });
+        if (postErr) throw postErr;
 
         overlay.classList.remove("visible");
         document.getElementById("form-content").style.display = "none";
         document.getElementById("success-msg").style.display = "block";
 
-      } catch (_) {
+      } catch (err) {
         overlay.classList.remove("visible");
         btn.disabled = false;
         errorMsg.textContent =
           "Something went wrong — please try again or contact mandyvaliquette00@gmail.com.";
         errorMsg.style.display = "block";
+        console.error("Bulletin post Supabase error:", err);
       }
     });
 
