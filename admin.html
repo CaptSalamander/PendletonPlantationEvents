@@ -8,7 +8,7 @@
                   admin to manage events, awards, announcements,
                   memories, bulletin posts, links, documents, and
                   site settings.
-     Config:      Set SCRIPT_URL below to your deployed web app URL.
+     Config:      Uses Supabase (supabase-config.js). Auth: email + password.
      Styles:      admin-styles.css, index-styles.css (for nav)
      ============================================================ -->
 
@@ -20,6 +20,8 @@
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="admin-styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -31,7 +33,10 @@
       <h1>Admin Portal</h1>
       <p>Pendleton Plantation Community Website</p>
       <div class="login-field">
-        <input type="password" id="login-password" placeholder="Enter admin password"
+        <input type="email" id="login-email" placeholder="Admin email address" autocomplete="email" />
+      </div>
+      <div class="login-field">
+        <input type="password" id="login-password" placeholder="Password"
                onkeydown="if(event.key==='Enter') doLogin()" autocomplete="current-password" />
       </div>
       <button class="login-btn" onclick="doLogin()">Sign In</button>
@@ -568,19 +573,6 @@
             <button class="btn btn-primary" style="margin-top:14px;" onclick="changeAdminPassword()">Update Admin Password</button>
           </div>
 
-          <!-- Change Dashboard Password -->
-          <div class="settings-card">
-            <h3>📊 Dashboard Password</h3>
-            <p style="font-size:0.85rem; color:var(--muted); margin-bottom:16px;">
-              This is the password used by the Event Dashboard admin view (Overview, Volunteers, Supplies, etc.).
-            </p>
-            <div class="form-field" style="max-width:300px;">
-              <label>New Dashboard Password</label>
-              <input type="password" id="new-dashboard-pass" placeholder="New password" />
-            </div>
-            <button class="btn btn-primary" style="margin-top:14px;" onclick="changeDashboardPassword()">Update Dashboard Password</button>
-          </div>
-
           <!-- Admin Contact Info -->
           <div class="settings-card">
             <h3>📧 Organizer Contact Info</h3>
@@ -621,77 +613,72 @@
 
   <script>
     // ============================================================
-    //  ✏️  CONFIG — paste your Google Apps Script Web App URL here
+    //  Admin portal — all data via Supabase (db).
+    //  Auth: Supabase email+password. Role check: profiles.role='admin'.
     // ============================================================
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylyN2ypYEab79HD_I1V8k1gNZp3nME5DolD_UrTkzzCBo3pezvUWxzjSTytWeqc_pYHg/exec";
-    // ============================================================
 
-    let ADMIN_KEY = "";          // Set after successful login
-    let modalCallback = null;    // Set before showing modal
-    let currentEventId = null;   // For editing existing events
+    let modalCallback  = null;
+    let currentEventId = null;
 
-    // ── LOGIN / AUTH ──────────────────────────────────────────
-    function doLogin() {
-      const pw  = document.getElementById("login-password").value;
-      const err = document.getElementById("login-error");
-      const card= document.getElementById("login-card");
-      if (!pw) { err.textContent = "Please enter a password."; return; }
-
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ action: "validateAdmin", password: pw }).toString(),
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.valid) {
-          ADMIN_KEY = pw;
-          sessionStorage.setItem("adminKey", pw);
-          document.getElementById("login-screen").style.display = "none";
-          document.getElementById("admin-ui").style.display = "block";
-          loadCurrentPanel();
-          loadSettings();
-        } else {
-          err.textContent = "Incorrect password. Please try again.";
-          card.classList.remove("shake");
-          void card.offsetWidth; // reflow
-          card.classList.add("shake");
-        }
-      })
-      .catch(() => {
-        err.textContent = "Could not reach server. Check your connection.";
-      });
+    // ── HELPERS ───────────────────────────────────────────────
+    function extractDriveIds(urls) {
+      return (urls||[]).map(u => {
+        const m = (u||"").match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (m) return m[1];
+        const m2 = (u||"").match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        return m2 ? m2[1] : null;
+      }).filter(Boolean);
     }
 
-    function doLogout() {
-      sessionStorage.removeItem("adminKey");
-      ADMIN_KEY = "";
+    function fmtDate(iso) {
+      if (!iso) return "";
+      return new Date(iso).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+    }
+
+    // ── LOGIN / AUTH ──────────────────────────────────────────
+    async function doLogin() {
+      const email = document.getElementById("login-email").value.trim();
+      const pw    = document.getElementById("login-password").value;
+      const err   = document.getElementById("login-error");
+      const card  = document.getElementById("login-card");
+      if (!email || !pw) { err.textContent = "Please enter email and password."; return; }
+
+      const { data, error } = await db.auth.signInWithPassword({ email, password: pw });
+      if (error) {
+        err.textContent = "Incorrect email or password.";
+        card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+        return;
+      }
+      const { data: profile } = await db.from("profiles").select("role").eq("id", data.user.id).single();
+      if (!profile || profile.role !== "admin") {
+        err.textContent = "This account does not have admin access.";
+        await db.auth.signOut();
+        return;
+      }
+      showAdminUI();
+    }
+
+    function showAdminUI() {
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("admin-ui").style.display = "block";
+      loadCurrentPanel();
+      loadSettings();
+    }
+
+    async function doLogout() {
+      await db.auth.signOut();
       document.getElementById("login-screen").style.display = "flex";
       document.getElementById("admin-ui").style.display = "none";
       document.getElementById("login-password").value = "";
+      document.getElementById("login-email").value = "";
     }
 
     // Restore session on page load
-    window.addEventListener("load", function() {
-      const saved = sessionStorage.getItem("adminKey");
-      if (saved) {
-        // Re-validate the saved key
-        fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ action: "validateAdmin", password: saved }).toString(),
-        })
-        .then(r => r.json())
-        .then(data => {
-          if (data.valid) {
-            ADMIN_KEY = saved;
-            document.getElementById("login-screen").style.display = "none";
-            document.getElementById("admin-ui").style.display = "block";
-            loadCurrentPanel();
-            loadSettings();
-          }
-        })
-        .catch(() => {});
+    window.addEventListener("load", async function() {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) {
+        const { data: profile } = await db.from("profiles").select("role").eq("id", session.user.id).single();
+        if (profile && profile.role === "admin") showAdminUI();
       }
     });
 
@@ -715,34 +702,6 @@
       else if (currentPanel === "bulletin")      loadBulletin();
       else if (currentPanel === "links")         loadLinks();
       else if (currentPanel === "documents")     loadDocuments();
-    }
-
-    // ── API HELPERS ───────────────────────────────────────────
-    async function apiGet(action, extra) {
-      const params = new URLSearchParams({ action, adminKey: ADMIN_KEY, ...(extra || {}) });
-      const res = await fetch(SCRIPT_URL + "?" + params.toString());
-      return res.json();
-    }
-
-    async function apiPost(action, data) {
-      const body = new URLSearchParams({ action, adminKey: ADMIN_KEY });
-      if (data) body.set("data", JSON.stringify(data));
-      const res = await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
-      });
-      return res.json();
-    }
-
-    async function apiPostSimple(params) {
-      params.adminKey = ADMIN_KEY;
-      const res = await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(params).toString(),
-      });
-      return res.json();
     }
 
     // ── TOAST ─────────────────────────────────────────────────
@@ -792,8 +751,9 @@
       const tbody = document.getElementById("events-tbody");
       tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
       try {
-        const data = await apiGet("allEventsAdmin");
-        eventsData = data.events || [];
+        const { data, error } = await db.from("events").select("*").order("event_date");
+        if (error) throw error;
+        eventsData = data || [];
         renderEventsTable(eventsData);
       } catch (e) {
         tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger);padding:20px;">${esc(e.message)}</td></tr>`;
@@ -808,12 +768,12 @@
       }
       tbody.innerHTML = events.map(ev => `
         <tr>
-          <td><strong>${esc(ev.eventName)}</strong><br><small style="color:var(--muted)">${esc(ev.eventId)}</small></td>
-          <td>${esc(ev.eventDate)}</td>
+          <td><strong>${esc(ev.event_name)}</strong><br><small style="color:var(--muted)">${esc(ev.id)}</small></td>
+          <td>${esc(ev.event_date)}</td>
           <td>${badge(ev.status)}</td>
           <td>
-            <button class="btn btn-secondary btn-sm" onclick="openEventForm('${esc(ev.eventId)}')">Edit</button>
-            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteEvent('${esc(ev.eventId)}','${esc(ev.eventName)}')">Delete</button>
+            <button class="btn btn-secondary btn-sm" onclick="openEventForm('${esc(ev.id)}')">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteEvent('${esc(ev.id)}','${esc(ev.event_name)}')">Delete</button>
           </td>
         </tr>`).join("");
     }
@@ -831,49 +791,52 @@
       }
 
       document.getElementById("event-form-title").textContent = "Edit Event";
-      const ev = eventsData.find(e => e.eventId === eventId);
+      const ev = eventsData.find(e => e.id === eventId);
       if (!ev) return;
 
-      document.getElementById("ef-name").value        = ev.eventName        || "";
-      document.getElementById("ef-id").value          = ev.eventId          || "";
-      document.getElementById("ef-date").value        = ev.eventDate        || "";
-      document.getElementById("ef-time").value        = ev.eventTime        || "";
-      document.getElementById("ef-signup-open").value = ev.signUpsOpenDate  || "";
-      document.getElementById("ef-status").value      = ev.status           || "Tentative";
-      document.getElementById("ef-color").value       = ev.bannerColorClass || "card-color-1";
-      document.getElementById("ef-emoji").value       = ev.emojiRow         || "";
-      document.getElementById("ef-adjective").value   = ev.headlineAdjective|| "";
-      document.getElementById("ef-loc-name").value    = ev.locationName     || "";
-      document.getElementById("ef-loc-addr").value    = ev.locationAddress  || "";
-      document.getElementById("ef-ics-start").value   = ev.icsStart         || "";
-      document.getElementById("ef-ics-end").value     = ev.icsEnd           || "";
-      document.getElementById("ef-short").value       = ev.shortDescription || "";
-      document.getElementById("ef-medium").value      = ev.mediumDescription|| "";
-      document.getElementById("ef-long").value        = ev.longDescription  || "";
-      document.getElementById("ef-org-name").value    = ev.organizerName    || "";
-      document.getElementById("ef-org-email").value   = ev.organizerEmail   || "";
-      document.getElementById("ef-org-phone").value   = ev.organizerPhone   || "";
-      document.getElementById("ef-org-addr").value    = ev.organizerAddress || "";
-      document.getElementById("ef-org-contact").value = ev.organizerContact || "Email";
+      document.getElementById("ef-name").value        = ev.event_name         || "";
+      document.getElementById("ef-id").value          = ev.id                 || "";
+      document.getElementById("ef-date").value        = ev.event_date         || "";
+      document.getElementById("ef-time").value        = ev.event_time         || "";
+      document.getElementById("ef-signup-open").value = ev.signups_open_date  || "";
+      document.getElementById("ef-status").value      = ev.status             || "Tentative";
+      document.getElementById("ef-color").value       = ev.banner_color_class || "card-color-1";
+      document.getElementById("ef-emoji").value       = ev.emoji_row          || "";
+      document.getElementById("ef-adjective").value   = ev.headline_adjective || "";
+      document.getElementById("ef-loc-name").value    = ev.location_name      || "";
+      document.getElementById("ef-loc-addr").value    = ev.location_address   || "";
+      document.getElementById("ef-ics-start").value   = ev.ics_start          || "";
+      document.getElementById("ef-ics-end").value     = ev.ics_end            || "";
+      document.getElementById("ef-short").value       = ev.short_description  || "";
+      document.getElementById("ef-medium").value      = ev.medium_description || "";
+      document.getElementById("ef-long").value        = ev.long_description   || "";
+      document.getElementById("ef-org-name").value    = ev.organizer_name     || "";
+      document.getElementById("ef-org-email").value   = ev.organizer_email    || "";
+      document.getElementById("ef-org-phone").value   = ev.organizer_phone    || "";
+      document.getElementById("ef-org-addr").value    = ev.organizer_address  || "";
+      document.getElementById("ef-org-contact").value = ev.organizer_contact  || "Email";
 
-      // Fetch roles + items for this event
-      apiGet("nextEvent").then(() => {}); // trigger init
-      // Load via allEventsAdmin which includes full event objects
       loadEventRolesAndItems(eventId);
     }
 
     async function loadEventRolesAndItems(eventId) {
-      // We need to re-fetch full event data including roles and items
-      // Use the public nextEvent endpoint — but we need a specific event
-      // So we load fresh from allEventsAdmin and merge
-      // For simplicity, call getEvent action
       try {
-        const data = await fetch(SCRIPT_URL + "?" + new URLSearchParams({ action: "allEventsAdmin", adminKey: ADMIN_KEY })).then(r=>r.json());
-        // Roles and items are only in the nextEvent response for the active event
-        // For full editing of any event, load via nextEvent action if it's next, else show empty
+        const [rolesRes, itemsRes] = await Promise.all([
+          db.from("event_volunteer_roles").select("*").eq("event_id", eventId).order("sort_order"),
+          db.from("event_donation_items").select("*").eq("event_id", eventId).order("sort_order"),
+        ]);
+        const roles = (rolesRes.data||[]).map(r => ({ label: r.role_label, detail: r.role_detail||"" }));
+        const catMap = {}, catList = [];
+        (itemsRes.data||[]).forEach(item => {
+          if (!catMap[item.category]) { catMap[item.category] = { category: item.category, items: [] }; catList.push(catMap[item.category]); }
+          catMap[item.category].items.push({ label: item.item_label, needed: item.qty_needed });
+        });
+        renderVolRolesFromData(roles);
+        renderDonationCatsFromData(catList);
+      } catch (e) {
         renderVolRolesFromData([]);
         renderDonationCatsFromData([]);
-      } catch (e) {}
+      }
     }
 
     function clearEventForm() {
@@ -969,59 +932,84 @@
     }
 
     async function submitEventForm() {
-      const data = {
-        eventId:            document.getElementById("ef-id").value.trim(),
-        eventName:          document.getElementById("ef-name").value.trim(),
-        status:             document.getElementById("ef-status").value,
-        eventDate:          document.getElementById("ef-date").value,
-        eventTime:          document.getElementById("ef-time").value.trim(),
-        signUpsOpenDate:    document.getElementById("ef-signup-open").value,
-        shortDescription:   document.getElementById("ef-short").value.trim(),
-        mediumDescription:  document.getElementById("ef-medium").value.trim(),
-        longDescription:    document.getElementById("ef-long").value.trim(),
-        emojiRow:           document.getElementById("ef-emoji").value.trim(),
-        headlineAdjective:  document.getElementById("ef-adjective").value.trim(),
-        locationName:       document.getElementById("ef-loc-name").value.trim(),
-        locationAddress:    document.getElementById("ef-loc-addr").value.trim(),
-        bannerColorClass:   document.getElementById("ef-color").value,
-        icsStart:           document.getElementById("ef-ics-start").value.trim(),
-        icsEnd:             document.getElementById("ef-ics-end").value.trim(),
-        organizerName:      document.getElementById("ef-org-name").value.trim(),
-        organizerAddress:   document.getElementById("ef-org-addr").value.trim(),
-        organizerPhone:     document.getElementById("ef-org-phone").value.trim(),
-        organizerEmail:     document.getElementById("ef-org-email").value.trim(),
-        organizerContact:   document.getElementById("ef-org-contact").value,
-        volunteerRoles:     collectVolRoles(),
-        donationItems:      collectDonationItems(),
+      const eventId   = document.getElementById("ef-id").value.trim();
+      const eventName = document.getElementById("ef-name").value.trim();
+      if (!eventId || !eventName) { toast("Event ID and Name are required.", "error"); return; }
+      const row = {
+        id:                  eventId,
+        event_name:          eventName,
+        status:              document.getElementById("ef-status").value,
+        event_date:          document.getElementById("ef-date").value || null,
+        event_time:          document.getElementById("ef-time").value.trim() || null,
+        signups_open_date:   document.getElementById("ef-signup-open").value || null,
+        short_description:   document.getElementById("ef-short").value.trim() || null,
+        medium_description:  document.getElementById("ef-medium").value.trim() || null,
+        long_description:    document.getElementById("ef-long").value.trim() || null,
+        emoji_row:           document.getElementById("ef-emoji").value.trim() || null,
+        headline_adjective:  document.getElementById("ef-adjective").value.trim() || null,
+        location_name:       document.getElementById("ef-loc-name").value.trim() || null,
+        location_address:    document.getElementById("ef-loc-addr").value.trim() || null,
+        banner_color_class:  document.getElementById("ef-color").value,
+        ics_start:           document.getElementById("ef-ics-start").value.trim() || null,
+        ics_end:             document.getElementById("ef-ics-end").value.trim() || null,
+        organizer_name:      document.getElementById("ef-org-name").value.trim() || null,
+        organizer_address:   document.getElementById("ef-org-addr").value.trim() || null,
+        organizer_phone:     document.getElementById("ef-org-phone").value.trim() || null,
+        organizer_email:     document.getElementById("ef-org-email").value.trim() || null,
+        organizer_contact:   document.getElementById("ef-org-contact").value,
       };
-      if (!data.eventId || !data.eventName) { toast("Event ID and Name are required.", "error"); return; }
       try {
-        const res = await apiPost("saveEvent", data);
-        if (res.success) {
-          toast("Event saved!", "success");
-          cancelEventForm();
-          loadEvents();
-        } else { toast("Save failed: " + (res.error||""), "error"); }
+        const { error: evErr } = await db.from("events").upsert(row, { onConflict: "id" });
+        if (evErr) throw evErr;
+
+        // Replace volunteer roles
+        const roles = collectVolRoles();
+        await db.from("event_volunteer_roles").delete().eq("event_id", eventId);
+        if (roles.length) {
+          const { error: rErr } = await db.from("event_volunteer_roles").insert(
+            roles.map((r, i) => ({ event_id: eventId, role_label: r.label, role_detail: r.detail||null, sort_order: i }))
+          );
+          if (rErr) throw rErr;
+        }
+
+        // Replace donation items
+        const cats = collectDonationItems();
+        await db.from("event_donation_items").delete().eq("event_id", eventId);
+        const itemRows = [];
+        cats.forEach((cat, ci) => cat.items.forEach((item, ii) =>
+          itemRows.push({ event_id: eventId, category: cat.category, item_label: item.label, qty_needed: item.needed, sort_order: ci*100+ii })
+        ));
+        if (itemRows.length) {
+          const { error: iErr } = await db.from("event_donation_items").insert(itemRows);
+          if (iErr) throw iErr;
+        }
+
+        toast("Event saved!", "success");
+        cancelEventForm();
+        loadEvents();
       } catch (e) { toast("Error: " + e.message, "error"); }
     }
 
     function confirmDeleteEvent(eventId, eventName) {
-      showModal("🗑️","Delete Event","Delete \"" + eventName + "\"? This also removes its volunteer roles and donation items.",
+      showModal("🗑️","Delete Event","Delete \"" + eventName + "\"? This also removes its roles and donation items.",
         async () => {
-          await apiPostSimple({ action: "deleteEvent", eventId });
-          toast("Event deleted.", "success");
-          loadEvents();
+          const { error } = await db.from("events").delete().eq("id", eventId);
+          if (!error) { toast("Event deleted.", "success"); loadEvents(); }
+          else toast("Error: " + error.message, "error");
         });
     }
 
     async function confirmArchive() {
       showModal("⚠️","Archive Sign-Ups",
-        "This will copy the current Signups sheet to a permanent archive and reset it for the next event. This cannot be undone.",
+        "This will mark all current sign-ups as archived. This cannot be undone.",
         async () => {
           try {
-            const res = await apiPostSimple({ action: "archiveSignups" });
-            if (res.success) toast("Archived as \"" + res.archivedAs + "\". Next event: " + (res.nextEventId||"none"), "success");
-            else toast("Archive failed.", "error");
+            const { data: cfg } = await db.from("config").select("value").eq("key","current_event_id").maybeSingle();
+            const evId = cfg?.value;
+            if (!evId) { toast("No current_event_id set in config.", "error"); return; }
+            const { error } = await db.from("signups").update({ archived: true }).eq("event_id", evId).eq("archived", false);
+            if (error) throw error;
+            toast("Sign-ups archived for: " + evId, "success");
           } catch (e) { toast("Error: " + e.message, "error"); }
         });
     }
@@ -1044,8 +1032,9 @@
       const tbody = document.getElementById("contests-tbody");
       tbody.innerHTML = '<tr><td colspan="5" class="admin-loading">Loading…</td></tr>';
       try {
-        const data = await apiGet("allAwardContests");
-        contestsData = data.contests || [];
+        const { data, error } = await db.from("award_contests").select("*").order("award_name");
+        if (error) throw error;
+        contestsData = data || [];
         renderContestsTable(contestsData);
       } catch (e) { tbody.innerHTML = `<tr><td colspan="5">Error: ${esc(e.message)}</td></tr>`; }
     }
@@ -1055,13 +1044,13 @@
       if (!contests.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🏆</div><p>No contests yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = contests.map(c => `
         <tr>
-          <td>${esc(c["Award Name"]||c.awardName||"")}</td>
-          <td>${esc(c["Category"]||c.category||"")}</td>
-          <td>${esc(c["Period"]||c.period||"")}</td>
-          <td>${badge(c["Status"]||c.status||"")}</td>
+          <td>${esc(c.award_name||"")}</td>
+          <td>${esc(c.category||"")}</td>
+          <td>${esc(c.period||"")}</td>
+          <td>${badge(c.status||"")}</td>
           <td>
-            <button class="btn btn-secondary btn-sm" onclick="openContestForm('${esc(c["Contest ID"]||c.contestId||"")}')">Edit</button>
-            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteContest('${esc(c["Contest ID"]||c.contestId||"")}')">Delete</button>
+            <button class="btn btn-secondary btn-sm" onclick="openContestForm('${esc(c.id)}')">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteContest('${esc(c.id)}')">Delete</button>
           </td>
         </tr>`).join("");
     }
@@ -1076,19 +1065,19 @@
         return;
       }
       document.getElementById("contest-form-title").textContent = "Edit Contest";
-      const c = contestsData.find(x => (x["Contest ID"]||x.contestId) === contestId);
+      const c = contestsData.find(x => x.id === contestId);
       if (!c) return;
-      document.getElementById("cf-name").value     = c["Award Name"]   || c.awardName    || "";
-      document.getElementById("cf-id").value       = c["Contest ID"]   || c.contestId    || "";
-      document.getElementById("cf-cat").value      = c["Category"]     || c.category     || "Community";
-      document.getElementById("cf-period").value   = c["Period"]       || c.period       || "";
-      document.getElementById("cf-status").value   = c["Status"]       || c.status       || "open";
-      document.getElementById("cf-deadline").value = c["Deadline"]     || c.deadline     || "";
-      document.getElementById("cf-icon").value     = c["Icon"]         || c.icon         || "";
-      document.getElementById("cf-badge").value    = c["Badge"]        || c.badge        || "";
-      document.getElementById("cf-banner").value   = c["Banner Color"] || c.bannerColor  || "banner-green";
-      document.getElementById("cf-prize").value    = c["Prize"]        || c.prize        || "";
-      document.getElementById("cf-desc").value     = c["Description"]  || c.description  || "";
+      document.getElementById("cf-name").value     = c.award_name   || "";
+      document.getElementById("cf-id").value       = c.id           || "";
+      document.getElementById("cf-cat").value      = c.category     || "Community";
+      document.getElementById("cf-period").value   = c.period       || "";
+      document.getElementById("cf-status").value   = c.status       || "open";
+      document.getElementById("cf-deadline").value = c.deadline     || "";
+      document.getElementById("cf-icon").value     = c.icon         || "";
+      document.getElementById("cf-badge").value    = c.badge        || "";
+      document.getElementById("cf-banner").value   = c.banner_color || "banner-green";
+      document.getElementById("cf-prize").value    = c.prize        || "";
+      document.getElementById("cf-desc").value     = c.description  || "";
     }
 
     function cancelContestForm() { document.getElementById("contest-form").style.display = "none"; }
@@ -1099,30 +1088,32 @@
     }
 
     async function submitContestForm() {
-      const data = {
-        contestId:   document.getElementById("cf-id").value.trim(),
-        icon:        document.getElementById("cf-icon").value.trim(),
-        badge:       document.getElementById("cf-badge").value.trim(),
-        bannerColor: document.getElementById("cf-banner").value,
-        awardName:   document.getElementById("cf-name").value.trim(),
+      const contestId = document.getElementById("cf-id").value.trim();
+      const awardName = document.getElementById("cf-name").value.trim();
+      if (!contestId || !awardName) { toast("Contest ID and Award Name required.", "error"); return; }
+      const row = {
+        id:          contestId,
+        award_name:  awardName,
+        icon:        document.getElementById("cf-icon").value.trim() || null,
+        badge:       document.getElementById("cf-badge").value.trim() || null,
+        banner_color:document.getElementById("cf-banner").value,
         category:    document.getElementById("cf-cat").value,
-        period:      document.getElementById("cf-period").value.trim(),
+        period:      document.getElementById("cf-period").value.trim() || null,
         status:      document.getElementById("cf-status").value,
-        description: document.getElementById("cf-desc").value.trim(),
-        deadline:    document.getElementById("cf-deadline").value.trim(),
-        prize:       document.getElementById("cf-prize").value.trim(),
+        description: document.getElementById("cf-desc").value.trim() || null,
+        deadline:    document.getElementById("cf-deadline").value.trim() || null,
+        prize:       document.getElementById("cf-prize").value.trim() || null,
       };
-      if (!data.contestId || !data.awardName) { toast("Contest ID and Award Name required.", "error"); return; }
-      const res = await apiPost("saveAwardContest", data);
-      if (res.success) { toast("Contest saved!", "success"); cancelContestForm(); loadContests(); }
-      else toast("Error: " + (res.error||""), "error");
+      const { error } = await db.from("award_contests").upsert(row, { onConflict: "id" });
+      if (!error) { toast("Contest saved!", "success"); cancelContestForm(); loadContests(); }
+      else toast("Error: " + error.message, "error");
     }
 
     function confirmDeleteContest(contestId) {
       showModal("🗑️","Delete Contest","Delete this award contest?", async () => {
-        await apiPostSimple({ action: "deleteAwardContest", contestId });
-        toast("Contest deleted.", "success");
-        loadContests();
+        const { error } = await db.from("award_contests").delete().eq("id", contestId);
+        if (!error) { toast("Contest deleted.", "success"); loadContests(); }
+        else toast("Error: " + error.message, "error");
       });
     }
 
@@ -1135,72 +1126,82 @@
     async function loadWinners() {
       const tbody = document.getElementById("winners-tbody");
       tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
-      const data = await apiGet("allWinners");
-      winnersData = data.winners || [];
+      const { data } = await db.from("winners").select("*").order("created_at", { ascending: false });
+      winnersData = data || [];
       if (!winnersData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">🥇</div><p>No winners yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = winnersData.map(w => `
         <tr>
           <td>${esc(w.award||"")}</td>
-          <td>${esc(w.winner||"")}</td>
+          <td>${esc(w.winner_name||"")}</td>
           <td>${esc(w.period||"")}</td>
           <td>
-            <button class="btn btn-secondary btn-sm" onclick="openWinnerForm('${esc((w.award||"")+"||"+(w.period||""))}')">Edit</button>
-            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteWinner('${esc(w.award||"")}','${esc(w.period||"")}')">Delete</button>
+            <button class="btn btn-secondary btn-sm" onclick="openWinnerForm(${w.id})">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteWinner(${w.id},'${esc(w.award||"")}')">Delete</button>
           </td>
         </tr>`).join("");
     }
 
-    function openWinnerForm(key) {
+    function openWinnerForm(id) {
       const form = document.getElementById("winner-form");
       form.style.display = "block";
       form.scrollIntoView({ behavior: "smooth" });
-      if (!key) { ["wf-award","wf-winner","wf-period","wf-year","wf-icon","wf-badge","wf-banner","wf-prize","wf-photo","wf-blurb","wf-q1","wf-q2","wf-q3"].forEach(id => document.getElementById(id).value=""); return; }
-      const parts = key.split("||");
-      const w = winnersData.find(x => x.award===parts[0] && x.period===parts[1]);
+      if (!id) {
+        ["wf-award","wf-winner","wf-period","wf-year","wf-icon","wf-badge","wf-banner","wf-prize","wf-photo","wf-blurb","wf-q1","wf-q2","wf-q3"].forEach(x => document.getElementById(x).value="");
+        form.dataset.editId = "";
+        return;
+      }
+      const w = winnersData.find(x => x.id === id);
       if (!w) return;
-      document.getElementById("wf-award").value  = w.award  || "";
-      document.getElementById("wf-winner").value = w.winner || "";
-      document.getElementById("wf-period").value = w.period || "";
-      document.getElementById("wf-year").value   = w.year   || "";
-      document.getElementById("wf-icon").value   = w.icon   || "";
-      document.getElementById("wf-badge").value  = w.badge  || "";
-      document.getElementById("wf-banner").value = w.bannerColor || "";
-      document.getElementById("wf-prize").value  = w.prize  || "";
-      document.getElementById("wf-photo").value  = w.photoId|| "";
-      document.getElementById("wf-blurb").value  = w.blurb  || "";
-      document.getElementById("wf-q1").value     = w.quote1 || "";
-      document.getElementById("wf-q2").value     = w.quote2 || "";
-      document.getElementById("wf-q3").value     = w.quote3 || "";
+      form.dataset.editId    = w.id;
+      document.getElementById("wf-award").value  = w.award        || "";
+      document.getElementById("wf-winner").value = w.winner_name  || "";
+      document.getElementById("wf-period").value = w.period       || "";
+      document.getElementById("wf-year").value   = w.year         || "";
+      document.getElementById("wf-icon").value   = w.icon         || "";
+      document.getElementById("wf-badge").value  = w.badge        || "";
+      document.getElementById("wf-banner").value = w.banner_color || "";
+      document.getElementById("wf-prize").value  = w.prize        || "";
+      document.getElementById("wf-photo").value  = w.photo_id     || "";
+      document.getElementById("wf-blurb").value  = w.blurb        || "";
+      document.getElementById("wf-q1").value     = w.quote1       || "";
+      document.getElementById("wf-q2").value     = w.quote2       || "";
+      document.getElementById("wf-q3").value     = w.quote3       || "";
     }
 
     function cancelWinnerForm() { document.getElementById("winner-form").style.display = "none"; }
 
     async function submitWinnerForm() {
-      const data = {
-        award:       document.getElementById("wf-award").value.trim(),
-        winner:      document.getElementById("wf-winner").value.trim(),
-        period:      document.getElementById("wf-period").value.trim(),
-        year:        document.getElementById("wf-year").value.trim(),
-        icon:        document.getElementById("wf-icon").value.trim(),
-        badge:       document.getElementById("wf-badge").value.trim(),
-        bannerColor: document.getElementById("wf-banner").value.trim(),
-        prize:       document.getElementById("wf-prize").value.trim(),
-        photoId:     document.getElementById("wf-photo").value.trim(),
-        blurb:       document.getElementById("wf-blurb").value.trim(),
-        quote1:      document.getElementById("wf-q1").value.trim(),
-        quote2:      document.getElementById("wf-q2").value.trim(),
-        quote3:      document.getElementById("wf-q3").value.trim(),
+      const award  = document.getElementById("wf-award").value.trim();
+      const winner = document.getElementById("wf-winner").value.trim();
+      if (!award || !winner) { toast("Award and winner name required.", "error"); return; }
+      const row = {
+        award:        award,
+        winner_name:  winner,
+        period:       document.getElementById("wf-period").value.trim() || null,
+        year:         document.getElementById("wf-year").value.trim() || null,
+        icon:         document.getElementById("wf-icon").value.trim() || null,
+        badge:        document.getElementById("wf-badge").value.trim() || null,
+        banner_color: document.getElementById("wf-banner").value.trim() || null,
+        prize:        document.getElementById("wf-prize").value.trim() || null,
+        photo_id:     document.getElementById("wf-photo").value.trim() || null,
+        blurb:        document.getElementById("wf-blurb").value.trim() || null,
+        quote1:       document.getElementById("wf-q1").value.trim() || null,
+        quote2:       document.getElementById("wf-q2").value.trim() || null,
+        quote3:       document.getElementById("wf-q3").value.trim() || null,
       };
-      const res = await apiPost("saveWinner", data);
-      if (res.success) { toast("Winner saved!", "success"); cancelWinnerForm(); loadWinners(); }
-      else toast("Error: " + (res.error||""), "error");
+      const editId = document.getElementById("winner-form").dataset.editId;
+      let error;
+      if (editId) { ({ error } = await db.from("winners").update(row).eq("id", editId)); }
+      else         { ({ error } = await db.from("winners").insert(row)); }
+      if (!error) { toast("Winner saved!", "success"); cancelWinnerForm(); loadWinners(); }
+      else toast("Error: " + error.message, "error");
     }
 
-    function confirmDeleteWinner(award, period) {
+    function confirmDeleteWinner(id, award) {
       showModal("🗑️","Delete Winner","Remove this winner entry?", async () => {
-        await apiPostSimple({ action: "deleteWinner", winnerId: award + "|" + period });
-        toast("Winner deleted.", "success");
-        loadWinners();
+        const { error } = await db.from("winners").delete().eq("id", id);
+        if (!error) { toast("Winner deleted.", "success"); loadWinners(); }
+        else toast("Error: " + error.message, "error");
       });
     }
 
@@ -1208,26 +1209,40 @@
     // ====================================================
     //  WINNER PREP
     // ====================================================
+    let prepData = [];
+
     async function loadWinnerPrep() {
       const tbody = document.getElementById("prep-tbody");
       tbody.innerHTML = '<tr><td colspan="5" class="admin-loading">Loading…</td></tr>';
-      const data = await apiGet("winnerPrep");
-      const prep = data.prep || [];
-      if (!prep.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📋</div><p>No winner prep rows yet.</p></div></td></tr>'; return; }
-      tbody.innerHTML = prep.map((row, i) => `
+      const { data } = await db.from("winner_prep").select("*").eq("promoted", false).order("submitted_at", { ascending: false });
+      prepData = data || [];
+      if (!prepData.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📋</div><p>No winner prep rows yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = prepData.map(row => `
         <tr>
-          <td>${esc(row.award||row["award"]||"")}</td>
-          <td>${esc(row.winner||row["winner"]||"")}</td>
-          <td>${esc(row["Nominator Name"]||"")}</td>
-          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc((row.blurb||row["blurb"]||"").substring(0,80))}</td>
-          <td><button class="btn btn-success btn-sm" onclick="promotePrep(${i+2})">Promote to Winners</button></td>
+          <td>${esc(row.award||"")}</td>
+          <td>${esc(row.winner_name||"")}</td>
+          <td>${esc(row.nominator_name||"")}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc((row.blurb||"").substring(0,80))}</td>
+          <td><button class="btn btn-success btn-sm" onclick="promotePrep(${row.id})">Promote to Winners</button></td>
         </tr>`).join("");
     }
 
-    async function promotePrep(rowId) {
-      const res = await apiPostSimple({ action: "promoteWinnerPrep", rowId });
-      if (res.success) { toast("Promoted to Winners!", "success"); loadWinnerPrep(); loadWinners(); }
-      else toast("Error: " + (res.error||""), "error");
+    async function promotePrep(prepId) {
+      const row = prepData.find(r => r.id === prepId);
+      if (!row) { toast("Row not found.", "error"); return; }
+      const winnerRow = {
+        award: row.award, winner_name: row.winner_name, period: row.period||null,
+        year: row.year||null, icon: row.icon||null, badge: row.badge||null,
+        banner_color: row.banner_color||null, prize: row.prize||null,
+        photo_id: row.photo_id||null, blurb: row.blurb||null,
+        quote1: row.quote1||null, quote2: row.quote2||null, quote3: row.quote3||null,
+      };
+      const { error: wErr } = await db.from("winners").insert(winnerRow);
+      if (wErr) { toast("Error: " + wErr.message, "error"); return; }
+      await db.from("winner_prep").update({ promoted: true }).eq("id", prepId);
+      toast("Promoted to Winners!", "success");
+      loadWinnerPrep();
+      loadWinners();
     }
 
 
@@ -1239,17 +1254,17 @@
     async function loadAnnouncements() {
       const tbody = document.getElementById("announcements-tbody");
       tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
-      const data = await apiGet("allAnnouncementsAdmin");
-      announcementsData = data.announcements || [];
+      const { data } = await db.from("announcements").select("*").order("created_at", { ascending: false });
+      announcementsData = data || [];
       if (!announcementsData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📢</div><p>No announcements yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = announcementsData.map(a => `
         <tr>
-          <td>${esc(a.day)} ${esc(a.month)}</td>
+          <td>${esc(a.day||"")} ${esc(a.month||"")}</td>
           <td>${esc(a.title)}</td>
-          <td>${badge(a.published==="Y"?"published":"draft")}</td>
+          <td>${badge(a.published ? "published" : "draft")}</td>
           <td>
-            <button class="btn btn-secondary btn-sm" onclick="openAnnouncementForm('${esc(a.id)}')">Edit</button>
-            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteAnnouncement('${esc(a.id)}','${esc(a.title)}')">Delete</button>
+            <button class="btn btn-secondary btn-sm" onclick="openAnnouncementForm(${a.id})">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteAnnouncement(${a.id},'${esc(a.title)}')">Delete</button>
           </td>
         </tr>`).join("");
     }
@@ -1266,42 +1281,45 @@
         return;
       }
       document.getElementById("af-title-label").textContent = "Edit Announcement";
-      const a = announcementsData.find(x => String(x.id) === String(id));
+      const a = announcementsData.find(x => x.id === id);
       if (!a) return;
-      document.getElementById("af-id").value        = a.id       || "";
-      document.getElementById("af-day").value       = a.day      || "";
-      document.getElementById("af-month").value     = a.month    || "";
-      document.getElementById("af-title").value     = a.title    || "";
-      document.getElementById("af-body").value      = a.body     || "";
-      document.getElementById("af-link").value      = a.link     || "";
-      document.getElementById("af-link-text").value = a.linkText || "";
-      document.getElementById("af-published").checked = a.published === "Y";
+      document.getElementById("af-id").value        = a.id        || "";
+      document.getElementById("af-day").value       = a.day       || "";
+      document.getElementById("af-month").value     = a.month     || "";
+      document.getElementById("af-title").value     = a.title     || "";
+      document.getElementById("af-body").value      = a.body      || "";
+      document.getElementById("af-link").value      = a.link      || "";
+      document.getElementById("af-link-text").value = a.link_text || "";
+      document.getElementById("af-published").checked = a.published === true;
     }
 
     function cancelAnnouncementForm() { document.getElementById("announcement-form").style.display = "none"; }
 
     async function submitAnnouncementForm() {
-      const data = {
-        id:        document.getElementById("af-id").value.trim() || null,
-        day:       document.getElementById("af-day").value.trim(),
-        month:     document.getElementById("af-month").value.trim(),
-        title:     document.getElementById("af-title").value.trim(),
-        body:      document.getElementById("af-body").value.trim(),
-        link:      document.getElementById("af-link").value.trim(),
-        linkText:  document.getElementById("af-link-text").value.trim(),
-        published: document.getElementById("af-published").checked ? "Y" : "N",
+      const id    = document.getElementById("af-id").value.trim();
+      const title = document.getElementById("af-title").value.trim();
+      const body  = document.getElementById("af-body").value.trim();
+      if (!title || !body) { toast("Title and body are required.", "error"); return; }
+      const row = {
+        day:       document.getElementById("af-day").value.trim() || null,
+        month:     document.getElementById("af-month").value.trim() || null,
+        title, body,
+        link:      document.getElementById("af-link").value.trim() || null,
+        link_text: document.getElementById("af-link-text").value.trim() || null,
+        published: document.getElementById("af-published").checked,
       };
-      if (!data.title || !data.body) { toast("Title and body are required.", "error"); return; }
-      const res = await apiPost("saveAnnouncement", data);
-      if (res.success) { toast("Announcement saved!", "success"); cancelAnnouncementForm(); loadAnnouncements(); }
-      else toast("Error: " + (res.error||""), "error");
+      let error;
+      if (id) { ({ error } = await db.from("announcements").update(row).eq("id", id)); }
+      else     { ({ error } = await db.from("announcements").insert(row)); }
+      if (!error) { toast("Announcement saved!", "success"); cancelAnnouncementForm(); loadAnnouncements(); }
+      else toast("Error: " + error.message, "error");
     }
 
     function confirmDeleteAnnouncement(id, title) {
       showModal("🗑️","Delete Announcement","Delete \"" + title + "\"?", async () => {
-        await apiPostSimple({ action: "deleteAnnouncement", id });
-        toast("Announcement deleted.", "success");
-        loadAnnouncements();
+        const { error } = await db.from("announcements").delete().eq("id", id);
+        if (!error) { toast("Announcement deleted.", "success"); loadAnnouncements(); }
+        else toast("Error: " + error.message, "error");
       });
     }
 
@@ -1312,39 +1330,37 @@
     async function loadMemories() {
       const tbody = document.getElementById("memories-tbody");
       tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading…</td></tr>';
-      const data = await apiGet("allMemories");
-      const memories = data.memories || [];
+      const { data } = await db.from("memories").select("*").order("submitted_at", { ascending: false });
+      const memories = data || [];
       if (!memories.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📷</div><p>No memories submitted yet.</p></div></td></tr>'; return; }
-      tbody.innerHTML = memories.map(m => `
-        <tr>
-          <td>${esc(m.date)}</td>
-          <td>${esc(m.uploader)}</td>
-          <td>${esc(m.event)}</td>
-          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.caption)}</td>
+      tbody.innerHTML = memories.map(m => {
+        const ids = extractDriveIds(m.photo_urls||[]);
+        return `<tr>
+          <td>${esc(fmtDate(m.submitted_at))}</td>
+          <td>${esc(m.uploader_name||"")}</td>
+          <td>${esc(m.event_name||"")}</td>
+          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.caption||"")}</td>
+          <td><div class="thumb-grid">${ids.slice(0,3).map(id=>`<img src="https://drive.google.com/thumbnail?id=${esc(id)}&sz=w70" onerror="this.style.display='none'" />`).join("")}</div></td>
+          <td>${badge(m.approved?"approved":"pending")}</td>
           <td>
-            <div class="thumb-grid">
-              ${(m.photoIds||[]).slice(0,3).map(id => `<img src="https://drive.google.com/thumbnail?id=${esc(id)}&sz=w70" onerror="this.style.display='none'" />`).join("")}
-            </div>
+            ${!m.approved ? `<button class="btn btn-success btn-sm" onclick="approveMemory(${m.id})">Approve</button>` : ""}
+            <button class="btn btn-danger btn-sm" onclick="confirmDeleteMemory(${m.id})">Delete</button>
           </td>
-          <td>${badge(m.approved==="Y"?"approved":"pending")}</td>
-          <td>
-            ${m.approved!=="Y" ? `<button class="btn btn-success btn-sm" onclick="approveMemory(${m.rowId})">Approve</button>` : ""}
-            <button class="btn btn-danger btn-sm" onclick="confirmDeleteMemory(${m.rowId})">Delete</button>
-          </td>
-        </tr>`).join("");
+        </tr>`;
+      }).join("");
     }
 
-    async function approveMemory(rowId) {
-      const res = await apiPostSimple({ action: "approveMemory", rowId });
-      if (res.success) { toast("Memory approved!", "success"); loadMemories(); }
+    async function approveMemory(id) {
+      const { error } = await db.from("memories").update({ approved: true }).eq("id", id);
+      if (!error) { toast("Memory approved!", "success"); loadMemories(); }
       else toast("Error.", "error");
     }
 
-    function confirmDeleteMemory(rowId) {
-      showModal("🗑️","Delete Memory","Permanently delete this memory submission and remove it from the gallery?", async () => {
-        await apiPostSimple({ action: "deleteMemory", rowId });
-        toast("Memory deleted.", "success");
-        loadMemories();
+    function confirmDeleteMemory(id) {
+      showModal("🗑️","Delete Memory","Permanently delete this memory submission?", async () => {
+        const { error } = await db.from("memories").delete().eq("id", id);
+        if (!error) { toast("Memory deleted.", "success"); loadMemories(); }
+        else toast("Error.", "error");
       });
     }
 
@@ -1352,67 +1368,69 @@
     // ====================================================
     //  BULLETIN BOARD
     // ====================================================
+    let bulletinData = [];
+
     async function loadBulletin() {
       const tbody = document.getElementById("bulletin-tbody");
       tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading…</td></tr>';
-      const data = await apiGet("allBulletinPosts");
-      const posts = data.posts || [];
-      if (!posts.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><p>No posts yet.</p></div></td></tr>'; return; }
-      tbody.innerHTML = posts.map(p => `
-        <tr>
-          <td>${esc(p.date)}</td>
-          <td>${esc(p.name)}</td>
-          <td>${esc(p.category)}</td>
-          <td>${esc(p.title)}</td>
+      const { data } = await db.from("bulletin_posts").select("*").order("submitted_at", { ascending: false });
+      bulletinData = data || [];
+      if (!bulletinData.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><p>No posts yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = bulletinData.map(p => {
+        const ids = extractDriveIds(p.photo_urls||[]);
+        return `<tr>
+          <td>${esc(fmtDate(p.submitted_at))}</td>
+          <td>${esc(p.poster_name||"")}</td>
+          <td>${esc(p.category||"")}</td>
+          <td>${esc(p.title||"")}</td>
+          <td><div class="thumb-grid">${ids.slice(0,2).map(id=>`<img src="https://drive.google.com/thumbnail?id=${esc(id)}&sz=w70" onerror="this.style.display='none'" />`).join("")}</div></td>
+          <td>${badge(p.approved?"approved":"pending")}</td>
           <td>
-            <div class="thumb-grid">
-              ${(p.photoIds||[]).slice(0,2).map(id => `<img src="https://drive.google.com/thumbnail?id=${esc(id)}&sz=w70" onerror="this.style.display='none'" />`).join("")}
-            </div>
+            ${!p.approved ? `<button class="btn btn-success btn-sm" onclick="approveBulletin(${p.id})">Approve</button>` : ""}
+            <button class="btn btn-secondary btn-sm" onclick="openBulletinEdit(${p.id})">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteBulletin(${p.id})">Delete</button>
           </td>
-          <td>${badge(p.approved==="Y"?"approved":"pending")}</td>
-          <td>
-            ${p.approved!=="Y" ? `<button class="btn btn-success btn-sm" onclick="approveBulletin(${p.rowId})">Approve</button>` : ""}
-            <button class="btn btn-secondary btn-sm" onclick="openBulletinEdit(${p.rowId},'${esc(p.category)}','${esc(p.title)}','${esc(p.content).replace(/'/g,"&#39;")}')">Edit</button>
-            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteBulletin(${p.rowId})">Delete</button>
-          </td>
-        </tr>`).join("");
+        </tr>`;
+      }).join("");
     }
 
-    async function approveBulletin(rowId) {
-      const res = await apiPostSimple({ action: "approveBulletinPost", rowId });
-      if (res.success) { toast("Post approved!", "success"); loadBulletin(); }
+    async function approveBulletin(id) {
+      const { error } = await db.from("bulletin_posts").update({ approved: true }).eq("id", id);
+      if (!error) { toast("Post approved!", "success"); loadBulletin(); }
       else toast("Error.", "error");
     }
 
-    function openBulletinEdit(rowId, cat, title, content) {
+    function openBulletinEdit(id) {
+      const p = bulletinData.find(x => x.id === id);
+      if (!p) return;
       const form = document.getElementById("bulletin-edit-form");
       form.style.display = "block";
       form.scrollIntoView({ behavior: "smooth" });
-      document.getElementById("bef-rowid").value  = rowId;
-      document.getElementById("bef-cat").value    = cat;
-      document.getElementById("bef-title").value  = title;
-      document.getElementById("bef-content").value= content;
+      document.getElementById("bef-rowid").value   = p.id;
+      document.getElementById("bef-cat").value     = p.category||"General";
+      document.getElementById("bef-title").value   = p.title||"";
+      document.getElementById("bef-content").value = p.content||"";
     }
 
     function cancelBulletinEdit() { document.getElementById("bulletin-edit-form").style.display = "none"; }
 
     async function submitBulletinEdit() {
-      const data = {
-        rowId:    parseInt(document.getElementById("bef-rowid").value),
+      const id  = document.getElementById("bef-rowid").value;
+      const row = {
         category: document.getElementById("bef-cat").value,
         title:    document.getElementById("bef-title").value.trim(),
         content:  document.getElementById("bef-content").value.trim(),
       };
-      const res = await apiPost("editBulletinPost", data);
-      if (res.success) { toast("Post updated!", "success"); cancelBulletinEdit(); loadBulletin(); }
+      const { error } = await db.from("bulletin_posts").update(row).eq("id", id);
+      if (!error) { toast("Post updated!", "success"); cancelBulletinEdit(); loadBulletin(); }
       else toast("Error.", "error");
     }
 
-    function confirmDeleteBulletin(rowId) {
+    function confirmDeleteBulletin(id) {
       showModal("🗑️","Delete Post","Permanently delete this bulletin board post?", async () => {
-        await apiPostSimple({ action: "deleteBulletinPost", rowId });
-        toast("Post deleted.", "success");
-        loadBulletin();
+        const { error } = await db.from("bulletin_posts").delete().eq("id", id);
+        if (!error) { toast("Post deleted.", "success"); loadBulletin(); }
+        else toast("Error.", "error");
       });
     }
 
@@ -1425,17 +1443,17 @@
     async function loadLinks() {
       const tbody = document.getElementById("links-tbody");
       tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
-      const data = await apiGet("allLinks");
-      linksData = data.links || [];
+      const { data } = await db.from("links").select("*").order("sort_order");
+      linksData = data || [];
       if (!linksData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">🔗</div><p>No links yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = linksData.map(l => `
         <tr>
-          <td>${esc(l.Category||l.category||"")}</td>
-          <td>${esc(l.Title||l.title||"")}</td>
-          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="${esc(l.URL||l.url||"")}" target="_blank">${esc(l.URL||l.url||"")}</a></td>
+          <td>${esc(l.category||"")}</td>
+          <td>${esc(l.title||"")}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="${esc(l.url||"")}" target="_blank">${esc(l.url||"")}</a></td>
           <td>
-            <button class="btn btn-secondary btn-sm" onclick="openLinkForm('${esc(l.ID||l.id||"")}')">Edit</button>
-            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteLink('${esc(l.ID||l.id||"")}')">Delete</button>
+            <button class="btn btn-secondary btn-sm" onclick="openLinkForm(${l.id})">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteLink(${l.id})">Delete</button>
           </td>
         </tr>`).join("");
     }
@@ -1451,40 +1469,43 @@
         return;
       }
       document.getElementById("lf-title-label").textContent = "Edit Link";
-      const l = linksData.find(x => String(x.ID||x.id) === String(id));
+      const l = linksData.find(x => x.id === id);
       if (!l) return;
-      document.getElementById("lf-id").value    = l.ID          || l.id          || "";
-      document.getElementById("lf-cat").value   = l.Category    || l.category    || "";
-      document.getElementById("lf-icon").value  = l.Icon        || l.icon        || "";
-      document.getElementById("lf-title").value = l.Title       || l.title       || "";
-      document.getElementById("lf-desc").value  = l.Description || l.description || "";
-      document.getElementById("lf-url").value   = l.URL         || l.url         || "";
-      document.getElementById("lf-label").value = l["URL Label"]|| l.urlLabel    || "";
+      document.getElementById("lf-id").value    = l.id          || "";
+      document.getElementById("lf-cat").value   = l.category    || "";
+      document.getElementById("lf-icon").value  = l.icon        || "";
+      document.getElementById("lf-title").value = l.title       || "";
+      document.getElementById("lf-desc").value  = l.description || "";
+      document.getElementById("lf-url").value   = l.url         || "";
+      document.getElementById("lf-label").value = l.url_label   || "";
     }
 
     function cancelLinkForm() { document.getElementById("link-form").style.display = "none"; }
 
     async function submitLinkForm() {
-      const data = {
-        id:          document.getElementById("lf-id").value.trim() || null,
+      const title = document.getElementById("lf-title").value.trim();
+      const url   = document.getElementById("lf-url").value.trim();
+      if (!title || !url) { toast("Title and URL are required.", "error"); return; }
+      const id  = document.getElementById("lf-id").value.trim();
+      const row = {
         category:    document.getElementById("lf-cat").value.trim(),
-        icon:        document.getElementById("lf-icon").value.trim(),
-        title:       document.getElementById("lf-title").value.trim(),
-        description: document.getElementById("lf-desc").value.trim(),
-        url:         document.getElementById("lf-url").value.trim(),
-        urlLabel:    document.getElementById("lf-label").value.trim(),
+        icon:        document.getElementById("lf-icon").value.trim() || null,
+        title, url,
+        description: document.getElementById("lf-desc").value.trim() || null,
+        url_label:   document.getElementById("lf-label").value.trim() || null,
       };
-      if (!data.title || !data.url) { toast("Title and URL are required.", "error"); return; }
-      const res = await apiPost("saveLink", data);
-      if (res.success) { toast("Link saved!", "success"); cancelLinkForm(); loadLinks(); }
+      let error;
+      if (id) { ({ error } = await db.from("links").update(row).eq("id", id)); }
+      else     { ({ error } = await db.from("links").insert(row)); }
+      if (!error) { toast("Link saved!", "success"); cancelLinkForm(); loadLinks(); }
       else toast("Error.", "error");
     }
 
     function confirmDeleteLink(id) {
       showModal("🗑️","Delete Link","Delete this link?", async () => {
-        await apiPostSimple({ action: "deleteLink", id });
-        toast("Link deleted.", "success");
-        loadLinks();
+        const { error } = await db.from("links").delete().eq("id", id);
+        if (!error) { toast("Link deleted.", "success"); loadLinks(); }
+        else toast("Error.", "error");
       });
     }
 
@@ -1497,17 +1518,17 @@
     async function loadDocuments() {
       const tbody = document.getElementById("docs-tbody");
       tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
-      const data = await apiGet("allDocuments");
-      docsData = data.documents || [];
+      const { data } = await db.from("documents").select("*").order("sort_order");
+      docsData = data || [];
       if (!docsData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📄</div><p>No documents yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = docsData.map(d => `
         <tr>
-          <td>${esc(d.Category||d.category||"")}</td>
-          <td>${esc(d.Title||d.title||"")}</td>
-          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="${esc(d.URL||d.url||"")}" target="_blank">${esc(d.URL||d.url||"")}</a></td>
+          <td>${esc(d.category||"")}</td>
+          <td>${esc(d.title||"")}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="${esc(d.url||"")}" target="_blank">${esc(d.url||"")}</a></td>
           <td>
-            <button class="btn btn-secondary btn-sm" onclick="openDocForm('${esc(d.ID||d.id||"")}')">Edit</button>
-            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteDoc('${esc(d.ID||d.id||"")}')">Delete</button>
+            <button class="btn btn-secondary btn-sm" onclick="openDocForm(${d.id})">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteDoc(${d.id})">Delete</button>
           </td>
         </tr>`).join("");
     }
@@ -1523,40 +1544,43 @@
         return;
       }
       document.getElementById("df-title-label").textContent = "Edit Document";
-      const d = docsData.find(x => String(x.ID||x.id) === String(id));
+      const d = docsData.find(x => x.id === id);
       if (!d) return;
-      document.getElementById("df-id").value    = d.ID          || d.id          || "";
-      document.getElementById("df-cat").value   = d.Category    || d.category    || "";
-      document.getElementById("df-icon").value  = d.Icon        || d.icon        || "";
-      document.getElementById("df-title").value = d.Title       || d.title       || "";
-      document.getElementById("df-desc").value  = d.Description || d.description || "";
-      document.getElementById("df-url").value   = d.URL         || d.url         || "";
-      document.getElementById("df-label").value = d["URL Label"]|| d.urlLabel    || "";
+      document.getElementById("df-id").value    = d.id          || "";
+      document.getElementById("df-cat").value   = d.category    || "";
+      document.getElementById("df-icon").value  = d.icon        || "";
+      document.getElementById("df-title").value = d.title       || "";
+      document.getElementById("df-desc").value  = d.description || "";
+      document.getElementById("df-url").value   = d.url         || "";
+      document.getElementById("df-label").value = d.url_label   || "";
     }
 
     function cancelDocForm() { document.getElementById("doc-form").style.display = "none"; }
 
     async function submitDocForm() {
-      const data = {
-        id:          document.getElementById("df-id").value.trim() || null,
+      const title = document.getElementById("df-title").value.trim();
+      const url   = document.getElementById("df-url").value.trim();
+      if (!title || !url) { toast("Title and URL are required.", "error"); return; }
+      const id  = document.getElementById("df-id").value.trim();
+      const row = {
         category:    document.getElementById("df-cat").value.trim(),
-        icon:        document.getElementById("df-icon").value.trim(),
-        title:       document.getElementById("df-title").value.trim(),
-        description: document.getElementById("df-desc").value.trim(),
-        url:         document.getElementById("df-url").value.trim(),
-        urlLabel:    document.getElementById("df-label").value.trim(),
+        icon:        document.getElementById("df-icon").value.trim() || null,
+        title, url,
+        description: document.getElementById("df-desc").value.trim() || null,
+        url_label:   document.getElementById("df-label").value.trim() || null,
       };
-      if (!data.title || !data.url) { toast("Title and URL are required.", "error"); return; }
-      const res = await apiPost("saveDocument", data);
-      if (res.success) { toast("Document saved!", "success"); cancelDocForm(); loadDocuments(); }
+      let error;
+      if (id) { ({ error } = await db.from("documents").update(row).eq("id", id)); }
+      else     { ({ error } = await db.from("documents").insert(row)); }
+      if (!error) { toast("Document saved!", "success"); cancelDocForm(); loadDocuments(); }
       else toast("Error.", "error");
     }
 
     function confirmDeleteDoc(id) {
       showModal("🗑️","Delete Document","Delete this document entry?", async () => {
-        await apiPostSimple({ action: "deleteDocument", id });
-        toast("Document deleted.", "success");
-        loadDocuments();
+        const { error } = await db.from("documents").delete().eq("id", id);
+        if (!error) { toast("Document deleted.", "success"); loadDocuments(); }
+        else toast("Error.", "error");
       });
     }
 
@@ -1566,10 +1590,12 @@
     // ====================================================
     async function loadSettings() {
       try {
-        const data = await apiGet("getConfig");
-        document.getElementById("cfg-org-name").value  = data["Organizer Name"]  || "";
-        document.getElementById("cfg-org-email").value = data["Organizer Email"] || "";
-        document.getElementById("cfg-org-phone").value = data["Organizer Phone"] || "";
+        const { data } = await db.from("config").select("key, value");
+        const cfg = {};
+        (data||[]).forEach(r => { cfg[r.key] = r.value; });
+        document.getElementById("cfg-org-name").value  = cfg.organizer_name  || "";
+        document.getElementById("cfg-org-email").value = cfg.organizer_email || "";
+        document.getElementById("cfg-org-phone").value = cfg.organizer_phone || "";
       } catch(e) {}
     }
 
@@ -1578,32 +1604,22 @@
       const cp = document.getElementById("confirm-admin-pass").value;
       if (!np) { toast("Enter a new password.", "error"); return; }
       if (np !== cp) { toast("Passwords do not match.", "error"); return; }
-      const res = await apiPost("updateConfig", { "Admin Password": np });
-      if (res.success) {
-        toast("Admin password updated. Please log in again.", "warning");
-        ADMIN_KEY = np;
-        sessionStorage.setItem("adminKey", np);
-        document.getElementById("new-admin-pass").value    = "";
+      const { error } = await db.auth.updateUser({ password: np });
+      if (!error) {
+        toast("Password updated!", "success");
+        document.getElementById("new-admin-pass").value = "";
         document.getElementById("confirm-admin-pass").value = "";
-      } else toast("Error saving.", "error");
-    }
-
-    async function changeDashboardPassword() {
-      const np = document.getElementById("new-dashboard-pass").value;
-      if (!np) { toast("Enter a new password.", "error"); return; }
-      const res = await apiPost("updateConfig", { "Dashboard Password": np });
-      if (res.success) { toast("Dashboard password updated!", "success"); document.getElementById("new-dashboard-pass").value = ""; }
-      else toast("Error saving.", "error");
+      } else toast("Error: " + error.message, "error");
     }
 
     async function saveOrgInfo() {
-      const data = {
-        "Organizer Name":  document.getElementById("cfg-org-name").value.trim(),
-        "Organizer Email": document.getElementById("cfg-org-email").value.trim(),
-        "Organizer Phone": document.getElementById("cfg-org-phone").value.trim(),
-      };
-      const res = await apiPost("updateConfig", data);
-      if (res.success) toast("Contact info saved!", "success");
+      const fields = [
+        { key: "organizer_name",  value: document.getElementById("cfg-org-name").value.trim() },
+        { key: "organizer_email", value: document.getElementById("cfg-org-email").value.trim() },
+        { key: "organizer_phone", value: document.getElementById("cfg-org-phone").value.trim() },
+      ];
+      const { error } = await db.from("config").upsert(fields, { onConflict: "key" });
+      if (!error) toast("Contact info saved!", "success");
       else toast("Error saving.", "error");
     }
 
