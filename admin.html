@@ -95,7 +95,7 @@
           <div class="archive-card">
             <h3>⚠️ Archive Current Sign-Ups</h3>
             <p style="font-size:0.88rem; color:#7a7060; margin-bottom:16px;">
-              Archives the current Signups sheet under the event's name, then creates a fresh sheet for the next upcoming event. <strong>This action cannot be undone.</strong>
+              Marks all sign-ups for the current event (set via <code>current_event_id</code> in Settings → Config) as archived so they no longer appear in active views. The event record itself is preserved. <strong>This action cannot be undone.</strong>
             </p>
             <button class="btn btn-warning" onclick="confirmArchive()">Archive Sign-Ups &amp; Advance to Next Event</button>
           </div>
@@ -613,14 +613,30 @@
 
   <script>
     // ============================================================
-    //  Admin portal — all data via Supabase (db).
-    //  Auth: Supabase email+password. Role check: profiles.role='admin'.
+    //  Admin portal — all data via Supabase (db client from supabase-config.js).
+    //
+    //  Auth flow:
+    //    1. Sign in with Supabase email + password.
+    //    2. Verify profiles.role = 'admin' — valid Supabase accounts that
+    //       are NOT admin are signed out immediately and shown an error.
+    //    3. Session is preserved by Supabase in localStorage; on page load
+    //       we call getSession() and re-check the role before revealing the UI.
+    //
+    //  Data model (all snake_case from Postgres):
+    //    events, event_volunteer_roles, event_donation_items, signups
+    //    award_contests, winners, winner_prep, award_nominations
+    //    announcements, memories, bulletin_posts
+    //    links, documents, config (key/value pairs), profiles
     // ============================================================
 
-    let modalCallback  = null;
-    let currentEventId = null;
+    let modalCallback  = null;  // Callback to invoke when the confirm modal is accepted
+    let currentEventId = null;  // Tracks which event is being edited (null = new)
 
     // ── HELPERS ───────────────────────────────────────────────
+
+    // Extracts Google Drive file IDs from an array of Drive share/view URLs.
+    // Handles both /file/d/<ID>/view format and legacy ?id=<ID> format.
+    // Returns an array of bare file ID strings (nulls filtered out).
     function extractDriveIds(urls) {
       return (urls||[]).map(u => {
         const m = (u||"").match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -630,12 +646,16 @@
       }).filter(Boolean);
     }
 
+    // Formats a Postgres/ISO timestamp string as "Mon D, YYYY" (e.g. "Mar 25, 2026").
     function fmtDate(iso) {
       if (!iso) return "";
       return new Date(iso).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
     }
 
     // ── LOGIN / AUTH ──────────────────────────────────────────
+
+    // Two-step login: Supabase auth first, then role check against profiles table.
+    // If the user is not an admin, they are signed out and shown an error message.
     async function doLogin() {
       const email = document.getElementById("login-email").value.trim();
       const pw    = document.getElementById("login-password").value;
@@ -646,9 +666,11 @@
       const { data, error } = await db.auth.signInWithPassword({ email, password: pw });
       if (error) {
         err.textContent = "Incorrect email or password.";
+        // CSS shake animation: remove class, force reflow, re-add
         card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
         return;
       }
+      // Even if auth succeeds, reject non-admin accounts
       const { data: profile } = await db.from("profiles").select("role").eq("id", data.user.id).single();
       if (!profile || profile.role !== "admin") {
         err.textContent = "This account does not have admin access.";
@@ -658,6 +680,7 @@
       showAdminUI();
     }
 
+    // Reveals the admin UI and kicks off the default panel + settings load.
     function showAdminUI() {
       document.getElementById("login-screen").style.display = "none";
       document.getElementById("admin-ui").style.display = "block";
@@ -665,6 +688,7 @@
       loadSettings();
     }
 
+    // Signs the user out of Supabase and returns to the login screen.
     async function doLogout() {
       await db.auth.signOut();
       document.getElementById("login-screen").style.display = "flex";
@@ -673,7 +697,9 @@
       document.getElementById("login-email").value = "";
     }
 
-    // Restore session on page load
+    // On page load: check for an existing Supabase session and re-verify the
+    // admin role. This avoids a full sign-in on every page refresh while still
+    // ensuring a demoted account can't retain access via a stale token.
     window.addEventListener("load", async function() {
       const { data: { session } } = await db.auth.getSession();
       if (session) {
@@ -683,8 +709,9 @@
     });
 
     // ── PANEL NAVIGATION ──────────────────────────────────────
-    let currentPanel = "events";
+    let currentPanel = "events";  // Tracks which sidebar section is visible
 
+    // Switches the active panel and reloads its data. Called by sidebar nav buttons.
     function showPanel(name) {
       currentPanel = name;
       document.querySelectorAll(".admin-panel").forEach(p => p.classList.remove("active"));
@@ -694,6 +721,8 @@
       loadCurrentPanel();
     }
 
+    // Dispatches a fresh data load for whichever panel is currently active.
+    // Awards loads all three subtabs at once (contests, winners, prep).
     function loadCurrentPanel() {
       if      (currentPanel === "events")        loadEvents();
       else if (currentPanel === "awards")        { loadContests(); loadWinners(); loadWinnerPrep(); }
@@ -705,6 +734,7 @@
     }
 
     // ── TOAST ─────────────────────────────────────────────────
+    // type: "success" | "error" | "warning" (maps to CSS classes)
     function toast(msg, type) {
       const el = document.createElement("div");
       el.className = "toast " + (type || "");
@@ -714,6 +744,7 @@
     }
 
     // ── MODAL ─────────────────────────────────────────────────
+    // Reusable confirmation dialog. onConfirm fires when the user clicks OK.
     function showModal(icon, title, body, onConfirm) {
       document.getElementById("modal-icon").textContent = icon;
       document.getElementById("modal-title").textContent = title;
@@ -731,11 +762,13 @@
     }
 
     // ── ESCAPE HTML ───────────────────────────────────────────
+    // Sanitizes a value before injecting it into innerHTML — prevents XSS.
     function esc(s) {
       return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
     // ── STATUS BADGE ──────────────────────────────────────────
+    // Returns a <span> with class badge-{val} for color-coded status labels.
     function badge(val) {
       val = String(val||"").toLowerCase();
       return `<span class="badge badge-${val}">${esc(val)}</span>`;
@@ -745,7 +778,7 @@
     // ====================================================
     //  EVENTS
     // ====================================================
-    let eventsData = [];
+    let eventsData = [];  // In-memory cache used by openEventForm to populate the edit form without a second query
 
     async function loadEvents() {
       const tbody = document.getElementById("events-tbody");
@@ -778,6 +811,9 @@
         </tr>`).join("");
     }
 
+    // Opens the event form in "New" mode (eventId=null/falsy) or "Edit" mode.
+    // Populates all fields from the eventsData cache, then fetches the event's
+    // volunteer roles and donation items from their own tables.
     function openEventForm(eventId) {
       currentEventId = eventId;
       const form = document.getElementById("event-form");
@@ -819,6 +855,9 @@
       loadEventRolesAndItems(eventId);
     }
 
+    // Fetches volunteer roles and donation items for the given event in parallel.
+    // Donation items are flat rows in the DB; catMap groups them by category name
+    // before passing to the renderer, which builds one collapsible block per category.
     async function loadEventRolesAndItems(eventId) {
       try {
         const [rolesRes, itemsRes] = await Promise.all([
@@ -857,6 +896,8 @@
       currentEventId = null;
     }
 
+    // Auto-generates the event ID slug from the name (letters/digits only).
+    // Only runs for new events — never overwrites an existing ID while editing.
     function autoSlug() {
       if (currentEventId) return; // don't auto-overwrite when editing
       const name = document.getElementById("ef-name").value;
@@ -913,6 +954,8 @@
       list.appendChild(div);
     }
 
+    // Reads all volunteer role rows from the DOM and returns a clean array.
+    // Rows with an empty label are silently dropped.
     function collectVolRoles() {
       return Array.from(document.querySelectorAll(".vol-role-row")).map(row => ({
         label:  row.querySelector(".vol-label").value.trim(),
@@ -920,6 +963,8 @@
       })).filter(r => r.label);
     }
 
+    // Reads all donation category blocks + their item rows from the DOM.
+    // Empty quantity fields are stored as null (not 0) to distinguish "unknown" from "none needed".
     function collectDonationItems() {
       return Array.from(document.querySelectorAll(".donation-cat-block")).map(block => ({
         category: block.querySelector(".cat-name-input").value.trim(),
@@ -931,6 +976,9 @@
       })).filter(c => c.category);
     }
 
+    // Three-step save: (1) upsert the event row, (2) delete + re-insert volunteer roles,
+    // (3) delete + re-insert donation items. Using delete+insert instead of upsert for
+    // the child tables avoids stale rows when items are removed or reordered.
     async function submitEventForm() {
       const eventId   = document.getElementById("ef-id").value.trim();
       const eventName = document.getElementById("ef-name").value.trim();
@@ -999,6 +1047,9 @@
         });
     }
 
+    // Marks all non-archived sign-ups for the current event as archived = true.
+    // Reads current_event_id from the config table — admin must set that key in Settings
+    // before archiving, or the operation will abort with a clear error message.
     async function confirmArchive() {
       showModal("⚠️","Archive Sign-Ups",
         "This will mark all current sign-ups as archived. This cannot be undone.",
@@ -1018,8 +1069,9 @@
     // ====================================================
     //  AWARD CONTESTS
     // ====================================================
-    let contestsData = [];
+    let contestsData = [];  // Cache for the contest list; used by openContestForm
 
+    // Switches between the three Awards sub-tabs: contests | winners | prep.
     function setAwardsSubtab(sub, btn) {
       document.querySelectorAll(".subtab").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
@@ -1082,6 +1134,7 @@
 
     function cancelContestForm() { document.getElementById("contest-form").style.display = "none"; }
 
+    // Auto-generates a contest ID slug from the award name (letters/digits only).
     function autoContestId() {
       const name = document.getElementById("cf-name").value;
       document.getElementById("cf-id").value = name.replace(/[^a-zA-Z0-9]/g,"");
@@ -1121,7 +1174,7 @@
     // ====================================================
     //  WINNERS
     // ====================================================
-    let winnersData = [];
+    let winnersData = [];  // Cache for the winners list; used by openWinnerForm
 
     async function loadWinners() {
       const tbody = document.getElementById("winners-tbody");
@@ -1141,6 +1194,8 @@
         </tr>`).join("");
     }
 
+    // Opens the winner form. The form element's dataset.editId stores the numeric DB id
+    // when editing an existing winner; an empty string means this is a new insert.
     function openWinnerForm(id) {
       const form = document.getElementById("winner-form");
       form.style.display = "block";
@@ -1189,6 +1244,7 @@
         quote2:       document.getElementById("wf-q2").value.trim() || null,
         quote3:       document.getElementById("wf-q3").value.trim() || null,
       };
+      // editId is set by openWinnerForm when editing an existing row; empty for new inserts
       const editId = document.getElementById("winner-form").dataset.editId;
       let error;
       if (editId) { ({ error } = await db.from("winners").update(row).eq("id", editId)); }
@@ -1209,8 +1265,10 @@
     // ====================================================
     //  WINNER PREP
     // ====================================================
-    let prepData = [];
+    let prepData = [];  // Cache; used by promotePrep to build the winners row without a re-fetch
 
+    // Only loads rows that haven't been promoted yet. Once promoted = true,
+    // the row stays in winner_prep for audit history but no longer appears here.
     async function loadWinnerPrep() {
       const tbody = document.getElementById("prep-tbody");
       tbody.innerHTML = '<tr><td colspan="5" class="admin-loading">Loading…</td></tr>';
@@ -1227,6 +1285,9 @@
         </tr>`).join("");
     }
 
+    // Two-step promotion: copy the prep row into the winners table, then mark it
+    // promoted = true so it disappears from the pending list. If the insert fails,
+    // we bail before marking promoted to avoid losing the prep data.
     async function promotePrep(prepId) {
       const row = prepData.find(r => r.id === prepId);
       if (!row) { toast("Row not found.", "error"); return; }
@@ -1249,7 +1310,7 @@
     // ====================================================
     //  ANNOUNCEMENTS
     // ====================================================
-    let announcementsData = [];
+    let announcementsData = [];  // Cache; avoids a re-fetch when opening the edit form
 
     async function loadAnnouncements() {
       const tbody = document.getElementById("announcements-tbody");
@@ -1308,6 +1369,7 @@
         link_text: document.getElementById("af-link-text").value.trim() || null,
         published: document.getElementById("af-published").checked,
       };
+      // published is a Postgres BOOLEAN — pass true/false, not "Y"/"N"
       let error;
       if (id) { ({ error } = await db.from("announcements").update(row).eq("id", id)); }
       else     { ({ error } = await db.from("announcements").insert(row)); }
@@ -1327,6 +1389,8 @@
     // ====================================================
     //  MEMORIES
     // ====================================================
+    // Reads from the raw memories table (not the public_memories view) so that
+    // unapproved submissions are visible to the admin for review.
     async function loadMemories() {
       const tbody = document.getElementById("memories-tbody");
       tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading…</td></tr>';
@@ -1368,8 +1432,10 @@
     // ====================================================
     //  BULLETIN BOARD
     // ====================================================
-    let bulletinData = [];
+    let bulletinData = [];  // Cache; used by openBulletinEdit to avoid re-fetching and to prevent XSS from inline onclick data
 
+    // Reads from the raw bulletin_posts table (not public_bulletin_posts view) so that
+    // unapproved posts and private contact fields are visible to the admin.
     async function loadBulletin() {
       const tbody = document.getElementById("bulletin-tbody");
       tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading…</td></tr>';
@@ -1400,6 +1466,8 @@
       else toast("Error.", "error");
     }
 
+    // Looks up the post by id from the bulletinData cache rather than passing data
+    // inline via onclick attributes, which would break on titles/content with quotes.
     function openBulletinEdit(id) {
       const p = bulletinData.find(x => x.id === id);
       if (!p) return;
@@ -1588,6 +1656,8 @@
     // ====================================================
     //  SETTINGS
     // ====================================================
+    // Loads organizer contact info from the config table (key/value pairs).
+    // Called on login so the Settings panel is pre-populated immediately.
     async function loadSettings() {
       try {
         const { data } = await db.from("config").select("key, value");
@@ -1599,6 +1669,8 @@
       } catch(e) {}
     }
 
+    // Updates the password for the currently signed-in admin via Supabase Auth.
+    // No Sheets config row to update — auth is fully handled by Supabase.
     async function changeAdminPassword() {
       const np = document.getElementById("new-admin-pass").value;
       const cp = document.getElementById("confirm-admin-pass").value;
@@ -1612,6 +1684,8 @@
       } else toast("Error: " + error.message, "error");
     }
 
+    // Saves the three organizer contact rows to the config table.
+    // Uses upsert so it works whether the keys already exist or are being set for the first time.
     async function saveOrgInfo() {
       const fields = [
         { key: "organizer_name",  value: document.getElementById("cfg-org-name").value.trim() },
