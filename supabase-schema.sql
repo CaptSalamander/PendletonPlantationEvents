@@ -702,6 +702,65 @@ GRANT SELECT ON dashboard_potluck TO anon, authenticated;
 
 
 -- ============================================================
+--  LOOKUP SIGNUP FUNCTION
+--  Public, name-based sign-up lookup for the dashboard "My Sign-Up" tab.
+--  Returns limited fields only — no email, phone, or address.
+--  SECURITY DEFINER lets anon users call it without a SELECT policy on signups.
+-- ============================================================
+CREATE OR REPLACE FUNCTION lookup_signup(p_query TEXT)
+RETURNS TABLE (
+  first_name     TEXT,
+  last_name      TEXT,
+  attending      TEXT,
+  num_adults     INT,
+  num_children   INT,
+  potluck_item   TEXT,
+  other_donation TEXT,
+  cash_donation  TEXT,
+  notes          TEXT,
+  roles          TEXT[],
+  donations      JSONB
+)
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT
+    s.first_name,
+    s.last_name,
+    s.attending,
+    s.num_adults,
+    s.num_children,
+    s.potluck_item,
+    s.other_donation,
+    s.cash_donation,
+    s.notes,
+    COALESCE(
+      array_agg(DISTINCT svr.role_label) FILTER (WHERE svr.role_label IS NOT NULL),
+      ARRAY[]::TEXT[]
+    ) AS roles,
+    COALESCE(
+      jsonb_agg(DISTINCT jsonb_build_object('item', sdi.item_label, 'qty', sdi.qty_pledged))
+        FILTER (WHERE sdi.item_label IS NOT NULL),
+      '[]'::JSONB
+    ) AS donations
+  FROM signups s
+  LEFT JOIN signup_volunteer_roles svr ON svr.signup_id = s.id
+  LEFT JOIN signup_donation_items  sdi ON sdi.signup_id = s.id
+  WHERE s.archived = false
+    AND (
+         lower(s.first_name)                           LIKE '%' || lower(p_query) || '%'
+      OR lower(s.last_name)                            LIKE '%' || lower(p_query) || '%'
+      OR lower(s.first_name || ' ' || s.last_name)    LIKE '%' || lower(p_query) || '%'
+    )
+  GROUP BY s.id
+  LIMIT 10
+$$;
+
+GRANT EXECUTE ON FUNCTION lookup_signup(TEXT) TO anon, authenticated;
+
+
+-- ============================================================
 --  TRIGGERS
 -- ============================================================
 

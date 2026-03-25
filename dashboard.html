@@ -3,9 +3,10 @@
 
 <!-- ============================================================
      File:        dashboard.html
-     Purpose:     Easter Egg Hunt sign-up dashboard — tab-based
-                  view of live Google Sheet data.
-     Tabs:        Overview | Volunteers | Supplies | Potluck
+     Purpose:     Event sign-up dashboard — tab-based view of
+                  live Supabase data for the current event.
+     Public tabs: My Sign-Up, Shopping List
+     Admin tabs:  Overview | Volunteers | Supplies | Potluck | Attendees
      Styles:      index-styles.css (global), dashboard-styles.css
      ============================================================ -->
 
@@ -24,6 +25,8 @@
     rel="stylesheet" />
   <link rel="stylesheet" href="index-styles.css" />
   <link rel="stylesheet" href="dashboard-styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
@@ -108,11 +111,15 @@
   <div id="admin-login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:none;align-items:center;justify-content:center;">
     <div style="background:#1e2a1e;border:1px solid rgba(201,168,76,0.3);border-radius:12px;padding:32px;max-width:340px;width:90%;text-align:center;">
       <p style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:#c9a84c;margin:0 0 6px">Dashboard Admin</p>
-      <p style="font-size:0.8rem;color:rgba(240,235,220,0.6);margin:0 0 20px">Enter the dashboard password to view all sign-up data.</p>
-      <input id="admin-pw-input" type="password" placeholder="Dashboard password"
+      <p style="font-size:0.8rem;color:rgba(240,235,220,0.6);margin:0 0 20px">Sign in with your admin account to view full sign-up data.</p>
+      <input id="admin-email-input" type="email" placeholder="Admin email address"
+             style="width:100%;box-sizing:border-box;padding:10px 14px;border-radius:8px;border:1px solid rgba(201,168,76,0.3);background:rgba(255,255,255,0.06);color:#f0ebdc;font-size:0.9rem;margin-bottom:10px;"
+             autocomplete="email" />
+      <input id="admin-pw-input" type="password" placeholder="Password"
              style="width:100%;box-sizing:border-box;padding:10px 14px;border-radius:8px;border:1px solid rgba(201,168,76,0.3);background:rgba(255,255,255,0.06);color:#f0ebdc;font-size:0.9rem;margin-bottom:12px;"
+             autocomplete="current-password"
              onkeydown="if(event.key==='Enter'){submitAdminLogin();}" />
-      <div id="admin-pw-error" style="color:#c97070;font-size:0.78rem;margin-bottom:10px;display:none">Incorrect password. Please try again.</div>
+      <div id="admin-pw-error" style="color:#c97070;font-size:0.78rem;margin-bottom:10px;display:none">Incorrect email or password.</div>
       <div style="display:flex;gap:10px;justify-content:center;">
         <button onclick="submitAdminLogin()" style="padding:8px 22px;border-radius:8px;background:#c9a84c;color:#1a2614;border:none;font-weight:600;cursor:pointer;">Log In</button>
         <button onclick="closeAdminLogin()" style="padding:8px 22px;border-radius:8px;background:transparent;color:#c9a84c;border:1px solid rgba(201,168,76,0.4);cursor:pointer;">Cancel</button>
@@ -153,172 +160,57 @@
 
   <script>
     // ============================================================
-    //  ✏️  CONFIG — update these when reusing for a different event
+    //  Dashboard — all data via Supabase (db client from supabase-config.js).
+    //
+    //  Public tabs (no login): My Sign-Up, Shopping List.
+    //  Admin-only tabs (Supabase auth + profiles.role='admin'):
+    //    Overview, Volunteers, Supplies, Potluck, Attendees.
+    //
+    //  Data sources:
+    //    dashboard_overview           — aggregate counts (public view)
+    //    dashboard_volunteer_counts   — role counts (public view)
+    //    dashboard_donations          — donation progress (public view)
+    //    dashboard_potluck            — potluck items (public view)
+    //    signups + joins              — full contact list (admin only, raw table)
+    //    lookup_signup(query)         — name-based lookup RPC (public, no PII)
+    //    config                       — reads current_event_id
     // ============================================================
 
-    // Google Apps Script web app URL — update after redeploying.
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxfLH4a-m-tqM9b2EMeHEjEhCjJrP_fVZ_7hO7n74sSKMkFoAjAmjm_zOYSJfqh8MrI/exec";
-
     // Expected attendance for the "Estimated vs Actual" section.
-    const ESTIMATED_ADULTS = 40;
+    // These are event-specific; update them in the admin config if needed.
+    const ESTIMATED_ADULTS   = 40;
     const ESTIMATED_CHILDREN = 50;
 
-    // Volunteer roles with target headcounts.
-    // Names must match the role labels in signup-page-easter.html exactly.
-    const VOLUNTEER_ROLES = [
-      { name: "Hide the Eggs", needed: 4 },
-      { name: "Check-In Table", needed: 3 },
-      { name: "Age Zone Monitor", needed: 4 },
-      { name: "Craft Station", needed: 2 },
-      { name: "Photo Booth", needed: 2 },
-      { name: "Cleanup Crew", needed: 4 },
-      { name: "Setup / Decor", needed: 4 },
-      { name: "Snack Table", needed: 3 },
-    ];
-
-    // Donation categories and items.
-    // Labels must match DONATION_ITEMS in google-apps-script.gs exactly.
-    const DONATION_CATEGORIES = [
-      {
-        category: "Eggs & Filling",
-        items: [
-          { label: "Plastic Eggs — any color", needed: 450 },
-          { label: "Plastic Eggs — teal (allergy-friendly)", needed: 30 },
-          { label: "Golden Eggs — special prize eggs", needed: 6 },
-          { label: "Candy — individually wrapped, nut-free", needed: 225 },
-          { label: "Bouncy Balls — small", needed: 45 },
-          { label: "Mini Erasers — fun shapes", needed: 45 },
-          { label: "Mini Play-Doh or putty containers", needed: 20 },
-          { label: "Stickers — mini sheets", needed: 45 },
-          { label: "Small Coins (nickels, dimes, quarters)", needed: 45 },
-          { label: "Fake Tattoo / Fun Coupons (DIY)", needed: 20 },
-          { label: "Temporary Tattoos — mini", needed: 45 },
-          { label: "Storage bins to save eggs for next year", needed: 2 },
-        ],
-      },
-      {
-        category: "Prizes",
-        items: [
-          { label: "Golden Egg Prize Baskets — golden egg winners", needed: 3 },
-          { label: "Prizes for Inside Baskets", needed: null },
-          { label: "Ribbon for prize baskets", needed: 1 },
-        ],
-      },
-      {
-        category: "Snack Table & Potluck",
-        items: [
-          { label: "Juice boxes for kids", needed: 35 },
-          { label: "Water bottles or water jug + cups", needed: 55 },
-          { label: "Other beverage", needed: null },
-          { label: "Main entree", needed: null },
-          { label: "Side entree", needed: null },
-          { label: "Dessert", needed: null },
-          { label: "Easter candy for grown-ups", needed: null },
-          { label: "Small plates", needed: 60 },
-          { label: "Large plates", needed: 60 },
-          { label: "Plastic cups", needed: 60 },
-          { label: "Plastic eating utensils", needed: 60 },
-          { label: "Paper towels / napkins", needed: 100 },
-        ],
-      },
-      {
-        category: "Crafts",
-        items: [
-          { label: "Sticker sheets for decorating", needed: 30 },
-          { label: "Glitter glue sticks", needed: 15 },
-          { label: "Crayons — boxes", needed: 10 },
-          { label: "Washable markers — sets", needed: 8 },
-          { label: "Drop cloth / disposable tablecloth", needed: 2 },
-        ],
-      },
-      {
-        category: "Decor",
-        items: [
-          { label: "Pastel balloons — latex", needed: 50 },
-          { label: "Pastel streamers", needed: 10 },
-          { label: "Tissue paper pom-poms", needed: 10 },
-          { label: "Paper flower garland (DIY)", needed: null },
-          { label: "Easter banner ('Happy Easter!' or custom)", needed: 1 },
-          { label: "Plastic Easter lawn decorations", needed: null },
-          { label: "Ribbon / raffia for baskets & decor", needed: null },
-          { label: "Easter-themed tablecloth weights/clips", needed: null },
-          { label: "Chalkboard or whiteboard + markers", needed: 1 },
-          { label: "Easel to hold signs", needed: 1 },
-          { label: "Balloon pump (hand or electric)", needed: 1 },
-          { label: "Balloon weights", needed: null },
-        ],
-      },
-      {
-        category: "Photo Booth",
-        items: [
-          { label: "Photobooth backdrop", needed: 1 },
-          { label: "Photobooth backdrop stand", needed: 1 },
-          { label: "Easter basket prop (real or faux)", needed: 1 },
-          { label: "Printable photo booth props (DIY)", needed: null },
-          { label: "Other photo booth props (DIY)", needed: null },
-          { label: "Popsicle sticks for props", needed: null },
-          { label: "Tripod (for phone)", needed: 1 },
-        ],
-      },
-      {
-        category: "Hunt Supplies",
-        items: [
-          { label: "Baskets / Easter bags for kids", needed: null },
-          { label: "Rope, twine, or pennant flags", needed: null },
-          { label: "Wooden stakes / dowel rods for signs", needed: null },
-          { label: "Zip ties or clips to attach rope", needed: null },
-        ],
-      },
-      {
-        category: "Admin & Logistics",
-        items: [
-          { label: "Folding tables — refreshments", needed: 2 },
-          { label: "Folding tables — craft station", needed: 2 },
-          { label: "Folding tables — check-in", needed: 1 },
-          { label: "Folding tables — raffle/prize display", needed: 1 },
-          { label: "Folding chairs", needed: null },
-          { label: "Tablecloths — pastel/Easter themed", needed: null },
-          { label: "Trash bags — large (39 gal)", needed: 3 },
-          { label: "Recycling bags", needed: 3 },
-          { label: "Hand sanitizer", needed: 2 },
-          { label: "Pens / clipboards for sign-in", needed: 5 },
-          { label: "Portable bluetooth speaker", needed: 1 },
-          { label: "Extension cord (if music/PA)", needed: 1 },
-          { label: "First aid kit", needed: 1 },
-          { label: "Bug spray", needed: null },
-          { label: "Sunscreen", needed: null },
-        ],
-      },
-    ];
+    // Populated dynamically from Supabase event_volunteer_roles + event_donation_items.
+    let VOLUNTEER_ROLES    = [];
+    let DONATION_CATEGORIES = [];
 
     // ============================================================
     //  STATE
     // ============================================================
-    let dashData = null;
-    let currentTab = 'lookup';   // Default to lookup tab; admin required for others
-    let isAdmin = false;          // Set true after admin login
-    let dashAdminKey = '';        // Stored dashboard password after validation
+    let dashData       = null;
+    let currentEventId = null;   // Loaded from config.current_event_id
+    let currentTab     = 'lookup';
+    let isAdmin        = false;
 
-    let volFilter = 'all';
-    let supFilter = 'all';
-    let supSort = 'remaining';
+    let volFilter  = 'all';
+    let supFilter  = 'all';
+    let supSort    = 'remaining';
     let volSortCol = {};   // { "Role Name": "name" | "email" | "phone" }
     let volSortDir = {};   // { "Role Name": "asc" | "desc" }
 
-    let lookupQuery = '';
-    let lookupPassword = '';        // Optional lookup password set by attendee at sign-up
-    let lookupResults = null;       // null = not searched yet, [] = searched but no results
-    let lookupLocked = false;       // true when server returns { locked: true }
+    let lookupQuery   = '';
+    let lookupResults = null;    // null = not yet searched, [] = no results
     let lookupLoading = false;
 
-    let attendeesSort = 'name';
+    let attendeesSort    = 'name';
     let attendeesSortDir = 'asc';
-    let shopName = '';
-    let shopResults = null;   // null = not searched, array = searched
-    let shopLoading = false;
-    let shopIncludePledged = true;
+    let shopName             = '';
+    let shopResults          = null;
+    let shopLoading          = false;
+    let shopIncludePledged   = true;
     let shopIncludeUnclaimed = true;
-    let shopChecked = new Set();
+    let shopChecked          = new Set();
 
 
     // ============================================================
@@ -327,8 +219,10 @@
     function showAdminLogin() {
       const modal = document.getElementById('admin-login-modal');
       modal.style.display = 'flex';
-      const inp = document.getElementById('admin-pw-input');
-      if (inp) { inp.value = ''; inp.focus(); }
+      const emailInp = document.getElementById('admin-email-input');
+      if (emailInp) { emailInp.value = ''; emailInp.focus(); }
+      const pwInp = document.getElementById('admin-pw-input');
+      if (pwInp) pwInp.value = '';
       document.getElementById('admin-pw-error').style.display = 'none';
     }
 
@@ -336,41 +230,35 @@
       document.getElementById('admin-login-modal').style.display = 'none';
     }
 
+    // Two-step login: Supabase auth, then role check against profiles table.
     async function submitAdminLogin() {
-      const inp = document.getElementById('admin-pw-input');
-      const pw = inp ? inp.value.trim() : '';
-      if (!pw) return;
+      const email = (document.getElementById('admin-email-input')?.value || '').trim();
+      const pw    = document.getElementById('admin-pw-input')?.value || '';
+      if (!email || !pw) return;
       const errEl = document.getElementById('admin-pw-error');
       errEl.style.display = 'none';
 
-      try {
-        const fd = new FormData();
-        fd.append('action', 'validateDashboard');
-        fd.append('password', pw);
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.valid) {
-          isAdmin = true;
-          dashAdminKey = pw;
-          sessionStorage.setItem('dash_admin_key', pw);
-          closeAdminLogin();
-          updateAdminUI();
-          // Now load the dashboard data if not yet loaded
-          if (!dashData) loadDashboard();
-          else { setTab('overview'); }
-        } else {
-          errEl.style.display = 'block';
-        }
-      } catch (e) {
-        errEl.textContent = 'Could not connect. Try again.';
+      const { data, error } = await db.auth.signInWithPassword({ email, password: pw });
+      if (error) { errEl.style.display = 'block'; return; }
+
+      const { data: profile } = await db.from("profiles").select("role").eq("id", data.user.id).single();
+      if (!profile || profile.role !== "admin") {
+        errEl.textContent = 'This account does not have admin access.';
         errEl.style.display = 'block';
+        await db.auth.signOut();
+        return;
       }
+
+      isAdmin = true;
+      closeAdminLogin();
+      updateAdminUI();
+      if (!dashData) loadDashboard();
+      else { await loadAdminData(); setTab('overview'); }
     }
 
-    function doAdminLogout() {
+    async function doAdminLogout() {
+      await db.auth.signOut();
       isAdmin = false;
-      dashAdminKey = '';
-      sessionStorage.removeItem('dash_admin_key');
       updateAdminUI();
       setTab('lookup');
     }
@@ -391,20 +279,18 @@
       if (archiveArea) archiveArea.style.display = isAdmin ? '' : 'none';
     }
 
+    // Marks all non-archived sign-ups for the current event as archived = true.
+    // Reads current_event_id from the config table.
     async function confirmArchive() {
-      if (!confirm('Archive current sign-ups and advance to the next event?\n\nThis will:\n• Copy the current Signups sheet to an archive sheet\n• Reset the Signups sheet for the next event\n\nThis cannot be undone.')) return;
+      if (!confirm('Archive current sign-ups?\n\nThis will mark all sign-ups for the current event as archived. This cannot be undone.')) return;
       try {
-        const fd = new FormData();
-        fd.append('action', 'archiveSignups');
-        fd.append('adminKey', dashAdminKey);
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.success) {
-          alert(`Archived! Archived as: ${data.archivedAs || 'previous event'}\nNext event: ${data.nextEventId || '(none found)'}`);
-          loadDashboard();
-        } else {
-          alert('Archive failed: ' + (data.error || 'Unknown error'));
-        }
+        const { error } = await db.from("signups")
+          .update({ archived: true })
+          .eq("event_id", currentEventId)
+          .eq("archived", false);
+        if (error) throw error;
+        alert('Sign-ups archived for: ' + currentEventId);
+        loadDashboard();
       } catch (e) {
         alert('Archive failed: ' + e.message);
       }
@@ -445,62 +331,137 @@
     // ============================================================
     //  DATA FETCH
     // ============================================================
+
+    // Loads public dashboard data from Supabase views.
+    // If admin is logged in, also calls loadAdminData() for full contact list.
     async function loadDashboard() {
       const body = document.getElementById('dash-body');
-      const btn = document.getElementById('refresh-btn');
-      const ts = document.getElementById('last-updated');
+      const btn  = document.getElementById('refresh-btn');
+      const ts   = document.getElementById('last-updated');
 
       if (btn) btn.disabled = true;
       body.innerHTML = '<div class="dash-loading">Loading sign-up data…</div>';
 
       try {
-        const res = await fetch(SCRIPT_URL);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-        dashData = data;
-
-        // Update hero eyebrow with event name if provided
-        if (data.eventName) {
-          const eyebrow = document.getElementById('dash-eyebrow');
-          if (eyebrow) eyebrow.textContent = '✦  ' + data.eventName + '  ✦';
+        // Get current event ID from config
+        const { data: cfg } = await db.from("config").select("value").eq("key", "current_event_id").maybeSingle();
+        currentEventId = cfg?.value;
+        if (!currentEventId) {
+          body.innerHTML = `<div class="dash-error">No current event configured. Ask the admin to set <em>current_event_id</em> in Settings.</div>`;
+          return;
         }
 
-        // Use API-provided volunteer roles if present (map label → name, keep needed from fallback)
-        if (data.volunteerRoles && data.volunteerRoles.length > 0) {
-          const existingMap = {};
-          VOLUNTEER_ROLES.forEach(r => { existingMap[r.name] = r.needed; });
-          VOLUNTEER_ROLES.length = 0;
-          data.volunteerRoles.forEach(r => {
-            VOLUNTEER_ROLES.push({ name: r.label || r.name || r, needed: existingMap[r.label || r.name || r] || 0 });
-          });
-        }
+        // Load event name + volunteer roles + donation items for this event (in parallel)
+        const [evRes, rolesRes, itemsRes] = await Promise.all([
+          db.from("events").select("event_name").eq("id", currentEventId).maybeSingle(),
+          db.from("event_volunteer_roles").select("*").eq("event_id", currentEventId).order("sort_order"),
+          db.from("event_donation_items").select("*").eq("event_id", currentEventId).order("sort_order"),
+        ]);
 
-        // Use API-provided donation categories if present
-        if (data.donationCategories && data.donationCategories.length > 0) {
-          DONATION_CATEGORIES.length = 0;
-          data.donationCategories.forEach(cat => {
-            DONATION_CATEGORIES.push({
-              category: cat.category || cat,
-              items: (cat.items || []).map(item => ({
-                label: item.label || item,
-                needed: item.needed != null ? Number(item.needed) : null,
-              }))
-            });
-          });
-        }
+        // Populate VOLUNTEER_ROLES from DB (needed count defaults to 0 — set in admin if desired)
+        VOLUNTEER_ROLES = (rolesRes.data || []).map(r => ({ name: r.role_label, needed: 0 }));
+
+        // Group donation items by category into DONATION_CATEGORIES
+        const catMap = {}, catList = [];
+        (itemsRes.data || []).forEach(item => {
+          if (!catMap[item.category]) { catMap[item.category] = { category: item.category, items: [] }; catList.push(catMap[item.category]); }
+          catMap[item.category].items.push({ label: item.item_label, needed: item.qty_needed });
+        });
+        DONATION_CATEGORIES = catList;
+
+        // Fetch public aggregate views in parallel
+        const [overviewRes, volCountsRes, donationsRes, potluckRes] = await Promise.all([
+          db.from("dashboard_overview").select("*").eq("event_id", currentEventId).maybeSingle(),
+          db.from("dashboard_volunteer_counts").select("*").eq("event_id", currentEventId),
+          db.from("dashboard_donations").select("*").eq("event_id", currentEventId),
+          db.from("dashboard_potluck").select("*").eq("event_id", currentEventId),
+        ]);
+
+        const overview = overviewRes.data || {};
+
+        // Build volunteerCounts map: role_label → count
+        const volCounts = {};
+        (volCountsRes.data || []).forEach(r => { volCounts[r.role_label] = Number(r.volunteer_count); });
+
+        // Build donationCounts map: item_label → qty_pledged
+        const donCounts = {};
+        (donationsRes.data || []).forEach(r => { donCounts[r.item_label] = Number(r.qty_pledged); });
+
+        // Potluck items as flat string array
+        const potluckItems = (potluckRes.data || []).map(r => r.potluck_item).filter(Boolean);
+
+        dashData = {
+          eventName:       evRes.data?.event_name || currentEventId,
+          totalSignups:    Number(overview.total_signups    || 0),
+          totalAdults:     Number(overview.total_adults     || 0),
+          totalChildren:   Number(overview.total_children   || 0),
+          ages_0_3:        Number(overview.ages_0_3         || 0),
+          ages_4_8:        Number(overview.ages_4_8         || 0),
+          ages_9_plus:     Number(overview.ages_9_plus      || 0),
+          volunteerCounts: volCounts,
+          volunteerDetails: {},   // Populated by loadAdminData() for admin only
+          donationCounts:  donCounts,
+          potluckItems,
+          attendees:       [],    // Populated by loadAdminData() for admin only
+        };
+
+        // Update hero eyebrow with event name
+        const eyebrow = document.getElementById('dash-eyebrow');
+        if (eyebrow) eyebrow.textContent = '✦  ' + dashData.eventName + '  ✦';
+
+        // Load admin-only data (full signups) if already signed in
+        if (isAdmin) await loadAdminData();
 
         renderTab();
-        const d = new Date(data.lastUpdated);
-        if (ts) ts.textContent = 'Last refreshed: ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (ts) ts.textContent = 'Last refreshed: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       } catch (err) {
         body.innerHTML = `<div class="dash-error">
-          Could not load data. Make sure the script is deployed and try refreshing.<br>
-          <small style="opacity:0.6">${err.message}</small>
+          Could not load data. Try refreshing.<br>
+          <small style="opacity:0.6">${esc(err.message)}</small>
         </div>`;
         if (ts) ts.textContent = '—';
       } finally {
         if (btn) btn.disabled = false;
       }
+    }
+
+    // Loads full sign-up data (contact details, age breakdowns) for admin-only tabs.
+    // Called after login and after loadDashboard() when already signed in.
+    async function loadAdminData() {
+      if (!currentEventId || !dashData) return;
+      const { data: signups } = await db.from("signups")
+        .select("*, signup_volunteer_roles(role_label), signup_donation_items(item_label, qty_pledged)")
+        .eq("event_id", currentEventId)
+        .eq("archived", false);
+      if (!signups) return;
+
+      // Age breakdowns (not in the public view — computed from raw rows)
+      dashData.ages_0_3    = signups.reduce((s, r) => s + (r.children_0_3    || 0), 0);
+      dashData.ages_4_8    = signups.reduce((s, r) => s + (r.children_4_8    || 0), 0);
+      dashData.ages_9_plus = signups.reduce((s, r) => s + (r.children_9_plus || 0), 0);
+
+      // Volunteer details map: role_label → [{name, email, phone}]
+      const volDetails = {};
+      signups.forEach(s => {
+        (s.signup_volunteer_roles || []).forEach(r => {
+          if (!volDetails[r.role_label]) volDetails[r.role_label] = [];
+          volDetails[r.role_label].push({
+            name:  `${s.first_name} ${s.last_name}`.trim(),
+            email: s.email || '',
+            phone: s.phone || '',
+          });
+        });
+      });
+      dashData.volunteerDetails = volDetails;
+
+      // Attendees array for the Attendees tab
+      dashData.attendees = signups.map(s => ({
+        name:     `${s.first_name} ${s.last_name}`.trim(),
+        attending: s.attending || 'No',
+        adults:   s.num_adults   || 0,
+        children: s.num_children || 0,
+        roles:    (s.signup_volunteer_roles || []).map(r => r.role_label),
+      }));
     }
 
 
@@ -941,11 +902,11 @@
       if (inp) inp.value = shopName;
     }
 
-    // Look up a name's pledges for the shopping list.
+    // Looks up a name's donation pledges for the shopping list via the lookup_signup RPC.
     async function performShopLookup() {
       const input = document.getElementById('shop-input');
       if (!input) return;
-      shopName = input.value.trim();
+      shopName    = input.value.trim();
       shopResults = null;
       shopChecked = new Set();
       if (!shopName) { renderTab(); return; }
@@ -956,10 +917,12 @@
       if (inp) inp.value = shopName;
 
       try {
-        const url = SCRIPT_URL + '?action=lookup&name=' + encodeURIComponent(shopName);
-        const res = await fetch(url);
-        const data = await res.json();
-        shopResults = data.results || [];
+        const { data, error } = await db.rpc("lookup_signup", { p_query: shopName });
+        if (error) throw error;
+        // Map to the shape expected by renderShoppingList(): [{donations: [{item, qty}]}]
+        shopResults = (data || []).map(r => ({
+          donations: (r.donations || []).filter(Boolean).map(d => ({ item: d.item, qty: d.qty })),
+        }));
       } catch (err) {
         shopResults = [];
       } finally {
@@ -1049,8 +1012,7 @@
     //  MY SIGN-UP TAB
     // ============================================================
 
-    // Renders the lookup tab. The form is always shown; results
-    // appear below once a search has been performed.
+    // Renders the lookup tab. The form is always shown; results appear below once searched.
     function renderLookup() {
       const inputVal = esc(lookupQuery);
 
@@ -1058,21 +1020,6 @@
 
       if (lookupLoading) {
         resultsHtml = '<div class="lookup-status">Searching…</div>';
-      } else if (lookupLocked) {
-        // Server returned { locked: true } — ask for the lookup password
-        const wrongPw = lookupPassword.length > 0;
-        resultsHtml = `
-          <div class="lookup-status" style="text-align:left;max-width:420px;margin:0 auto;">
-            <p style="margin:0 0 10px">A lookup password was set for this sign-up. Enter it below to view your details.</p>
-            ${wrongPw ? `<p style="color:#c97070;margin:0 0 10px;font-size:0.83rem;">✗ Incorrect password. Please try again.</p>` : ''}
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <input class="lookup-input" id="lookup-pw-input" type="password"
-                     placeholder="Your lookup password"
-                     autocomplete="off" style="flex:1;"
-                     onkeydown="if(event.key==='Enter'){performLookupWithPassword();event.preventDefault();}" />
-              <button class="lookup-btn" onclick="performLookupWithPassword()">Submit</button>
-            </div>
-          </div>`;
       } else if (lookupResults === null) {
         // Not searched yet — show nothing
       } else if (lookupResults.length === 0) {
@@ -1091,7 +1038,6 @@
       return `
         <div class="lookup-intro">
           <p>Type your first and/or last name to see your sign-up details.</p>
-          <p style="font-size:0.78rem;opacity:0.6;margin-top:4px;">If you set a lookup password when you signed up, you'll be asked to enter it.</p>
         </div>
         <form class="lookup-form" onsubmit="performLookup(); return false;">
           <input  class="lookup-input"
@@ -1177,30 +1123,34 @@
         </div>`;
     }
 
-    // Fetches sign-up data for the entered name from the GAS endpoint.
+    // Looks up sign-up details by name using the lookup_signup Supabase RPC.
+    // Returns limited fields only (no email/phone/address) — safe for public use.
     async function performLookup() {
       const input = document.getElementById('lookup-input');
       if (!input) return;
       lookupQuery = input.value.trim();
       lookupResults = null;
-      lookupLocked = false;
-      lookupPassword = '';
       if (!lookupQuery) { renderTab(); return; }
 
       lookupLoading = true;
       renderTab();
 
       try {
-        const url = SCRIPT_URL + '?action=lookup&name=' + encodeURIComponent(lookupQuery);
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.locked) {
-          lookupLocked = true;
-          lookupResults = null;
-        } else {
-          lookupLocked = false;
-          lookupResults = data.results || [];
-        }
+        const { data, error } = await db.rpc("lookup_signup", { p_query: lookupQuery });
+        if (error) throw error;
+        // Map RPC result fields to the card format expected by buildLookupCard()
+        lookupResults = (data || []).map(r => ({
+          name:          `${r.first_name || ''} ${r.last_name || ''}`.trim(),
+          attending:      r.attending    || 'No',
+          adults:         r.num_adults   || 0,
+          children:       r.num_children || 0,
+          roles:          r.roles        || [],
+          donations:      (r.donations   || []).filter(Boolean),
+          potluck:        r.potluck_item || '',
+          otherDonation:  r.other_donation || '',
+          cash:           r.cash_donation  || '',
+          notes:          r.notes          || '',
+        }));
       } catch (err) {
         lookupResults = [];
       } finally {
@@ -1208,40 +1158,6 @@
         renderTab();
         const inp = document.getElementById('lookup-input');
         if (inp) inp.value = lookupQuery;
-      }
-    }
-
-    // Called after user enters a lookup password.
-    async function performLookupWithPassword() {
-      const pwInput = document.getElementById('lookup-pw-input');
-      if (!pwInput) return;
-      lookupPassword = pwInput.value.trim();
-      if (!lookupPassword) return;
-
-      lookupLoading = true;
-      renderTab();
-
-      try {
-        const url = SCRIPT_URL + '?action=lookup&name=' + encodeURIComponent(lookupQuery)
-                    + '&lookup_password=' + encodeURIComponent(lookupPassword);
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.locked) {
-          lookupLocked = true;   // Wrong password
-          lookupResults = null;
-        } else {
-          lookupLocked = false;
-          lookupResults = data.results || [];
-        }
-      } catch (err) {
-        lookupResults = [];
-      } finally {
-        lookupLoading = false;
-        renderTab();
-        const inp = document.getElementById('lookup-input');
-        if (inp) inp.value = lookupQuery;
-        const pw2 = document.getElementById('lookup-pw-input');
-        if (pw2 && lookupLocked) pw2.value = lookupPassword;
       }
     }
 
@@ -1306,24 +1222,16 @@
     //  INIT
     // ============================================================
 
-    // Restore admin session from sessionStorage
-    (async function initAdminSession() {
-      const saved = sessionStorage.getItem('dash_admin_key');
-      if (saved) {
-        try {
-          const fd = new FormData();
-          fd.append('action', 'validateDashboard');
-          fd.append('password', saved);
-          const res = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
-          const data = await res.json();
-          if (data.valid) {
-            isAdmin = true;
-            dashAdminKey = saved;
-            updateAdminUI();
-          } else {
-            sessionStorage.removeItem('dash_admin_key');
-          }
-        } catch (e) { /* silent — admin stays logged out */ }
+    // Restore admin session from Supabase (persisted in localStorage by the SDK).
+    // Re-checks profiles.role so a demoted account can't retain admin access on refresh.
+    (async function init() {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) {
+        const { data: profile } = await db.from("profiles").select("role").eq("id", session.user.id).single();
+        if (profile && profile.role === "admin") {
+          isAdmin = true;
+          updateAdminUI();
+        }
       }
       loadDashboard();
     })();
