@@ -3,14 +3,15 @@
 
 <!-- ============================================================
      File:        signup.html
-     Purpose:     Generic community event sign-up form.
-                  Fetches the next upcoming event from Google Sheets
-                  via the Apps Script web app URL and dynamically
-                  populates all event details, volunteer roles, and
-                  donation items. Submits responses back to the same
-                  script, which saves them to the Signups sheet and
-                  sends the organizer a notification email.
-     Config:      Set SCRIPT_URL below to your deployed web app URL.
+     Purpose:     Generic community event sign-up form. Accepts an
+                  ?event=ID query parameter; fetches that event's
+                  details, volunteer roles, and donation items from
+                  Supabase. On submit, inserts into signups +
+                  signup_volunteer_roles + signup_donation_items.
+                  A fire-and-forget GAS call sends the organizer a
+                  notification email (EMAIL_SCRIPT_URL below).
+     Scripts:     supabase-config.js (Supabase client)
+                  GAS email endpoint (EMAIL_SCRIPT_URL in <script>)
      Styles:      signup-styles.css
      ============================================================ -->
 

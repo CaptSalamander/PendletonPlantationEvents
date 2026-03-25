@@ -1,21 +1,22 @@
 // ============================================================
 //  File:        google-apps-script.gs
-//  Purpose:     Google Apps Script backend for the Pendleton
-//               Plantation community website.
-//               Handles event sign-ups, dashboard data,
-//               event management, awards, announcements,
-//               memories, bulletin board, links, documents,
-//               and admin CRUD operations.
+//  Status:      ⚠️  DEPRECATED — kept for reference only.
+//               This script is no longer deployed or called by
+//               any page on the site.
 //
-//  How to use:
-//    1. Open your Google Sheet.
-//    2. Go to Extensions → Apps Script.
-//    3. Paste this entire file, replacing any existing code.
-//    4. Click "Deploy" → "New deployment" → "Web app".
-//    5. Set "Execute as" = Me, "Who has access" = Anyone.
-//    6. Copy the Web App URL into signup.html, dashboard.html,
-//       index.html, awards.html, links.html, documents.html,
-//       and admin.html (SCRIPT_URL constant in each file).
+//  History:     Was the sole backend for the entire site —
+//               handled sign-ups, dashboard data, admin CRUD,
+//               awards, announcements, links, documents, memories,
+//               and bulletin board via Google Sheets.
+//
+//  Replaced by: Supabase (PostgreSQL + RLS + Auth) for all data.
+//               Separate slim GAS scripts handle photo upload to
+//               Drive + email notifications:
+//                 nominations-script.gs
+//                 submit-memory-script.gs
+//                 bulletin-board-script.gs
+//               The signup.html email notification uses a separate
+//               lightweight GAS endpoint (EMAIL_SCRIPT_URL).
 // ============================================================
 
 
