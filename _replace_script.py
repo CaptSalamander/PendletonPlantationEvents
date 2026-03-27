@@ -1305,11 +1305,12 @@ new_tail = '''    // ── HELPERS ──────────────�
 '''
 
 content = open('admin.html', 'r', encoding='utf-8').read()
-lines = content.split('\n')
 
-# Find start of old implementation (line 623, 0-indexed 622)
-target_line = lines[622]
-start_idx = content.find(target_line)
+# Find the JS injection point by text search (robust — survives HTML additions above)
+MARKER = "    // ── HELPERS"
+start_idx = content.find(MARKER)
+if start_idx == -1:
+    raise RuntimeError("Injection marker '// ── HELPERS' not found in admin.html")
 
 # Replace from start_idx to end of file with new tail
 new_content = content[:start_idx] + new_tail

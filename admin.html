@@ -620,6 +620,33 @@
   <div class="modal-overlay hidden" id="import-modal">
     <div class="modal-card" style="max-width:840px;width:92%;max-height:90vh;overflow-y:auto;">
       <div class="modal-title" id="import-modal-title">Import Records</div>
+      <p style="font-size:0.8rem;color:var(--muted);margin:0 0 12px;">Upload a .csv or .xlsx file, or paste CSV text below.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+        <label class="btn btn-secondary" style="cursor:pointer;font-size:0.8rem;">
+          📂 Choose File
+          <input type="file" id="import-file" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleImportFile()">
+        </label>
+        <button class="btn btn-outline" onclick="downloadImportTemplate()" style="font-size:0.8rem;">⬇ Download Template</button>
+        <button class="btn btn-secondary" onclick="closeImportModal()" style="margin-left:auto;font-size:0.8rem;">✕ Cancel</button>
+      </div>
+      <textarea id="import-paste" placeholder="…or paste CSV rows here (first row = headers)" style="width:100%;box-sizing:border-box;height:90px;font-family:monospace;font-size:0.75rem;border:1px solid var(--border);border-radius:6px;padding:8px;resize:vertical;"></textarea>
+      <button class="btn btn-outline" onclick="parseImportPaste()" style="margin-top:6px;font-size:0.8rem;">Parse Text</button>
+
+      <!-- Preview section (hidden until rows are parsed) -->
+      <div id="import-preview" style="display:none;margin-top:14px;">
+        <div id="import-preview-count" style="font-size:0.8rem;color:var(--muted);margin-bottom:6px;"></div>
+        <div style="overflow-x:auto;max-height:240px;border:1px solid var(--border);border-radius:6px;">
+          <table id="import-preview-table" style="width:100%;border-collapse:collapse;"></table>
+        </div>
+        <button class="btn btn-primary" id="import-confirm-btn" onclick="submitImport()" disabled style="margin-top:12px;width:100%;">Import All Rows</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOAST CONTAINER ──────────────────────────────────── -->
+  <div id="toast-container"></div>
+
+  <script>
     // ── HELPERS ───────────────────────────────────────────────
     function esc(s) {
       return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
