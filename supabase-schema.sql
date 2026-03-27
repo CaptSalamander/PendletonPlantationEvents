@@ -78,12 +78,16 @@ CREATE TABLE IF NOT EXISTS events (
 
 -- ── event_volunteer_roles ────────────────────────────────────
 CREATE TABLE IF NOT EXISTS event_volunteer_roles (
-  id          BIGSERIAL   PRIMARY KEY,
-  event_id    TEXT        NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-  role_label  TEXT        NOT NULL,
-  role_detail TEXT,
-  sort_order  INT         NOT NULL DEFAULT 0
+  id              BIGSERIAL   PRIMARY KEY,
+  event_id        TEXT        NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  role_label      TEXT        NOT NULL,
+  role_detail     TEXT,
+  max_volunteers  INT,
+  sort_order      INT         NOT NULL DEFAULT 0
 );
+
+-- Run this migration if the table already exists:
+-- ALTER TABLE event_volunteer_roles ADD COLUMN IF NOT EXISTS max_volunteers INT;
 
 -- ── event_donation_items ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS event_donation_items (

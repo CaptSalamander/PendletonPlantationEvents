@@ -205,7 +205,7 @@ new_tail = '''    // ── HELPERS ──────────────�
           db.from('event_donation_items').select('*').eq('event_id', eventId).order('sort_order'),
         ]);
 
-        const roles = (rolesRes.data||[]).map(r => ({ label: r.role_label, detail: r.role_detail||'' }));
+        const roles = (rolesRes.data||[]).map(r => ({ label: r.role_label, detail: r.role_detail||'', max_volunteers: r.max_volunteers ?? null }));
 
         const catMap = {}, catList = [];
         (itemsRes.data||[]).forEach(item => {
@@ -252,15 +252,16 @@ new_tail = '''    // ── HELPERS ──────────────�
     function renderVolRolesFromData(roles) {
       const list = document.getElementById("vol-roles-list");
       list.innerHTML = "";
-      (roles||[]).forEach(r => addVolRole(r.label, r.detail));
+      (roles||[]).forEach(r => addVolRole(r.label, r.detail, r.max_volunteers));
     }
 
-    function addVolRole(label, detail) {
+    function addVolRole(label, detail, qty) {
       const div = document.createElement("div");
       div.className = "dynamic-row vol-role-row";
       div.innerHTML = `
         <input type="text" placeholder="Role name" value="${esc(label||'')}" class="vol-label" />
         <input type="text" placeholder="Short description" value="${esc(detail||'')}" class="vol-detail" />
+        <input type="number" placeholder="Qty" min="1" value="${qty != null ? qty : ''}" class="vol-qty" style="width:70px;" title="Max volunteers for this role (leave blank for unlimited)" />
         <button class="remove-btn" onclick="this.parentElement.remove()">\u2715</button>`;
       document.getElementById("vol-roles-list").appendChild(div);
     }
@@ -299,10 +300,14 @@ new_tail = '''    // ── HELPERS ──────────────�
     }
 
     function collectVolRoles() {
-      return Array.from(document.querySelectorAll(".vol-role-row")).map(row => ({
-        label:  row.querySelector(".vol-label").value.trim(),
-        detail: row.querySelector(".vol-detail").value.trim(),
-      })).filter(r => r.label);
+      return Array.from(document.querySelectorAll(".vol-role-row")).map(row => {
+        const qtyVal = row.querySelector(".vol-qty").value;
+        return {
+          label:  row.querySelector(".vol-label").value.trim(),
+          detail: row.querySelector(".vol-detail").value.trim(),
+          qty:    qtyVal !== "" ? parseInt(qtyVal, 10) : null,
+        };
+      }).filter(r => r.label);
     }
 
     function collectDonationItems() {
@@ -354,7 +359,7 @@ new_tail = '''    // ── HELPERS ──────────────�
         const roles = collectVolRoles();
         if (roles.length > 0) {
           const { error: rErr } = await db.from('event_volunteer_roles').insert(
-            roles.map((r, i) => ({ event_id: eventId, role_label: r.label, role_detail: r.detail || null, sort_order: i }))
+            roles.map((r, i) => ({ event_id: eventId, role_label: r.label, role_detail: r.detail || null, max_volunteers: r.qty, sort_order: i }))
           );
           if (rErr) throw rErr;
         }
@@ -681,9 +686,9 @@ new_tail = '''    // ── HELPERS ──────────────�
           <td>${esc(contest ? contest.award_name : (n.contest_id||"\u2014"))}</td>
           <td>${esc(n.nominee_name||"")}</td>
           <td>${esc(n.nominator_name||"")}</td>
-          <td>${badge(n.approved ? "approved" : "pending")}</td>
+          <td>${badge(n.approved ? "received" : "pending")}</td>
           <td>
-            ${!n.approved ? `<button class="btn btn-success btn-sm" onclick="approveNomination(${n.id})">Approve</button>` : ""}
+            ${!n.approved ? `<button class="btn btn-success btn-sm" onclick="markNominationReceived(${n.id})">Mark Received</button>` : ""}
             <button class="btn btn-secondary btn-sm" onclick="openNominationForm(${n.id})">Edit</button>
             <button class="btn btn-danger    btn-sm" onclick="confirmDeleteNomination(${n.id})">Delete</button>
           </td>
@@ -737,10 +742,36 @@ new_tail = '''    // ── HELPERS ──────────────�
       else toast("Error: " + error.message, "error");
     }
 
-    async function approveNomination(id) {
+    const NOM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybNrl0_bXnHxWpPkc-9c0egc7UqpwJ5wQyRhqP4qodW6qIGbNKB_XlZsJDMDSQZLc/exec";
+
+    async function markNominationReceived(id) {
+      const n = nominationsData.find(x => x.id === id);
+      if (!n) return;
       const { error } = await db.from('award_nominations').update({ approved: true }).eq('id', id);
-      if (!error) { toast("Nomination approved!", "success"); loadNominations(); }
-      else toast("Error: " + error.message, "error");
+      if (error) { toast("Error: " + error.message, "error"); return; }
+
+      // Send confirmation email to the nominator via GAS.
+      if (n.nominator_email) {
+        try {
+          await fetch(NOM_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({
+              action:          "mark_received",
+              nominator_name:  n.nominator_name  || "",
+              nominator_email: n.nominator_email || "",
+              nominee_name:    n.nominee_name    || "",
+              award_category:  n.award_category  || "",
+              custom_award:    n.custom_award    || "",
+            }),
+          });
+        } catch (gasErr) {
+          console.warn("Confirmation email failed:", gasErr);
+        }
+      }
+
+      toast("Marked as received \\u2014 confirmation email sent!", "success");
+      loadNominations();
     }
 
     function confirmDeleteNomination(id) {

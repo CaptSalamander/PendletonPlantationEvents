@@ -49,7 +49,8 @@
 
 .memories-grid:has(> .memory-item) {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  justify-content: center;
   gap: 14px;
   max-width: 1200px;
   margin: 0 auto;
@@ -61,7 +62,7 @@
   /* Reduce padding and switch to slightly smaller minimum column width. */
   .memories-hero { padding: 120px 24px 56px; }
   .memories-grid { padding: 40px 0 80px; }
-  .memories-grid:has(> .memory-item) { padding: 40px 24px 80px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .memories-grid:has(> .memory-item) { padding: 40px 24px 80px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 }
 
 
@@ -112,12 +113,13 @@
 /* Photo grid inside an event group — same tile style, tighter container. */
 .memory-event-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  justify-content: center;
   gap: 12px;
 }
 
 @media (max-width: 600px) {
-  .memory-event-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .memory-event-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
 }
 
 

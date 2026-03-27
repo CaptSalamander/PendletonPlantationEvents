@@ -111,8 +111,9 @@
    is distributed evenly so the grid fills the container. */
 .link-grid {
   display: grid;
-  /* auto-fill packs as many 300px-wide columns as the container allows. */
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* auto-fit packs as many 300px-wide columns as needed; empty tracks collapse so cards center. */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  justify-content: center;
   gap: 16px;   /* Space between cards. */
 }
 

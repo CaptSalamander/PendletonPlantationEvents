@@ -355,6 +355,7 @@
         const volunteerRoles = (rolesResult.data || []).map(r => ({
           label:  r.role_label,
           detail: r.role_detail || '',
+          maxVol: r.max_volunteers ?? null,
         }));
 
         // Group donation items by category → { category, items: [{ label, needed }] }
@@ -458,7 +459,7 @@
         <label class="checkbox-item">
           <input type="checkbox" name="volunteer" value="${escAttr(r.label)}" />
           <div class="item-label" data-item="${escAttr(r.label)}">
-            <strong>${escHtml(r.label)}</strong>${r.detail ? " — " + escHtml(r.detail) : ""}
+            <strong>${escHtml(r.label)}</strong>${r.detail ? " — " + escHtml(r.detail) : ""}${r.maxVol != null ? ` <span style="font-size:0.8em;opacity:0.65;">(${r.maxVol} spot${r.maxVol === 1 ? '' : 's'})</span>` : ""}
           </div>
         </label>`).join("");
     }

@@ -275,6 +275,7 @@ body {
 .badge-confirmed   { background: #d4edda; color: #155724; }
 .badge-tentative   { background: #fff3cd; color: #856404; }
 .badge-approved    { background: #d4edda; color: #155724; }
+.badge-received    { background: #d4edda; color: #155724; }
 .badge-pending     { background: #fff3cd; color: #856404; }
 .badge-published   { background: #d4edda; color: #155724; }
 .badge-draft       { background: #e2e3e5; color: #383d41; }
