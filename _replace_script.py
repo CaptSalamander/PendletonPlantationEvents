@@ -1038,6 +1038,267 @@ new_tail = '''    // ── HELPERS ──────────────�
       else toast("Error saving.", "error");
     }
 
+
+    // ====================================================
+    //  BULK IMPORT (CSV / Excel)
+    // ====================================================
+
+    let importType = null;
+    let importRows = [];
+
+    // Column definitions per entity type.
+    // columns: ordered list used for template download + preview headers.
+    // required: fields that must be non-empty for a row to be valid.
+    // table: Supabase table name.
+    // idCol: primary key column name, or null for auto-id tables.
+    // reload: function to call after a successful import.
+    const IMPORT_SCHEMAS = {
+      events: {
+        label: "Events",
+        table: "events",
+        idCol: "id",
+        columns: ["id","event_name","status","event_date","event_time","signups_open_date",
+                  "short_description","medium_description","long_description","emoji_row",
+                  "headline_adjective","location_name","location_address","banner_color_class",
+                  "organizer_name","organizer_email","organizer_phone","organizer_contact"],
+        required: ["id","event_name"],
+        reload: () => loadEvents(),
+      },
+      award_contests: {
+        label: "Award Contests",
+        table: "award_contests",
+        idCol: "id",
+        columns: ["id","icon","badge","banner_color","award_name","category",
+                  "period","status","description","deadline","prize"],
+        required: ["id","award_name"],
+        reload: () => loadContests(),
+      },
+      announcements: {
+        label: "Announcements",
+        table: "announcements",
+        idCol: null,
+        columns: ["day","month","title","body","link","link_text","published"],
+        required: ["title"],
+        reload: () => loadAnnouncements(),
+      },
+      links: {
+        label: "Links",
+        table: "links",
+        idCol: null,
+        columns: ["category","icon","title","description","url","url_label","sort_order"],
+        required: ["category","title","url"],
+        reload: () => loadLinks(),
+      },
+      documents: {
+        label: "Documents",
+        table: "documents",
+        idCol: null,
+        columns: ["category","icon","title","description","url","url_label","sort_order"],
+        required: ["category","title","url"],
+        reload: () => loadDocuments(),
+      },
+      winners: {
+        label: "Winners",
+        table: "winners",
+        idCol: null,
+        columns: ["award","winner_name","period","year","icon","badge","banner_color",
+                  "prize","photo_id","blurb","quote1","quote2","quote3"],
+        required: ["award","winner_name"],
+        reload: () => { loadWinners(); },
+      },
+    };
+
+    function openImportModal(type) {
+      importType = type;
+      importRows = [];
+      const schema = IMPORT_SCHEMAS[type];
+      document.getElementById("import-modal-title").textContent = "Import " + schema.label;
+      document.getElementById("import-file").value = "";
+      document.getElementById("import-paste").value = "";
+      document.getElementById("import-preview").style.display = "none";
+      document.getElementById("import-confirm-btn").disabled = true;
+      document.getElementById("import-modal").classList.remove("hidden");
+    }
+
+    function closeImportModal() {
+      document.getElementById("import-modal").classList.add("hidden");
+      importType = null;
+      importRows = [];
+    }
+
+    // Download a blank CSV template with the correct column headers for this entity type.
+    function downloadImportTemplate() {
+      if (!importType) return;
+      const schema = IMPORT_SCHEMAS[importType];
+      const csv = schema.columns.join(",") + "\n";
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = importType + "_template.csv";
+      a.click();
+    }
+
+    // Parse a raw CSV string into { headers, rows }.
+    // Handles quoted fields and embedded commas/newlines.
+    function parseCSVText(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length < 2) return { headers: [], rows: [] };
+
+      function parseLine(line) {
+        const result = [];
+        let cur = "", inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+            else inQuotes = !inQuotes;
+          } else if (ch === ',' && !inQuotes) {
+            result.push(cur.trim()); cur = "";
+          } else {
+            cur += ch;
+          }
+        }
+        result.push(cur.trim());
+        return result;
+      }
+
+      const headers = parseLine(lines[0]).map(h => h.toLowerCase().replace(/\\s+/g, "_").replace(/[^a-z0-9_]/g, ""));
+      const rows = lines.slice(1).filter(l => l.trim()).map(l => {
+        const vals = parseLine(l);
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = vals[i] !== undefined ? vals[i] : ""; });
+        return obj;
+      });
+      return { headers, rows };
+    }
+
+    // Handle file upload (.csv or .xlsx/.xls).
+    async function handleImportFile() {
+      const file = document.getElementById("import-file").files[0];
+      if (!file) return;
+      const ext = file.name.split(".").pop().toLowerCase();
+
+      if (ext === "csv") {
+        const text = await file.text();
+        const { rows } = parseCSVText(text);
+        renderImportPreview(rows);
+      } else if (ext === "xlsx" || ext === "xls") {
+        if (!window.XLSX) { toast("Excel library not loaded yet. Try again in a moment.", "error"); return; }
+        const buffer = await file.arrayBuffer();
+        const wb = XLSX.read(buffer, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws, { defval: "" });
+        const rows = data.map(row => {
+          const out = {};
+          Object.entries(row).forEach(([k, v]) => {
+            out[k.toLowerCase().replace(/\\s+/g, "_").replace(/[^a-z0-9_]/g, "")] = String(v ?? "");
+          });
+          return out;
+        });
+        renderImportPreview(rows);
+      } else {
+        toast("Unsupported file type. Use .csv or .xlsx.", "error");
+      }
+    }
+
+    // Parse pasted CSV text when the user clicks "Parse Text".
+    function parseImportPaste() {
+      const text = document.getElementById("import-paste").value;
+      if (!text.trim()) { toast("Paste some CSV text first.", "error"); return; }
+      const { rows } = parseCSVText(text);
+      renderImportPreview(rows);
+    }
+
+    // Build and show the preview table from a parsed rows array.
+    function renderImportPreview(rows) {
+      if (!importType || !rows.length) { toast("No data rows found.", "error"); return; }
+      importRows = rows;
+      const schema = IMPORT_SCHEMAS[importType];
+
+      // Only show columns that are in the schema (ignore unknown cols from user file).
+      const headers = schema.columns.filter(col => rows[0].hasOwnProperty(col));
+      if (!headers.length) {
+        toast("No matching columns found. Download the template to see expected headers.", "error");
+        return;
+      }
+
+      let html = '<thead><tr style="background:var(--surface-2,#f5f5f5);position:sticky;top:0;">';
+      headers.forEach(h => { html += `<th style="padding:6px 8px;text-align:left;font-size:0.7rem;white-space:nowrap;border-bottom:1px solid var(--border);">${esc(h)}</th>`; });
+      html += '</tr></thead><tbody>';
+
+      const preview = rows.slice(0, 10);
+      preview.forEach((row, i) => {
+        html += `<tr style="${i % 2 === 1 ? 'background:var(--surface-2,#f5f5f5)' : ''}">`;
+        headers.forEach(h => {
+          html += `<td style="padding:5px 8px;font-size:0.7rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(String(row[h]||""))}">${esc(String(row[h]||""))}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody>';
+      if (rows.length > 10) {
+        html += `<tfoot><tr><td colspan="${headers.length}" style="padding:6px 8px;font-size:0.7rem;color:var(--muted);">… and ${rows.length - 10} more row(s) not shown</td></tr></tfoot>`;
+      }
+
+      document.getElementById("import-preview-table").innerHTML = html;
+      document.getElementById("import-preview-count").textContent =
+        `${rows.length} row${rows.length !== 1 ? "s" : ""} ready to import`;
+      document.getElementById("import-preview").style.display = "block";
+      document.getElementById("import-confirm-btn").disabled = false;
+    }
+
+    // Validate and batch-insert all parsed rows into Supabase.
+    async function submitImport() {
+      if (!importType || !importRows.length) return;
+      const schema = IMPORT_SCHEMAS[importType];
+
+      // Map each row to only include valid schema columns; coerce types.
+      const rows = importRows.map(row => {
+        const out = {};
+        schema.columns.forEach(col => {
+          const val = row[col];
+          if (val === undefined || val === "") return;
+          if (col === "published" || col === "approved") {
+            out[col] = val.toLowerCase() === "true" || val === "1";
+          } else if (col === "sort_order") {
+            out[col] = parseInt(val) || 0;
+          } else {
+            out[col] = val;
+          }
+        });
+        return out;
+      });
+
+      // Validate required fields.
+      const errors = [];
+      schema.required.forEach(req => {
+        const bad = rows.reduce((acc, r, i) => (!r[req] ? acc.concat(i + 1) : acc), []);
+        if (bad.length) errors.push(`"${req}" is empty in row(s) ${bad.join(", ")}`);
+      });
+      if (errors.length) { toast("Validation failed: " + errors.join("; "), "error"); return; }
+
+      const btn = document.getElementById("import-confirm-btn");
+      btn.disabled = true;
+      btn.textContent = "Importing…";
+
+      try {
+        let error;
+        if (schema.idCol) {
+          ({ error } = await db.from(schema.table).upsert(rows, { onConflict: schema.idCol }));
+        } else {
+          ({ error } = await db.from(schema.table).insert(rows));
+        }
+        if (error) throw error;
+        toast(`✓ Imported ${rows.length} ${schema.label.toLowerCase()} successfully!`, "success");
+        closeImportModal();
+        schema.reload();
+      } catch (e) {
+        toast("Import error: " + e.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Import All Rows";
+      }
+    }
+
   </script>
 </body>
 </html>
