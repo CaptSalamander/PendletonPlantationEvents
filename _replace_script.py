@@ -412,9 +412,11 @@ new_tail = '''    // ── HELPERS ──────────────�
     function setAwardsSubtab(sub, btn) {
       document.querySelectorAll(".subtab").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      document.getElementById("awards-contests-panel").style.display = sub === "contests" ? "block" : "none";
-      document.getElementById("awards-winners-panel").style.display  = sub === "winners"  ? "block" : "none";
-      document.getElementById("awards-prep-panel").style.display     = sub === "prep"     ? "block" : "none";
+      document.getElementById("awards-contests-panel").style.display    = sub === "contests"    ? "block" : "none";
+      document.getElementById("awards-nominations-panel").style.display = sub === "nominations" ? "block" : "none";
+      document.getElementById("awards-winners-panel").style.display     = sub === "winners"     ? "block" : "none";
+      document.getElementById("awards-prep-panel").style.display        = sub === "prep"        ? "block" : "none";
+      if (sub === "nominations") loadNominations();
     }
 
     async function loadContests() {
@@ -653,6 +655,100 @@ new_tail = '''    // ── HELPERS ──────────────�
       toast("Promoted to Winners!", "success");
       loadWinnerPrep();
       loadWinners();
+    }
+
+
+    // ====================================================
+    //  NOMINATIONS
+    // ====================================================
+    let nominationsData = [];
+
+    async function loadNominations() {
+      const tbody = document.getElementById("nominations-tbody");
+      tbody.innerHTML = '<tr><td colspan="6" class="admin-loading">Loading\u2026</td></tr>';
+      const { data, error } = await db.from('award_nominations').select('*').order('submitted_at', { ascending: false });
+      if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:20px;">${esc(error.message)}</td></tr>`; return; }
+      nominationsData = data || [];
+      if (!nominationsData.length) {
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">\U0001f4dd</div><p>No nominations yet.</p></div></td></tr>';
+        return;
+      }
+      tbody.innerHTML = nominationsData.map(n => {
+        const contest = contestsData.find(c => c.id === n.contest_id);
+        return `
+        <tr>
+          <td>${esc(fmtDate(n.submitted_at))}</td>
+          <td>${esc(contest ? contest.award_name : (n.contest_id||"\u2014"))}</td>
+          <td>${esc(n.nominee_name||"")}</td>
+          <td>${esc(n.nominator_name||"")}</td>
+          <td>${badge(n.approved ? "approved" : "pending")}</td>
+          <td>
+            ${!n.approved ? `<button class="btn btn-success btn-sm" onclick="approveNomination(${n.id})">Approve</button>` : ""}
+            <button class="btn btn-secondary btn-sm" onclick="openNominationForm(${n.id})">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteNomination(${n.id})">Delete</button>
+          </td>
+        </tr>`;
+      }).join("");
+    }
+
+    function openNominationForm(id) {
+      const n = nominationsData.find(x => x.id === id);
+      if (!n) return;
+      const form = document.getElementById("nomination-form");
+      form.style.display = "block";
+      form.scrollIntoView({ behavior: "smooth" });
+      document.getElementById("nf-id").value        = n.id;
+      document.getElementById("nf-nom-name").value  = n.nominator_name    || "";
+      document.getElementById("nf-nom-email").value = n.nominator_email   || "";
+      document.getElementById("nf-nom-phone").value = n.nominator_phone   || "";
+      document.getElementById("nf-nom-addr").value  = n.nominator_address || "";
+      document.getElementById("nf-nee-name").value  = n.nominee_name      || "";
+      document.getElementById("nf-nee-addr").value  = n.nominee_address   || "";
+      document.getElementById("nf-cat").value       = n.award_category    || "";
+      document.getElementById("nf-custom").value    = n.custom_award      || "";
+      document.getElementById("nf-reasons").value   = n.reasons           || "";
+      document.getElementById("nf-approved").value  = n.approved ? "true" : "false";
+      const sel = document.getElementById("nf-contest");
+      sel.innerHTML = '<option value="">— None —</option>' +
+        contestsData.map(c => `<option value="${esc(c.id)}"${c.id === n.contest_id ? " selected" : ""}>${esc(c.award_name)}</option>`).join("");
+    }
+
+    function cancelNominationForm() {
+      document.getElementById("nomination-form").style.display = "none";
+    }
+
+    async function submitNominationEdit() {
+      const id  = document.getElementById("nf-id").value;
+      const row = {
+        contest_id:        document.getElementById("nf-contest").value.trim()    || null,
+        nominator_name:    document.getElementById("nf-nom-name").value.trim(),
+        nominator_email:   document.getElementById("nf-nom-email").value.trim(),
+        nominator_phone:   document.getElementById("nf-nom-phone").value.trim()  || null,
+        nominator_address: document.getElementById("nf-nom-addr").value.trim()   || null,
+        nominee_name:      document.getElementById("nf-nee-name").value.trim(),
+        nominee_address:   document.getElementById("nf-nee-addr").value.trim()   || null,
+        award_category:    document.getElementById("nf-cat").value.trim()        || null,
+        custom_award:      document.getElementById("nf-custom").value.trim()     || null,
+        reasons:           document.getElementById("nf-reasons").value.trim()    || null,
+        approved:          document.getElementById("nf-approved").value === "true",
+      };
+      const { error } = await db.from('award_nominations').update(row).eq('id', id);
+      if (!error) { toast("Nomination saved!", "success"); cancelNominationForm(); loadNominations(); }
+      else toast("Error: " + error.message, "error");
+    }
+
+    async function approveNomination(id) {
+      const { error } = await db.from('award_nominations').update({ approved: true }).eq('id', id);
+      if (!error) { toast("Nomination approved!", "success"); loadNominations(); }
+      else toast("Error: " + error.message, "error");
+    }
+
+    function confirmDeleteNomination(id) {
+      showModal("\U0001f5d1\ufe0f","Delete Nomination","Permanently delete this nomination?", async () => {
+        const { error } = await db.from('award_nominations').delete().eq('id', id);
+        if (!error) { toast("Nomination deleted.", "success"); loadNominations(); }
+        else toast("Error: " + error.message, "error");
+      });
     }
 
 
