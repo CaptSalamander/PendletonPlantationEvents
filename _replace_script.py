@@ -451,6 +451,7 @@ new_tail = '''    // ── HELPERS ──────────────�
       if (!contestId) {
         document.getElementById("contest-form-title").textContent = "New Contest";
         ["cf-name","cf-id","cf-period","cf-deadline","cf-icon","cf-badge","cf-prize","cf-desc"].forEach(id => document.getElementById(id).value="");
+        updateBadgePreview();
         return;
       }
       document.getElementById("contest-form-title").textContent = "Edit Contest";
@@ -464,12 +465,20 @@ new_tail = '''    // ── HELPERS ──────────────�
       document.getElementById("cf-deadline").value = c.deadline     || "";
       document.getElementById("cf-icon").value     = c.icon         || "";
       document.getElementById("cf-badge").value    = c.badge        || "";
+      updateBadgePreview();
       document.getElementById("cf-banner").value   = c.banner_color || "banner-green";
       document.getElementById("cf-prize").value    = c.prize        || "";
       document.getElementById("cf-desc").value     = c.description  || "";
     }
 
     function cancelContestForm() { document.getElementById("contest-form").style.display = "none"; }
+
+    function updateBadgePreview() {
+      const val = document.getElementById("cf-badge").value;
+      const img = document.getElementById("cf-badge-preview");
+      if (val) { img.src = val; img.style.display = "block"; }
+      else { img.src = ""; img.style.display = "none"; }
+    }
 
     function autoContestId() {
       const name = document.getElementById("cf-name").value;
