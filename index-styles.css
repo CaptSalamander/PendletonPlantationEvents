@@ -1057,25 +1057,6 @@ section {
   }
 }
 
-/* The note below the photo grid inviting residents to submit photos. */
-.photo-upload-note {
-  text-align: center;
-  font-size: 0.8rem;
-  font-weight: 300;
-  color: rgba(245, 240, 232, 0.45);
-  letter-spacing: 0.05em;
-}
-
-/* The email link inside the upload note — colored gold. */
-.photo-upload-note a {
-  color: var(--gold);
-  text-decoration: none;
-}
-
-.photo-upload-note a:hover {
-  text-decoration: underline;
-}
-
 
 /* ── ANNOUNCEMENTS SECTION ────────────────────────────────────
    A list of dated HOA announcements on a parchment background.

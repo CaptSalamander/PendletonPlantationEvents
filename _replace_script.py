@@ -1,626 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
+import sys, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-<!-- ============================================================
-     File:        admin.html
-     Purpose:     Admin control panel for the Pendleton Plantation
-                  community website. Password-protected. Allows the
-                  admin to manage events, awards, announcements,
-                  memories, bulletin posts, links, documents, and
-                  site settings.
-     Config:      Uses Supabase (supabase-config.js). Auth: email + password.
-     Styles:      admin-styles.css, index-styles.css (for nav)
-     ============================================================ -->
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin — Pendleton Plantation</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="admin-styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-</head>
-
-<body>
-
-  <!-- ── LOGIN SCREEN ─────────────────────────────────────── -->
-  <div id="login-screen">
-    <div class="login-card" id="login-card">
-      <div class="login-logo">🌿</div>
-      <h1>Admin Portal</h1>
-      <p>Pendleton Plantation Community Website</p>
-      <div class="login-field">
-        <input type="email" id="login-email" placeholder="Admin email address" autocomplete="email" />
-      </div>
-      <div class="login-field">
-        <input type="password" id="login-password" placeholder="Password"
-               onkeydown="if(event.key==='Enter') doLogin()" autocomplete="current-password" />
-      </div>
-      <button class="login-btn" onclick="doLogin()">Sign In</button>
-      <div class="login-error" id="login-error"></div>
-    </div>
-  </div>
-
-
-  <!-- ── ADMIN UI (revealed after login) ──────────────────── -->
-  <div id="admin-ui">
-
-    <!-- Header bar -->
-    <div class="admin-header">
-      <div class="admin-header-brand">
-        <span>✦</span> Pendleton Plantation &nbsp;—&nbsp; Admin
-      </div>
-      <div class="admin-header-right">
-        <a href="index.html" target="_blank">← View Site</a>
-        <button class="logout-btn" onclick="doLogout()">Log Out</button>
-      </div>
-    </div>
-
-    <div class="admin-body">
-
-      <!-- ── SIDEBAR ────────────────────────────────────────── -->
-      <div class="admin-sidebar">
-        <div class="sidebar-section-label">Content</div>
-        <div class="sidebar-nav-item active" data-panel="events"       onclick="showPanel('events')">       <span class="nav-icon">📅</span> Events</div>
-        <div class="sidebar-nav-item"        data-panel="awards"       onclick="showPanel('awards')">       <span class="nav-icon">🏆</span> Awards</div>
-        <div class="sidebar-nav-item"        data-panel="announcements" onclick="showPanel('announcements')"><span class="nav-icon">📢</span> Announcements</div>
-        <div class="sidebar-nav-item"        data-panel="memories"     onclick="showPanel('memories')">     <span class="nav-icon">📷</span> Memories</div>
-        <div class="sidebar-nav-item"        data-panel="bulletin"     onclick="showPanel('bulletin')">     <span class="nav-icon">📋</span> Bulletin Board</div>
-        <div class="sidebar-section-label">Resources</div>
-        <div class="sidebar-nav-item"        data-panel="links"        onclick="showPanel('links')">        <span class="nav-icon">🔗</span> Links</div>
-        <div class="sidebar-nav-item"        data-panel="documents"    onclick="showPanel('documents')">    <span class="nav-icon">📄</span> Documents</div>
-        <div class="sidebar-section-label">Admin</div>
-        <div class="sidebar-nav-item"        data-panel="settings"     onclick="showPanel('settings')">     <span class="nav-icon">⚙️</span> Settings</div>
-      </div>
-
-      <!-- ── MAIN CONTENT ──────────────────────────────────── -->
-      <div class="admin-content">
-
-
-        <!-- ══════════════════════════════════════════════════
-             EVENTS PANEL
-        ══════════════════════════════════════════════════ -->
-        <div class="admin-panel active" id="panel-events">
-          <div class="admin-page-title">Events</div>
-          <div class="admin-page-subtitle">Manage upcoming and past community events. The sign-up page automatically shows the next chronological confirmed event.</div>
-
-          <div class="btn-row">
-            <button class="btn btn-primary" onclick="openEventForm(null)">+ Add New Event</button>
-          </div>
-
-          <!-- Archive card -->
-          <div class="archive-card">
-            <h3>⚠️ Archive Current Sign-Ups</h3>
-            <p style="font-size:0.88rem; color:#7a7060; margin-bottom:16px;">
-              Marks all sign-ups for the current event (set via <code>current_event_id</code> in Settings → Config) as archived so they no longer appear in active views. The event record itself is preserved. <strong>This action cannot be undone.</strong>
-            </p>
-            <button class="btn btn-warning" onclick="confirmArchive()">Archive Sign-Ups &amp; Advance to Next Event</button>
-          </div>
-
-          <div class="admin-table-wrap">
-            <table class="admin-table" id="events-table">
-              <thead>
-                <tr>
-                  <th>Event</th><th>Date</th><th>Status</th><th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="events-tbody">
-                <tr><td colspan="4" class="admin-loading">Loading events…</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Event editor form (hidden by default) -->
-          <div class="admin-form" id="event-form" style="display:none;">
-            <h3 id="event-form-title">New Event</h3>
-
-            <div class="form-grid-2" style="margin-bottom:16px;">
-              <div class="form-field">
-                <label>Event Name *</label>
-                <input type="text" id="ef-name" placeholder="Easter Egg Hunt 2026" oninput="autoSlug()" />
-              </div>
-              <div class="form-field">
-                <label>Event ID / Slug *</label>
-                <input type="text" id="ef-id" placeholder="EasterEggHunt2026" />
-              </div>
-            </div>
-
-            <div class="form-grid-3" style="margin-bottom:16px;">
-              <div class="form-field">
-                <label>Event Date *</label>
-                <input type="date" id="ef-date" />
-              </div>
-              <div class="form-field">
-                <label>Event Time</label>
-                <input type="text" id="ef-time" placeholder="10:00 AM – 1:00 PM" />
-              </div>
-              <div class="form-field">
-                <label>Sign-Ups Open Date</label>
-                <input type="date" id="ef-signup-open" />
-              </div>
-            </div>
-
-            <div class="form-grid-2" style="margin-bottom:16px;">
-              <div class="form-field">
-                <label>Status</label>
-                <select id="ef-status">
-                  <option value="Draft">Draft (Details Forthcoming)</option>
-                  <option value="Confirmed">Confirmed (Sign-Ups Open)</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </div>
-              <div class="form-field">
-                <label>Banner Color Class</label>
-                <select id="ef-color">
-                  <option value="card-color-1">Color 1 (Teal)</option>
-                  <option value="card-color-2">Color 2 (Gold)</option>
-                  <option value="card-color-3">Color 3 (Green)</option>
-                  <option value="card-color-4">Color 4 (Rose)</option>
-                  <option value="card-color-5">Color 5 (Purple)</option>
-                  <option value="card-color-6">Color 6 (Navy)</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-grid-2" style="margin-bottom:16px;">
-              <div class="form-field">
-                <label>Emoji Row</label>
-                <input type="text" id="ef-emoji" placeholder="🐰 🥚 🌸 🥚 🐰" />
-              </div>
-              <div class="form-field">
-                <label>Headline Adjective</label>
-                <input type="text" id="ef-adjective" placeholder="Magical" />
-              </div>
-            </div>
-
-            <div class="form-grid-2" style="margin-bottom:16px;">
-              <div class="form-field">
-                <label>Location Name</label>
-                <input type="text" id="ef-loc-name" placeholder="Pendleton Plantation Pool Area" />
-              </div>
-              <div class="form-field">
-                <label>Location Address</label>
-                <input type="text" id="ef-loc-addr" placeholder="100 Armistead Ln • Easley, SC 29642" />
-              </div>
-            </div>
-
-            <div class="form-grid-2" style="margin-bottom:16px;">
-              <div class="form-field">
-                <label>ICS Start (YYYYMMDDTHHmmss)</label>
-                <input type="text" id="ef-ics-start" placeholder="20260321T100000" />
-              </div>
-              <div class="form-field">
-                <label>ICS End (YYYYMMDDTHHmmss)</label>
-                <input type="text" id="ef-ics-end" placeholder="20260321T130000" />
-              </div>
-            </div>
-
-            <div class="form-field form-full" style="margin-bottom:16px;">
-              <label>Short Description (Homepage preview)</label>
-              <textarea id="ef-short" placeholder="1–2 sentences for the homepage event card."></textarea>
-            </div>
-
-            <div class="form-field form-full" style="margin-bottom:16px;">
-              <label>Medium Description (Events page card)</label>
-              <textarea id="ef-medium" placeholder="2–4 sentences for the events page."></textarea>
-            </div>
-
-            <div class="form-field form-full" style="margin-bottom:16px;">
-              <label>Long Description (Sign-Up page body — HTML allowed)</label>
-              <textarea id="ef-long" class="tall" placeholder="Full event description with schedule. HTML tags allowed."></textarea>
-            </div>
-
-            <!-- Organizer info -->
-            <h3 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.1rem; color:var(--forest); border-bottom:1px solid var(--parchment); padding-bottom:10px; margin-bottom:16px;">Organizer</h3>
-            <div class="form-grid-2" style="margin-bottom:16px;">
-              <div class="form-field">
-                <label>Organizer Name</label>
-                <input type="text" id="ef-org-name" />
-              </div>
-              <div class="form-field">
-                <label>Organizer Email</label>
-                <input type="email" id="ef-org-email" placeholder="mandyvaliquette00@gmail.com" />
-              </div>
-              <div class="form-field">
-                <label>Organizer Phone</label>
-                <input type="tel" id="ef-org-phone" />
-              </div>
-              <div class="form-field">
-                <label>Organizer Address</label>
-                <input type="text" id="ef-org-addr" />
-              </div>
-              <div class="form-field">
-                <label>Preferred Contact Method</label>
-                <select id="ef-org-contact">
-                  <option value="Email">Email</option>
-                  <option value="Phone">Phone</option>
-                  <option value="Text">Text</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Volunteer Roles -->
-            <h3 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.1rem; color:var(--forest); border-bottom:1px solid var(--parchment); padding-bottom:10px; margin-bottom:16px;">Volunteer Roles</h3>
-            <div id="vol-roles-list" class="dynamic-list"></div>
-            <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addVolRole()">+ Add Role</button>
-
-            <!-- Donation Categories/Items -->
-            <h3 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.1rem; color:var(--forest); border-bottom:1px solid var(--parchment); padding-bottom:10px; margin:20px 0 16px;">Donation Items</h3>
-            <div id="donation-cats-list"></div>
-            <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addDonationCategory()">+ Add Category</button>
-
-            <!-- Form action buttons -->
-            <div class="btn-row" style="margin-top:24px; border-top:1px solid var(--parchment); padding-top:20px;">
-              <button class="btn btn-primary" onclick="submitEventForm()">💾 Save Event</button>
-              <button class="btn btn-secondary" onclick="cancelEventForm()">Cancel</button>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- ══════════════════════════════════════════════════
-             AWARDS PANEL
-        ══════════════════════════════════════════════════ -->
-        <div class="admin-panel" id="panel-awards">
-          <div class="admin-page-title">Awards</div>
-          <div class="admin-page-subtitle">Manage award contests and select winners.</div>
-
-          <div class="subtab-bar">
-            <button class="subtab active" onclick="setAwardsSubtab('contests', this)">Contests</button>
-            <button class="subtab"        onclick="setAwardsSubtab('winners',  this)">Winners</button>
-            <button class="subtab"        onclick="setAwardsSubtab('prep',     this)">Winner Prep</button>
-          </div>
-
-          <!-- Contests subtab -->
-          <div id="awards-contests-panel">
-            <div class="btn-row">
-              <button class="btn btn-primary" onclick="openContestForm(null)">+ Add Contest</button>
-            </div>
-            <div class="admin-table-wrap">
-              <table class="admin-table">
-                <thead><tr><th>Award</th><th>Category</th><th>Period</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody id="contests-tbody"><tr><td colspan="5" class="admin-loading">Loading…</td></tr></tbody>
-              </table>
-            </div>
-            <div class="admin-form" id="contest-form" style="display:none;">
-              <h3 id="contest-form-title">New Contest</h3>
-              <div class="form-grid-2" style="margin-bottom:14px;">
-                <div class="form-field"><label>Award Name *</label><input type="text" id="cf-name" oninput="autoContestId()" /></div>
-                <div class="form-field"><label>Contest ID *</label><input type="text" id="cf-id" /></div>
-                <div class="form-field"><label>Category</label>
-                  <select id="cf-cat">
-                    <option>Yard &amp; Garden</option><option>Community</option>
-                    <option>Service</option><option>Events</option><option>Youth</option>
-                  </select>
-                </div>
-                <div class="form-field"><label>Period</label><input type="text" id="cf-period" placeholder="April 2026" /></div>
-                <div class="form-field"><label>Status</label>
-                  <select id="cf-status">
-                    <option value="open">Open</option><option value="soon">Coming Soon</option>
-                    <option value="voting">Voting</option><option value="deliberating">Deliberating</option>
-                    <option value="awarded">Awarded</option>
-                  </select>
-                </div>
-                <div class="form-field"><label>Deadline</label><input type="text" id="cf-deadline" placeholder="March 31, 2026" /></div>
-                <div class="form-field"><label>Icon (emoji)</label><input type="text" id="cf-icon" placeholder="🌿" /></div>
-                <div class="form-field"><label>Badge (image path)</label><input type="text" id="cf-badge" placeholder="images/Awards Badges/awards-badges-pngs/yard-of-the-month.png" /></div>
-                <div class="form-field"><label>Banner Color</label>
-                  <select id="cf-banner">
-                    <option value="banner-green">Green</option><option value="banner-forest">Forest</option>
-                    <option value="banner-gold">Gold</option><option value="banner-gold-warm">Gold Warm</option>
-                    <option value="banner-amber">Amber</option><option value="banner-purple">Purple</option>
-                    <option value="banner-blue">Blue</option><option value="banner-navy">Navy</option>
-                    <option value="banner-teal">Teal</option><option value="banner-sky">Sky</option>
-                    <option value="banner-crimson">Crimson</option><option value="banner-bronze">Bronze</option>
-                  </select>
-                </div>
-                <div class="form-field"><label>Prize</label><input type="text" id="cf-prize" /></div>
-              </div>
-              <div class="form-field form-full" style="margin-bottom:14px;"><label>Description</label><textarea id="cf-desc" class="tall"></textarea></div>
-              <div class="btn-row">
-                <button class="btn btn-primary" onclick="submitContestForm()">💾 Save</button>
-                <button class="btn btn-secondary" onclick="cancelContestForm()">Cancel</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Winners subtab -->
-          <div id="awards-winners-panel" style="display:none;">
-            <div class="btn-row">
-              <button class="btn btn-primary" onclick="openWinnerForm(null)">+ Add Winner</button>
-            </div>
-            <div class="admin-table-wrap">
-              <table class="admin-table">
-                <thead><tr><th>Award</th><th>Winner</th><th>Period</th><th>Actions</th></tr></thead>
-                <tbody id="winners-tbody"><tr><td colspan="4" class="admin-loading">Loading…</td></tr></tbody>
-              </table>
-            </div>
-            <div class="admin-form" id="winner-form" style="display:none;">
-              <h3>Winner Details</h3>
-              <div class="form-grid-2" style="margin-bottom:14px;">
-                <div class="form-field"><label>Award Name *</label><input type="text" id="wf-award" /></div>
-                <div class="form-field"><label>Winner Name *</label><input type="text" id="wf-winner" /></div>
-                <div class="form-field"><label>Period</label><input type="text" id="wf-period" placeholder="April 2026" /></div>
-                <div class="form-field"><label>Year</label><input type="number" id="wf-year" placeholder="2026" /></div>
-                <div class="form-field"><label>Icon (emoji)</label><input type="text" id="wf-icon" placeholder="🌿" /></div>
-                <div class="form-field"><label>Badge filename</label><input type="text" id="wf-badge" placeholder="yard-of-the-month" /></div>
-                <div class="form-field"><label>Banner Color</label><input type="text" id="wf-banner" placeholder="banner-green" /></div>
-                <div class="form-field"><label>Prize</label><input type="text" id="wf-prize" /></div>
-                <div class="form-field"><label>Google Drive Photo ID</label><input type="text" id="wf-photo" placeholder="Leave blank for silhouette" /></div>
-              </div>
-              <div class="form-field form-full" style="margin-bottom:10px;"><label>Blurb (1–3 sentences)</label><textarea id="wf-blurb"></textarea></div>
-              <div class="form-field form-full" style="margin-bottom:10px;"><label>Quote 1</label><input type="text" id="wf-q1" /></div>
-              <div class="form-field form-full" style="margin-bottom:10px;"><label>Quote 2</label><input type="text" id="wf-q2" /></div>
-              <div class="form-field form-full" style="margin-bottom:14px;"><label>Quote 3</label><input type="text" id="wf-q3" /></div>
-              <div class="btn-row">
-                <button class="btn btn-primary" onclick="submitWinnerForm()">💾 Save</button>
-                <button class="btn btn-secondary" onclick="cancelWinnerForm()">Cancel</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Winner Prep subtab -->
-          <div id="awards-prep-panel" style="display:none;">
-            <p style="font-size:0.88rem; color:var(--muted); margin-bottom:16px;">
-              These rows were auto-generated from nomination submissions. Review and promote the best candidates to the Winners tab.
-            </p>
-            <div class="admin-table-wrap">
-              <table class="admin-table">
-                <thead><tr><th>Award</th><th>Nominee</th><th>Nominator</th><th>Blurb</th><th>Actions</th></tr></thead>
-                <tbody id="prep-tbody"><tr><td colspan="5" class="admin-loading">Loading…</td></tr></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- ══════════════════════════════════════════════════
-             ANNOUNCEMENTS PANEL
-        ══════════════════════════════════════════════════ -->
-        <div class="admin-panel" id="panel-announcements">
-          <div class="admin-page-title">Announcements</div>
-          <div class="admin-page-subtitle">Manage announcements shown on the homepage. Only Published items are visible to the public.</div>
-
-          <div class="btn-row">
-            <button class="btn btn-primary" onclick="openAnnouncementForm(null)">+ Add Announcement</button>
-          </div>
-
-          <div class="admin-table-wrap">
-            <table class="admin-table">
-              <thead><tr><th>Date</th><th>Title</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody id="announcements-tbody"><tr><td colspan="4" class="admin-loading">Loading…</td></tr></tbody>
-            </table>
-          </div>
-
-          <div class="admin-form" id="announcement-form" style="display:none;">
-            <h3 id="af-title-label">New Announcement</h3>
-            <input type="hidden" id="af-id" />
-            <div class="form-grid-3" style="margin-bottom:14px;">
-              <div class="form-field"><label>Day *</label><input type="text" id="af-day" placeholder="21" /></div>
-              <div class="form-field"><label>Month *</label><input type="text" id="af-month" placeholder="Mar 2026" /></div>
-              <div class="form-field">
-                <label>Published</label>
-                <div class="toggle-wrap" style="margin-top:8px;">
-                  <label class="toggle"><input type="checkbox" id="af-published" /><span class="toggle-slider"></span></label>
-                  <span class="toggle-label">Published</span>
-                </div>
-              </div>
-            </div>
-            <div class="form-field form-full" style="margin-bottom:14px;"><label>Title *</label><input type="text" id="af-title" /></div>
-            <div class="form-field form-full" style="margin-bottom:14px;"><label>Body *</label><textarea id="af-body" class="tall"></textarea></div>
-            <div class="form-grid-2" style="margin-bottom:14px;">
-              <div class="form-field"><label>Link URL (optional)</label><input type="text" id="af-link" placeholder="signup.html" /></div>
-              <div class="form-field"><label>Link Text (optional)</label><input type="text" id="af-link-text" placeholder="Sign Up Now →" /></div>
-            </div>
-            <div class="btn-row">
-              <button class="btn btn-primary" onclick="submitAnnouncementForm()">💾 Save</button>
-              <button class="btn btn-secondary" onclick="cancelAnnouncementForm()">Cancel</button>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- ══════════════════════════════════════════════════
-             MEMORIES PANEL
-        ══════════════════════════════════════════════════ -->
-        <div class="admin-panel" id="panel-memories">
-          <div class="admin-page-title">Memory Submissions</div>
-          <div class="admin-page-subtitle">Approve, edit, or remove submitted photos from the memory scrapbook. Only Approved items appear in the public gallery.</div>
-
-          <div class="admin-table-wrap">
-            <table class="admin-table">
-              <thead><tr><th>Date</th><th>Uploader</th><th>Event</th><th>Caption</th><th>Photos</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody id="memories-tbody"><tr><td colspan="7" class="admin-loading">Loading…</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-
-        <!-- ══════════════════════════════════════════════════
-             BULLETIN BOARD PANEL
-        ══════════════════════════════════════════════════ -->
-        <div class="admin-panel" id="panel-bulletin">
-          <div class="admin-page-title">Bulletin Board</div>
-          <div class="admin-page-subtitle">Approve, edit, or remove community bulletin board posts.</div>
-
-          <div class="admin-table-wrap">
-            <table class="admin-table">
-              <thead><tr><th>Date</th><th>Name</th><th>Category</th><th>Title</th><th>Photos</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody id="bulletin-tbody"><tr><td colspan="7" class="admin-loading">Loading…</td></tr></tbody>
-            </table>
-          </div>
-
-          <!-- Inline edit form -->
-          <div class="admin-form" id="bulletin-edit-form" style="display:none;">
-            <h3>Edit Post</h3>
-            <input type="hidden" id="bef-rowid" />
-            <div class="form-field form-full" style="margin-bottom:14px;"><label>Category</label>
-              <select id="bef-cat">
-                <option>General</option><option>For Sale</option><option>Lost &amp; Found</option>
-                <option>Service Recommendation</option><option>Events</option><option>Announcements</option>
-              </select>
-            </div>
-            <div class="form-field form-full" style="margin-bottom:14px;"><label>Title</label><input type="text" id="bef-title" /></div>
-            <div class="form-field form-full" style="margin-bottom:14px;"><label>Content</label><textarea id="bef-content" class="tall"></textarea></div>
-            <div class="btn-row">
-              <button class="btn btn-primary" onclick="submitBulletinEdit()">💾 Save</button>
-              <button class="btn btn-secondary" onclick="cancelBulletinEdit()">Cancel</button>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- ══════════════════════════════════════════════════
-             LINKS PANEL
-        ══════════════════════════════════════════════════ -->
-        <div class="admin-panel" id="panel-links">
-          <div class="admin-page-title">Links</div>
-          <div class="admin-page-subtitle">Manage the resource links shown on the Links page.</div>
-
-          <div class="btn-row">
-            <button class="btn btn-primary" onclick="openLinkForm(null)">+ Add Link</button>
-          </div>
-
-          <div class="admin-table-wrap">
-            <table class="admin-table">
-              <thead><tr><th>Category</th><th>Title</th><th>URL</th><th>Actions</th></tr></thead>
-              <tbody id="links-tbody"><tr><td colspan="4" class="admin-loading">Loading…</td></tr></tbody>
-            </table>
-          </div>
-
-          <div class="admin-form" id="link-form" style="display:none;">
-            <h3 id="lf-title-label">New Link</h3>
-            <input type="hidden" id="lf-id" />
-            <div class="form-grid-2" style="margin-bottom:14px;">
-              <div class="form-field"><label>Category *</label><input type="text" id="lf-cat" placeholder="Community Portal" /></div>
-              <div class="form-field"><label>Icon (emoji)</label><input type="text" id="lf-icon" placeholder="🔗" /></div>
-              <div class="form-field form-full"><label>Title *</label><input type="text" id="lf-title" /></div>
-              <div class="form-field form-full"><label>Description</label><textarea id="lf-desc"></textarea></div>
-              <div class="form-field form-full"><label>URL *</label><input type="url" id="lf-url" placeholder="https://…" /></div>
-              <div class="form-field"><label>URL Label (optional)</label><input type="text" id="lf-label" placeholder="goenumerate.com" /></div>
-            </div>
-            <div class="btn-row">
-              <button class="btn btn-primary" onclick="submitLinkForm()">💾 Save</button>
-              <button class="btn btn-secondary" onclick="cancelLinkForm()">Cancel</button>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- ══════════════════════════════════════════════════
-             DOCUMENTS PANEL
-        ══════════════════════════════════════════════════ -->
-        <div class="admin-panel" id="panel-documents">
-          <div class="admin-page-title">Documents</div>
-          <div class="admin-page-subtitle">Manage downloadable documents shown on the Documents page.</div>
-
-          <div class="btn-row">
-            <button class="btn btn-primary" onclick="openDocForm(null)">+ Add Document</button>
-          </div>
-
-          <div class="admin-table-wrap">
-            <table class="admin-table">
-              <thead><tr><th>Category</th><th>Title</th><th>URL</th><th>Actions</th></tr></thead>
-              <tbody id="docs-tbody"><tr><td colspan="4" class="admin-loading">Loading…</td></tr></tbody>
-            </table>
-          </div>
-
-          <div class="admin-form" id="doc-form" style="display:none;">
-            <h3 id="df-title-label">New Document</h3>
-            <input type="hidden" id="df-id" />
-            <div class="form-grid-2" style="margin-bottom:14px;">
-              <div class="form-field"><label>Category *</label><input type="text" id="df-cat" placeholder="Neighborhood Documents — Click to Download" /></div>
-              <div class="form-field"><label>Icon (emoji)</label><input type="text" id="df-icon" placeholder="📄" /></div>
-              <div class="form-field form-full"><label>Title *</label><input type="text" id="df-title" /></div>
-              <div class="form-field form-full"><label>Description</label><textarea id="df-desc"></textarea></div>
-              <div class="form-field form-full"><label>URL *</label><input type="url" id="df-url" placeholder="https://…" /></div>
-              <div class="form-field"><label>URL Label (optional)</label><input type="text" id="df-label" /></div>
-            </div>
-            <div class="btn-row">
-              <button class="btn btn-primary" onclick="submitDocForm()">💾 Save</button>
-              <button class="btn btn-secondary" onclick="cancelDocForm()">Cancel</button>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- ══════════════════════════════════════════════════
-             SETTINGS PANEL
-        ══════════════════════════════════════════════════ -->
-        <div class="admin-panel" id="panel-settings">
-          <div class="admin-page-title">Settings</div>
-          <div class="admin-page-subtitle">Update passwords and admin contact information.</div>
-
-          <!-- Change Admin Password -->
-          <div class="settings-card">
-            <h3>🔐 Admin Password</h3>
-            <p style="font-size:0.85rem; color:var(--muted); margin-bottom:16px;">
-              This is the password used to log in to this admin page. After changing it, you will be logged out.
-            </p>
-            <div class="form-grid-2">
-              <div class="form-field">
-                <label>New Admin Password</label>
-                <input type="password" id="new-admin-pass" placeholder="New password" />
-              </div>
-              <div class="form-field">
-                <label>Confirm New Password</label>
-                <input type="password" id="confirm-admin-pass" placeholder="Repeat password" />
-              </div>
-            </div>
-            <button class="btn btn-primary" style="margin-top:14px;" onclick="changeAdminPassword()">Update Admin Password</button>
-          </div>
-
-          <!-- Admin Contact Info -->
-          <div class="settings-card">
-            <h3>📧 Organizer Contact Info</h3>
-            <p style="font-size:0.85rem; color:var(--muted); margin-bottom:16px;">
-              Used in sign-up notification emails and the site footer.
-            </p>
-            <div class="form-grid-2">
-              <div class="form-field"><label>Organizer Name</label><input type="text" id="cfg-org-name" /></div>
-              <div class="form-field"><label>Organizer Email</label><input type="email" id="cfg-org-email" /></div>
-              <div class="form-field"><label>Organizer Phone</label><input type="tel" id="cfg-org-phone" /></div>
-            </div>
-            <button class="btn btn-primary" style="margin-top:14px;" onclick="saveOrgInfo()">Save Contact Info</button>
-          </div>
-        </div>
-
-
-      </div><!-- end .admin-content -->
-    </div><!-- end .admin-body -->
-  </div><!-- end #admin-ui -->
-
-
-  <!-- ── CONFIRMATION MODAL ─────────────────────────────────── -->
-  <div class="modal-overlay hidden" id="confirm-modal">
-    <div class="modal-card">
-      <div class="modal-icon" id="modal-icon">⚠️</div>
-      <div class="modal-title" id="modal-title">Are you sure?</div>
-      <div class="modal-body"  id="modal-body"></div>
-      <div class="modal-actions">
-        <button class="btn btn-danger"     id="modal-confirm-btn" onclick="modalConfirm()">Confirm</button>
-        <button class="btn btn-secondary"  onclick="closeModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── TOAST CONTAINER ────────────────────────────────────── -->
-  <div id="toast-container"></div>
-
-
-  <script>
-    // ============================================================
-    //  Admin portal — all data via Supabase (db client from supabase-config.js).
-    //
-    //  Auth flow:
-    //    1. Sign in with Supabase email + password.
-    //    2. Verify profiles.role = 'admin' — valid Supabase accounts that
-    //       are NOT admin are signed out immediately and shown an error.
-    //    3. Session is preserved by Supabase in localStorage; on page load
-    // ── HELPERS ───────────────────────────────────────────────
+new_tail = '''    // ── HELPERS ───────────────────────────────────────────────
     function esc(s) {
       return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
@@ -636,7 +17,7 @@
     function extractDriveIds(urls) {
       return (urls||[]).map(url => {
         if (!url) return null;
-        const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        const m = url.match(/\\/d\\/([a-zA-Z0-9_-]+)/);
         if (m) return m[1];
         const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         return m2 ? m2[1] : null;
@@ -747,7 +128,7 @@
 
     async function loadEvents() {
       const tbody = document.getElementById("events-tbody");
-      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading\u2026</td></tr>';
       try {
         const { data, error } = await db.from('events').select('*').order('event_date');
         if (error) throw error;
@@ -761,7 +142,7 @@
     function renderEventsTable(events) {
       const tbody = document.getElementById("events-tbody");
       if (!events.length) {
-        tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📅</div><p>No events yet.</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">\U0001f4c5</div><p>No events yet.</p></div></td></tr>';
         return;
       }
       tbody.innerHTML = events.map(ev => `
@@ -880,7 +261,7 @@
       div.innerHTML = `
         <input type="text" placeholder="Role name" value="${esc(label||'')}" class="vol-label" />
         <input type="text" placeholder="Short description" value="${esc(detail||'')}" class="vol-detail" />
-        <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>`;
+        <button class="remove-btn" onclick="this.parentElement.remove()">\u2715</button>`;
       document.getElementById("vol-roles-list").appendChild(div);
     }
 
@@ -897,7 +278,7 @@
       div.innerHTML = `
         <div class="category-block-header">
           <input type="text" placeholder="Category name" value="${esc(catName||'')}" class="cat-name-input" />
-          <button class="remove-btn" onclick="this.closest('.donation-cat-block').remove()">✕ Remove Category</button>
+          <button class="remove-btn" onclick="this.closest('.donation-cat-block').remove()">\u2715 Remove Category</button>
         </div>
         <div class="donation-items-list dynamic-list"></div>
         <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addDonationItem(this)">+ Add Item</button>`;
@@ -913,7 +294,7 @@
       div.innerHTML = `
         <input type="text"   placeholder="Item label" value="${esc(label||'')}" class="item-label-input" style="flex:2" />
         <input type="number" placeholder="Needed qty" value="${needed!==null&&needed!==undefined?needed:''}" class="item-needed-input" style="flex:1;max-width:100px;" />
-        <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>`;
+        <button class="remove-btn" onclick="this.parentElement.remove()">\u2715</button>`;
       list.appendChild(div);
     }
 
@@ -999,7 +380,7 @@
     }
 
     function confirmDeleteEvent(eventId, eventName) {
-      showModal("🗑️","Delete Event","Delete \"" + eventName + "\"? This also removes its volunteer roles and donation items.",
+      showModal("\U0001f5d1\ufe0f","Delete Event","Delete \\"" + eventName + "\\"? This also removes its volunteer roles and donation items.",
         async () => {
           const { error } = await db.from('events').delete().eq('id', eventId);
           if (!error) { toast("Event deleted.", "success"); loadEvents(); }
@@ -1008,7 +389,7 @@
     }
 
     async function confirmArchive() {
-      showModal("⚠️","Archive Sign-Ups",
+      showModal("\u26a0\ufe0f","Archive Sign-Ups",
         "This will mark all current sign-ups as archived. This cannot be undone.",
         async () => {
           try {
@@ -1038,7 +419,7 @@
 
     async function loadContests() {
       const tbody = document.getElementById("contests-tbody");
-      tbody.innerHTML = '<tr><td colspan="5" class="admin-loading">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="admin-loading">Loading\u2026</td></tr>';
       try {
         const { data, error } = await db.from('award_contests').select('*').order('award_name');
         if (error) throw error;
@@ -1049,7 +430,7 @@
 
     function renderContestsTable(contests) {
       const tbody = document.getElementById("contests-tbody");
-      if (!contests.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🏆</div><p>No contests yet.</p></div></td></tr>'; return; }
+      if (!contests.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">\U0001f3c6</div><p>No contests yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = contests.map(c => `
         <tr>
           <td>${esc(c.award_name||"")}</td>
@@ -1118,7 +499,7 @@
     }
 
     function confirmDeleteContest(contestId) {
-      showModal("🗑️","Delete Contest","Delete this award contest?", async () => {
+      showModal("\U0001f5d1\ufe0f","Delete Contest","Delete this award contest?", async () => {
         const { error } = await db.from('award_contests').delete().eq('id', contestId);
         if (!error) { toast("Contest deleted.", "success"); loadContests(); }
         else toast("Error: " + error.message, "error");
@@ -1133,10 +514,10 @@
 
     async function loadWinners() {
       const tbody = document.getElementById("winners-tbody");
-      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading\u2026</td></tr>';
       const { data } = await db.from('winners').select('*').order('created_at', { ascending: false });
       winnersData = data || [];
-      if (!winnersData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">🥇</div><p>No winners yet.</p></div></td></tr>'; return; }
+      if (!winnersData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">\U0001f947</div><p>No winners yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = winnersData.map(w => `
         <tr>
           <td>${esc(w.award||"")}</td>
@@ -1209,7 +590,7 @@
     }
 
     function confirmDeleteWinner(id, award) {
-      showModal("🗑️","Delete Winner","Remove this winner entry?", async () => {
+      showModal("\U0001f5d1\ufe0f","Delete Winner","Remove this winner entry?", async () => {
         const { error } = await db.from('winners').delete().eq('id', id);
         if (!error) { toast("Winner deleted.", "success"); loadWinners(); }
         else toast("Error: " + error.message, "error");
@@ -1224,10 +605,10 @@
 
     async function loadWinnerPrep() {
       const tbody = document.getElementById("prep-tbody");
-      tbody.innerHTML = '<tr><td colspan="5" class="admin-loading">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="admin-loading">Loading\u2026</td></tr>';
       const { data } = await db.from('winner_prep').select('*').order('submitted_at', { ascending: false });
       prepData = (data||[]).filter(r => !r.promoted);
-      if (!prepData.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📋</div><p>No winner prep rows yet.</p></div></td></tr>'; return; }
+      if (!prepData.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">\U0001f4cb</div><p>No winner prep rows yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = prepData.map(row => `
         <tr>
           <td>${esc(row.award||"")}</td>
@@ -1273,10 +654,10 @@
 
     async function loadAnnouncements() {
       const tbody = document.getElementById("announcements-tbody");
-      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading\u2026</td></tr>';
       const { data } = await db.from('announcements').select('*').order('created_at', { ascending: false });
       announcementsData = data || [];
-      if (!announcementsData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📢</div><p>No announcements yet.</p></div></td></tr>'; return; }
+      if (!announcementsData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">\U0001f4e2</div><p>No announcements yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = announcementsData.map(a => `
         <tr>
           <td>${esc(a.day||"")} ${esc(a.month||"")}</td>
@@ -1340,7 +721,7 @@
     }
 
     function confirmDeleteAnnouncement(id, title) {
-      showModal("🗑️","Delete Announcement","Delete \"" + title + "\"?", async () => {
+      showModal("\U0001f5d1\ufe0f","Delete Announcement","Delete \\"" + title + "\\"?", async () => {
         const { error } = await db.from('announcements').delete().eq('id', id);
         if (!error) { toast("Announcement deleted.", "success"); loadAnnouncements(); }
         else toast("Error: " + error.message, "error");
@@ -1353,10 +734,10 @@
     // ====================================================
     async function loadMemories() {
       const tbody = document.getElementById("memories-tbody");
-      tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading\u2026</td></tr>';
       const { data } = await db.from('memories').select('*').order('submitted_at', { ascending: false });
       const memories = data || [];
-      if (!memories.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📷</div><p>No memories submitted yet.</p></div></td></tr>'; return; }
+      if (!memories.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">\U0001f4f7</div><p>No memories submitted yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = memories.map(m => {
         const ids = extractDriveIds(m.photo_urls||[]);
         return `
@@ -1382,7 +763,7 @@
     }
 
     function confirmDeleteMemory(id) {
-      showModal("🗑️","Delete Memory","Permanently delete this memory submission?", async () => {
+      showModal("\U0001f5d1\ufe0f","Delete Memory","Permanently delete this memory submission?", async () => {
         const { error } = await db.from('memories').delete().eq('id', id);
         if (!error) { toast("Memory deleted.", "success"); loadMemories(); }
         else toast("Error.", "error");
@@ -1397,10 +778,10 @@
 
     async function loadBulletin() {
       const tbody = document.getElementById("bulletin-tbody");
-      tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading\u2026</td></tr>';
       const { data } = await db.from('bulletin_posts').select('*').order('submitted_at', { ascending: false });
       bulletinData = data || [];
-      if (!bulletinData.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><p>No posts yet.</p></div></td></tr>'; return; }
+      if (!bulletinData.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">\U0001f4cb</div><p>No posts yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = bulletinData.map(p => {
         const ids = extractDriveIds(p.photo_urls||[]);
         return `
@@ -1453,7 +834,7 @@
     }
 
     function confirmDeleteBulletin(id) {
-      showModal("🗑️","Delete Post","Permanently delete this bulletin board post?", async () => {
+      showModal("\U0001f5d1\ufe0f","Delete Post","Permanently delete this bulletin board post?", async () => {
         const { error } = await db.from('bulletin_posts').delete().eq('id', id);
         if (!error) { toast("Post deleted.", "success"); loadBulletin(); }
         else toast("Error.", "error");
@@ -1468,10 +849,10 @@
 
     async function loadLinks() {
       const tbody = document.getElementById("links-tbody");
-      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading\u2026</td></tr>';
       const { data } = await db.from('links').select('*').order('sort_order');
       linksData = data || [];
-      if (!linksData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">🔗</div><p>No links yet.</p></div></td></tr>'; return; }
+      if (!linksData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">\U0001f517</div><p>No links yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = linksData.map(l => `
         <tr>
           <td>${esc(l.category||"")}</td>
@@ -1532,7 +913,7 @@
     }
 
     function confirmDeleteLink(id) {
-      showModal("🗑️","Delete Link","Delete this link?", async () => {
+      showModal("\U0001f5d1\ufe0f","Delete Link","Delete this link?", async () => {
         const { error } = await db.from('links').delete().eq('id', id);
         if (!error) { toast("Link deleted.", "success"); loadLinks(); }
         else toast("Error.", "error");
@@ -1547,10 +928,10 @@
 
     async function loadDocuments() {
       const tbody = document.getElementById("docs-tbody");
-      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="admin-loading">Loading\u2026</td></tr>';
       const { data } = await db.from('documents').select('*').order('sort_order');
       docsData = data || [];
-      if (!docsData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📄</div><p>No documents yet.</p></div></td></tr>'; return; }
+      if (!docsData.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">\U0001f4c4</div><p>No documents yet.</p></div></td></tr>'; return; }
       tbody.innerHTML = docsData.map(d => `
         <tr>
           <td>${esc(d.category||"")}</td>
@@ -1611,7 +992,7 @@
     }
 
     function confirmDeleteDoc(id) {
-      showModal("🗑️","Delete Document","Delete this document entry?", async () => {
+      showModal("\U0001f5d1\ufe0f","Delete Document","Delete this document entry?", async () => {
         const { error } = await db.from('documents').delete().eq('id', id);
         if (!error) { toast("Document deleted.", "success"); loadDocuments(); }
         else toast("Error.", "error");
@@ -1660,3 +1041,17 @@
   </script>
 </body>
 </html>
+'''
+
+content = open('admin.html', 'r', encoding='utf-8').read()
+lines = content.split('\n')
+
+# Find start of old implementation (line 623, 0-indexed 622)
+target_line = lines[622]
+start_idx = content.find(target_line)
+
+# Replace from start_idx to end of file with new tail
+new_content = content[:start_idx] + new_tail
+
+open('admin.html', 'w', encoding='utf-8').write(new_content)
+print(f'Done. Lines: {len(new_content.splitlines())}')

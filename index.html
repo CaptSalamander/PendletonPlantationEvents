@@ -213,16 +213,11 @@
     <!-- Photo grid tiles are injected here by JavaScript. -->
     <div class="photo-grid" id="photo-grid"></div>
 
-    <!-- Link to the full memories gallery. -->
-    <div style="text-align:center; margin-bottom:14px;">
-      <a href="memories.html" class="btn-outline" style="font-size:0.75rem;">View All Memories →</a>
+    <!-- Buttons below the photo grid. -->
+    <div style="text-align:center; margin-bottom:14px; display:flex; flex-direction:column; align-items:center; gap:16px;">
+      <a href="memories.html" class="btn-outline">View All Memories →</a>
+      <a href="submit-memory.html" class="btn-tertiary">Have photos from a neighborhood event? Upload them →</a>
     </div>
-
-    <!-- Note below the photo grid inviting residents to submit photos. -->
-    <p class="photo-upload-note">
-      Have photos from a neighborhood event? <a href="submit-memory.html">Upload them</a>
-      to be featured here.
-    </p>
   </section>
 
 
@@ -335,11 +330,12 @@
   //   period:   The time period for this award (e.g., "April 2026").
   //   empty:    Set to true when no winner has been named yet.
   //             This dims and italicizes the winner text on the card.
-  const awards = [
-    { icon: "🌿", category: "Yard of the Month", winner: "Coming Soon", period: "April 2026", empty: true },
-    { icon: "🎄", category: "Best Seasonal Decoration", winner: "Coming Soon", period: "Spring 2026", empty: true },
-    { icon: "🦸", category: "Neighborhood Hero", winner: "Coming Soon", period: "Q1 2026", empty: true },
-    { icon: "⭐", category: "Above & Beyond", winner: "Coming Soon", period: "Q1 2026", empty: true },
+  // Fallback award winner cards — shown immediately and if DB is unavailable.
+  const FALLBACK_AWARDS = [
+    { icon: "🏆", category: "Award", winner: "Coming Soon", period: "Coming Soon", empty: true },
+    { icon: "🏆", category: "Award", winner: "Coming Soon", period: "Coming Soon", empty: true },
+    { icon: "🏆", category: "Award", winner: "Coming Soon", period: "Coming Soon", empty: true },
+    { icon: "🏆", category: "Award", winner: "Coming Soon", period: "Coming Soon", empty: true },
   ];
 
 
@@ -362,45 +358,24 @@
   // Fallback events — shown immediately and if the API fetch fails.
   const FALLBACK_EVENTS = [
     {
-      emoji: "🥚", colorClass: "card-color-1",
-      statusLabel: "Sign-Ups Open", statusClass: "status-open",
-      date: "March 21, 2026", time: "10:00 AM – 1:00 PM", name: "Easter Egg Hunt",
-      desc: "A fun-filled day for the whole family! We'll have egg hunts for different age groups, crafts, potluck snacks/lunch, and a photobooth. Volunteers and donations are still needed — sign up to help or just RSVP to join the fun!",
-      link: "signup.html", linkText: "Sign Up Now",
-    },
-    {
-      emoji: "🍨", colorClass: "card-color-2",
+      emoji: "🎉", colorClass: "card-color-1",
       statusLabel: "Coming Soon", statusClass: "status-soon",
-      date: "May 2026", time: "", name: "Ice Cream Social",
-      desc: "Join us by the pool for some sweet treats! A perfect way to kick off the summer and connect with your neighbors.",
+      date: "Coming Soon", time: "", name: "Upcoming Community Event",
+      desc: "Details for this event are on the way. Check back soon!",
       link: "#events", linkText: "Details Coming Soon",
     },
     {
-      emoji: "🎆", colorClass: "card-color-6",
+      emoji: "🌟", colorClass: "card-color-2",
       statusLabel: "Coming Soon", statusClass: "status-soon",
-      date: "July 4, 2026", time: "", name: "4th of July Block Party",
-      desc: "Celebrate Independence Day with the whole neighborhood — food, games, and fireworks.",
+      date: "Coming Soon", time: "", name: "Upcoming Community Event",
+      desc: "Stay tuned for more neighborhood events throughout the year.",
       link: "#events", linkText: "Details Coming Soon",
     },
     {
-      emoji: "🦐", colorClass: "card-color-4",
+      emoji: "🏡", colorClass: "card-color-3",
       statusLabel: "Coming Soon", statusClass: "status-soon",
-      date: "Summer 2026", time: "", name: "Shrimp Boil",
-      desc: "A classic Southern feast by the pool — bring your appetite and a side dish to share.",
-      link: "#events", linkText: "Details Coming Soon",
-    },
-    {
-      emoji: "🎃", colorClass: "card-color-5",
-      statusLabel: "Coming Soon", statusClass: "status-soon",
-      date: "October 2026", time: "", name: "Halloween Trunk or Treat",
-      desc: "A safe, fun Halloween tradition right here in the neighborhood for our little ones.",
-      link: "#events", linkText: "Details Coming Soon",
-    },
-    {
-      emoji: "🎄", colorClass: "card-color-3",
-      statusLabel: "Coming Soon", statusClass: "status-soon",
-      date: "December 2026", time: "", name: "Holiday Lights Contest",
-      desc: "Deck your halls and compete for the best-decorated home on the block.",
+      date: "Coming Soon", time: "", name: "Upcoming Community Event",
+      desc: "More neighborhood events are being planned. Check back for updates!",
       link: "#events", linkText: "Details Coming Soon",
     },
   ];
@@ -426,20 +401,9 @@
   // Fallback announcements — shown immediately and if the API fetch fails.
   const FALLBACK_ANNOUNCEMENTS = [
     {
-      day: "21", month: "Mar 2026",
-      title: "Easter Egg Hunt — Sign-Ups Now Open!",
-      body: "We're hosting our first neighborhood Easter egg hunt on March 21st! We're looking for volunteers, candy donations, and plastic egg donations. Fill out the sign-up form to let us know how you'd like to help — or just RSVP to join the fun.",
-      link: "signup.html", linkText: "Sign Up Now →",
-    },
-    {
-      day: "01", month: "Mar 2026",
-      title: "Welcome to Our New Community Hub",
-      body: "We've launched this website to keep Pendleton Plantation neighbors connected. Check back here for event sign-ups, announcements, and a growing photo gallery of our community memories.",
-    },
-    {
-      day: "2", month: "Feb 2026",
-      title: "Spring HOA Meeting Recap",
-      body: "Our spring HOA meeting was held on February 2nd.",
+      day: "—", month: "———",
+      title: "Welcome to Pendleton Plantation",
+      body: "Stay connected with your neighbors. Check back here for upcoming events, announcements, and community news from your HOA.",
     },
   ];
 
@@ -533,19 +497,34 @@
     // ── RENDER AWARDS ────────────────────────────────────────
     // Build HTML for each award card and inject into #awards-grid.
     const awardsGrid = document.getElementById("awards-grid");
-    if (awardsGrid) {
-      awardsGrid.innerHTML = awards.map(a => `
+    function renderAwards(awardList) {
+      if (!awardsGrid) return;
+      awardsGrid.innerHTML = awardList.map(a => `
       <div class="award-card${a.empty ? " award-empty" : ""}">
-        <!-- Large emoji icon at the top of the card. -->
         <div class="award-icon">${a.icon}</div>
-        <!-- Award category label, e.g., "YARD OF THE MONTH". -->
         <div class="award-category">${a.category}</div>
-        <!-- Winner's name, or "Coming Soon" if no winner yet. -->
         <div class="award-winner">${a.winner}</div>
-        <!-- Time period for this award, e.g., "April 2026". -->
         <div class="award-period">${a.period}</div>
       </div>`).join("");
     }
+
+    // Render fallback immediately, then replace with live data from Supabase.
+    renderAwards(FALLBACK_AWARDS);
+
+    db.from('winners').select('icon, award, winner_name, period')
+      .order('created_at', { ascending: false })
+      .limit(4)
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          renderAwards(data.map(w => ({
+            icon: w.icon || "🏆",
+            category: w.award || "Award",
+            winner: w.winner_name || "Coming Soon",
+            period: w.period || "",
+            empty: !w.winner_name,
+          })));
+        }
+      });
 
 
     // ── RENDER EVENTS ────────────────────────────────────────

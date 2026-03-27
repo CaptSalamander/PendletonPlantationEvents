@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ============================================================
+     File:        account.html
+     Purpose:     Resident account portal. Supports two states:
+
+       Logged OUT — shows sign-in and sign-up forms side by side.
+                    After sign-up, calls claim_guest_submissions()
+                    so prior guest submissions are linked.
+
+       Logged IN  — shows account info and the resident's personal
+                    submission history (sign-ups, nominations,
+                    bulletin posts, memories).
+
+     Scripts:     supabase-config.js (shared Supabase client)
+     Styles:      nominations-styles.css (reuses the card/form look)
+     ============================================================ -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Account — Pendleton Plantation</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <!-- Reuse the nominations card/form stylesheet; same cream + gold palette. -->
+  <link rel="stylesheet" href="nominations-styles.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+
+  <style>
+    /* ── Account-specific overrides ─────────────────────────── */
+
+    /* Auth tabs — sign in / sign up switcher */
+    .auth-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--gold-mid);
+      margin-bottom: 28px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 12px;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--soft-text);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .auth-tab.active {
+      color: var(--forest);
+      border-bottom: 3px solid var(--forest);
+      margin-bottom: -2px;
+    }
+
+    /* Auth panels — only the active one is visible */
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+
+    /* History section headers */
+    .history-section {
+      margin-top: 32px;
+    }
+    .history-section h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      color: var(--forest);
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--gold-mid);
+    }
+    .history-empty {
+      font-size: 0.88rem;
+      color: var(--soft-text);
+      font-style: italic;
+    }
+
+    /* Individual history cards */
+    .history-card {
+      background: var(--cream);
+      border: 1px solid var(--gold-mid);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .history-card strong {
+      color: var(--forest);
+    }
+    .history-card .hc-meta {
+      font-size: 0.8rem;
+      color: var(--soft-text);
+      margin-top: 4px;
+    }
+
+    /* Logged-in header with name + sign-out */
+    .account-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .account-header-bar h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: var(--forest);
+    }
+    .btn-signout {
+      padding: 8px 20px;
+      background: transparent;
+      border: 2px solid var(--gold-mid);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      color: var(--soft-text);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-signout:hover {
+      background: var(--gold-mid);
+      color: var(--forest);
+    }
+
+    /* Loading spinner for history fetch */
+    .history-loading {
+      font-size: 0.88rem;
+      color: var(--soft-text);
+      font-style: italic;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── NAVIGATION ───────────────────────────────────────────-->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-links">
+      <li class="nav-has-dropdown">
+        <a href="index.html">Home <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="index.html#awards">Awards</a></li>
+          <li><a href="index.html#events">Events</a></li>
+          <li><a href="index.html#memories">Memories</a></li>
+          <li><a href="index.html#announcements">Announcements</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="awards.html">Awards <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="awards.html#competitions">🏆 Active Competitions</a></li>
+          <li><a href="awards.html#winners">🥇 Past Winners</a></li>
+          <li><a href="nominations.html">📝 Nominate a Neighbor</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="events.html">Events <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="dashboard.html">📊 Event Dashboard</a></li>
+          <li><a href="events.html#EasterEggHunt2026">🐣 Easter Egg Hunt</a></li>
+          <li><a href="events.html#IceCreamSocial2026">🍦 Ice Cream Social</a></li>
+          <li><a href="events.html#July4th2026">🎆 4th of July</a></li>
+          <li><a href="events.html#ShrimpBoil2026">🦐 Shrimp Boil</a></li>
+          <li><a href="events.html#TrunkOrTreat2026">🎃 Trunk or Treat</a></li>
+          <li><a href="events.html#HolidayLights2026">✨ Holiday Lights</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="memories.html">Memories <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="memories.html">📷 Memory Scrapbook</a></li>
+          <li><a href="submit-memory.html">✍️ Share a Memory</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="bulletin-board.html">Bulletin Board <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="bulletin-board.html">📋 View Board</a></li>
+          <li><a href="post-to-board.html">📝 Post to Board</a></li>
+        </ul>
+      </li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+      <li><a href="account.html" class="nav-active">My Account</a></li>
+      <li><a href="admin.html">Admin</a></li>
+    </ul>
+  </nav>
+
+
+  <!-- ── PAGE WRAPPER ─────────────────────────────────────────-->
+  <div class="page-wrapper">
+
+    <div class="header">
+      <div class="trophy-row">🏡 ✦ 🏡</div>
+      <h1>My <em>Account</em></h1>
+      <p class="subtitle">
+        Sign in to view your event sign-ups, nominations, bulletin board posts,
+        and memory submissions — all in one place.
+      </p>
+    </div>
+
+
+    <div class="card">
+
+      <!-- ── LOGGED-OUT VIEW ──────────────────────────────────
+           Sign-in and sign-up forms. Shown until the user authenticates. -->
+      <div id="auth-view">
+
+        <!-- Tab switcher -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+          <button class="auth-tab"        id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+        </div>
+
+        <!-- ── SIGN-IN PANEL ──────────────────────────────── -->
+        <div class="auth-panel active" id="panel-signin">
+
+          <div class="section-label">👤 Welcome Back</div>
+
+          <div class="field">
+            <label for="si-email">Email Address</label>
+            <input type="email" id="si-email" placeholder="you@email.com" autocomplete="email" />
+          </div>
+
+          <div class="field">
+            <label for="si-password">Password</label>
+            <input type="password" id="si-password" placeholder="••••••••" autocomplete="current-password" />
+          </div>
+
+          <div class="error-msg" id="si-error"></div>
+
+          <div class="submit-area">
+            <button class="submit-btn" id="si-btn" onclick="doSignIn()">Sign In →</button>
+            <p class="fine-print" style="margin-top:14px;">
+              Don't have an account yet?
+              <a href="#" onclick="switchTab('signup'); return false;">Create one here.</a>
+            </p>
+          </div>
+        </div><!-- end panel-signin -->
+
+
+        <!-- ── SIGN-UP PANEL ──────────────────────────────── -->
+        <div class="auth-panel" id="panel-signup">
+
+          <div class="section-label">🌟 Create Your Account</div>
+          <p style="font-size:0.88rem;color:var(--soft-text);margin-bottom:20px;line-height:1.65;">
+            A free account lets you view your event sign-ups, nominations, and bulletin board
+            posts all in one place. Your contact details are never shown publicly.
+          </p>
+
+          <div class="field">
+            <label for="su-email">Email Address</label>
+            <input type="email" id="su-email" placeholder="you@email.com" autocomplete="email" />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="su-password">Password</label>
+              <input type="password" id="su-password" placeholder="At least 6 characters" autocomplete="new-password" />
+            </div>
+            <div class="field">
+              <label for="su-confirm">Confirm Password</label>
+              <input type="password" id="su-confirm" placeholder="••••••••" autocomplete="new-password" />
+            </div>
+          </div>
+
+          <div class="error-msg" id="su-error"></div>
+
+          <div class="submit-area">
+            <button class="submit-btn" id="su-btn" onclick="doSignUp()">Create Account →</button>
+            <p class="fine-print" style="margin-top:14px;">
+              Already have an account?
+              <a href="#" onclick="switchTab('signin'); return false;">Sign in here.</a>
+            </p>
+          </div>
+        </div><!-- end panel-signup -->
+
+      </div><!-- end #auth-view -->
+
+
+      <!-- ── LOGGED-IN VIEW ────────────────────────────────────
+           Shown after authentication. Displays account info and
+           personal submission history. Hidden until sign-in. -->
+      <div id="account-view" style="display:none;">
+
+        <div class="account-header-bar">
+          <h2 id="account-greeting">Welcome back!</h2>
+          <button class="btn-signout" onclick="doSignOut()">Sign Out</button>
+        </div>
+
+        <!-- My Sign-Ups -->
+        <div class="history-section">
+          <h3>📅 My Event Sign-Ups</h3>
+          <div id="history-signups" class="history-loading">Loading…</div>
+        </div>
+
+        <!-- My Nominations -->
+        <div class="history-section">
+          <h3>🏆 My Nominations</h3>
+          <div id="history-nominations" class="history-loading">Loading…</div>
+        </div>
+
+        <!-- My Bulletin Board Posts -->
+        <div class="history-section">
+          <h3>📋 My Bulletin Board Posts</h3>
+          <div id="history-bulletin" class="history-loading">Loading…</div>
+        </div>
+
+        <!-- My Memory Submissions -->
+        <div class="history-section">
+          <h3>📷 My Memory Submissions</h3>
+          <div id="history-memories" class="history-loading">Loading…</div>
+        </div>
+
+      </div><!-- end #account-view -->
+
+    </div><!-- end .card -->
+
+    <div class="footer">
+      Pendleton Plantation HOA &nbsp;·&nbsp; Resident Portal
+    </div>
+
+  </div><!-- end .page-wrapper -->
+
+
+  <script>
+
+    // ── HELPERS ──────────────────────────────────────────────
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    // Switches between the Sign In and Create Account tabs.
+    function switchTab(tab) {
+      document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+      document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+      document.getElementById('panel-signin').classList.toggle('active', tab === 'signin');
+      document.getElementById('panel-signup').classList.toggle('active', tab === 'signup');
+    }
+
+    function showError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = loading;
+      btn.textContent = loading ? 'Please wait…' : btn.dataset.label || btn.textContent;
+    }
+
+
+    // ── SIGN IN ──────────────────────────────────────────────
+    async function doSignIn() {
+      const email    = document.getElementById('si-email').value.trim();
+      const password = document.getElementById('si-password').value;
+      showError('si-error', '');
+
+      if (!email || !password) {
+        showError('si-error', 'Please enter your email and password.');
+        return;
+      }
+
+      document.getElementById('si-btn').disabled = true;
+      document.getElementById('si-btn').textContent = 'Signing in…';
+
+      const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        document.getElementById('si-btn').disabled = false;
+        document.getElementById('si-btn').textContent = 'Sign In →';
+        showError('si-error',
+          error.message.includes('Invalid') || error.message.includes('credentials')
+            ? 'Incorrect email or password. Please try again.'
+            : error.message
+        );
+        return;
+      }
+
+      showAccountView(data.user);
+    }
+
+
+    // ── SIGN UP ──────────────────────────────────────────────
+    async function doSignUp() {
+      const email    = document.getElementById('su-email').value.trim();
+      const password = document.getElementById('su-password').value;
+      const confirm  = document.getElementById('su-confirm').value;
+      showError('su-error', '');
+
+      if (!email) {
+        showError('su-error', 'Please enter your email address.');
+        return;
+      }
+      if (password.length < 6) {
+        showError('su-error', 'Password must be at least 6 characters.');
+        return;
+      }
+      if (password !== confirm) {
+        showError('su-error', 'Passwords do not match.');
+        return;
+      }
+
+      document.getElementById('su-btn').disabled = true;
+      document.getElementById('su-btn').textContent = 'Creating account…';
+
+      const { data, error } = await db.auth.signUp({ email, password });
+
+      if (error) {
+        document.getElementById('su-btn').disabled = false;
+        document.getElementById('su-btn').textContent = 'Create Account →';
+        showError('su-error', error.message);
+        return;
+      }
+
+      // Link any prior guest submissions (same email) to this new account.
+      try { await db.rpc('claim_guest_submissions'); } catch (_) {}
+
+      showAccountView(data.user);
+    }
+
+
+    // ── SIGN OUT ─────────────────────────────────────────────
+    async function doSignOut() {
+      await db.auth.signOut();
+      document.getElementById('account-view').style.display = 'none';
+      document.getElementById('auth-view').style.display    = 'block';
+      switchTab('signin');
+    }
+
+
+    // ── SHOW ACCOUNT VIEW ────────────────────────────────────
+    // Called after successful sign-in or sign-up. Hides the auth
+    // forms, shows the account panel, and loads submission history.
+    function showAccountView(user) {
+      document.getElementById('auth-view').style.display    = 'none';
+      document.getElementById('account-view').style.display = 'block';
+
+      // Derive a display name from the email address.
+      const displayName = user.email.split('@')[0];
+      document.getElementById('account-greeting').textContent =
+        'Welcome, ' + displayName + '!';
+
+      loadHistory(user.id, user.email);
+    }
+
+
+    // ── LOAD SUBMISSION HISTORY ──────────────────────────────
+    // Fetches all four history types for this user from Supabase.
+    // user_id is used for rows with accounts; email fallback for
+    // guest submissions already claimed by claim_guest_submissions.
+    async function loadHistory(userId) {
+      // All four fetches run in parallel.
+      const [signupsRes, nominationsRes, bulletinRes, memoriesRes] = await Promise.all([
+        db.from('signups')
+          .select('id, event_id, submitted_at, first_name, last_name, attending, potluck_item, notes')
+          .eq('user_id', userId)
+          .order('submitted_at', { ascending: false }),
+
+        db.from('award_nominations')
+          .select('id, submitted_at, nominee_name, award_category, custom_award, approved')
+          .eq('user_id', userId)
+          .order('submitted_at', { ascending: false }),
+
+        db.from('bulletin_posts')
+          .select('id, submitted_at, title, category, approved')
+          .eq('user_id', userId)
+          .order('submitted_at', { ascending: false }),
+
+        db.from('memories')
+          .select('id, submitted_at, event_name, caption, approved')
+          .eq('user_id', userId)
+          .order('submitted_at', { ascending: false }),
+      ]);
+
+      renderSignups(signupsRes.data || []);
+      renderNominations(nominationsRes.data || []);
+      renderBulletin(bulletinRes.data || []);
+      renderMemories(memoriesRes.data || []);
+    }
+
+
+    // ── RENDER HELPERS ───────────────────────────────────────
+
+    function renderSignups(rows) {
+      const el = document.getElementById('history-signups');
+      if (!rows.length) {
+        el.innerHTML = '<p class="history-empty">No event sign-ups found.</p>';
+        return;
+      }
+      el.innerHTML = rows.map(r => `
+        <div class="history-card">
+          <strong>${esc(r.event_id)}</strong>
+          ${r.attending ? ` &mdash; ${esc(r.attending)}` : ''}
+          ${r.potluck_item ? `<br>🍽️ Potluck: ${esc(r.potluck_item)}` : ''}
+          ${r.notes ? `<br><em>${esc(r.notes)}</em>` : ''}
+          <div class="hc-meta">Submitted ${fmtDate(r.submitted_at)}</div>
+        </div>`).join('');
+    }
+
+    function renderNominations(rows) {
+      const el = document.getElementById('history-nominations');
+      if (!rows.length) {
+        el.innerHTML = '<p class="history-empty">No nominations found. <a href="nominations.html">Nominate a neighbor →</a></p>';
+        return;
+      }
+      el.innerHTML = rows.map(r => {
+        const award = r.award_category === 'Other — Suggest My Own' && r.custom_award
+          ? r.custom_award : (r.award_category || 'Award');
+        const status = r.approved ? '✅ Reviewed' : '⏳ Pending review';
+        return `
+        <div class="history-card">
+          <strong>${esc(r.nominee_name)}</strong> &mdash; ${esc(award)}
+          <br><span style="font-size:0.82rem;">${status}</span>
+          <div class="hc-meta">Submitted ${fmtDate(r.submitted_at)}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderBulletin(rows) {
+      const el = document.getElementById('history-bulletin');
+      if (!rows.length) {
+        el.innerHTML = '<p class="history-empty">No posts found. <a href="post-to-board.html">Post to the board →</a></p>';
+        return;
+      }
+      el.innerHTML = rows.map(r => {
+        const status = r.approved ? '✅ Published' : '⏳ Pending review';
+        return `
+        <div class="history-card">
+          <strong>${esc(r.title)}</strong>
+          <br><span style="font-size:0.82rem;">${esc(r.category)} · ${status}</span>
+          <div class="hc-meta">Submitted ${fmtDate(r.submitted_at)}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderMemories(rows) {
+      const el = document.getElementById('history-memories');
+      if (!rows.length) {
+        el.innerHTML = '<p class="history-empty">No memory submissions found. <a href="submit-memory.html">Share a memory →</a></p>';
+        return;
+      }
+      el.innerHTML = rows.map(r => {
+        const status = r.approved ? '✅ Published' : '⏳ Pending review';
+        return `
+        <div class="history-card">
+          <strong>${esc(r.event_name || 'Community Memory')}</strong>
+          ${r.caption ? `<br><em>${esc(r.caption)}</em>` : ''}
+          <br><span style="font-size:0.82rem;">${status}</span>
+          <div class="hc-meta">Submitted ${fmtDate(r.submitted_at)}</div>
+        </div>`;
+      }).join('');
+    }
+
+
+    // ── INIT — check for existing session on page load ───────
+    (async () => {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) {
+        showAccountView(session.user);
+      }
+    })();
+
+
+    // ── NAV: HAMBURGER TOGGLE ────────────────────────────────
+    const hamburger = document.querySelector('.nav-hamburger');
+    const navLinks  = document.querySelector('.nav-links');
+
+    if (hamburger && navLinks) {
+      hamburger.addEventListener('click', () => {
+        const isOpen = navLinks.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        hamburger.setAttribute('aria-expanded', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      });
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          navLinks.classList.remove('open');
+          hamburger.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        });
+      });
+    }
+
+    // Dropdown toggles (mobile only)
+    document.querySelectorAll('.nav-has-dropdown > a').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        if (window.innerWidth <= 1100) {
+          e.preventDefault();
+          link.parentElement.classList.toggle('open');
+        }
+      });
+    });
+
+  </script>
+
+</body>
+
+</html>
