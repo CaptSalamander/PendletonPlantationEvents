@@ -1130,7 +1130,7 @@ new_tail = '''    // ── HELPERS ──────────────�
     function downloadImportTemplate() {
       if (!importType) return;
       const schema = IMPORT_SCHEMAS[importType];
-      const csv = schema.columns.join(",") + "\n";
+      const csv = schema.columns.join(",") + "\\n";
       const blob = new Blob([csv], { type: "text/csv" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
@@ -1141,7 +1141,7 @@ new_tail = '''    // ── HELPERS ──────────────�
     // Parse a raw CSV string into { headers, rows }.
     // Handles quoted fields and embedded commas/newlines.
     function parseCSVText(text) {
-      const lines = text.trim().split(/\r?\n/);
+      const lines = text.trim().split(/\\r?\\n/);
       if (lines.length < 2) return { headers: [], rows: [] };
 
       function parseLine(line) {

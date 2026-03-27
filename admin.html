@@ -1776,8 +1776,7 @@
     function downloadImportTemplate() {
       if (!importType) return;
       const schema = IMPORT_SCHEMAS[importType];
-      const csv = schema.columns.join(",") + "
-";
+      const csv = schema.columns.join(",") + "\n";
       const blob = new Blob([csv], { type: "text/csv" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
