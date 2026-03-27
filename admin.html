@@ -1787,8 +1787,7 @@
     // Parse a raw CSV string into { headers, rows }.
     // Handles quoted fields and embedded commas/newlines.
     function parseCSVText(text) {
-      const lines = text.trim().split(/?
-/);
+      const lines = text.trim().split(/\r?\n/);
       if (lines.length < 2) return { headers: [], rows: [] };
 
       function parseLine(line) {
