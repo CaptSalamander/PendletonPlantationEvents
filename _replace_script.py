@@ -837,13 +837,15 @@ new_tail = '''    // ── HELPERS ──────────────�
     // ====================================================
     //  MEMORIES
     // ====================================================
+    let memoriesData = [];
+
     async function loadMemories() {
       const tbody = document.getElementById("memories-tbody");
       tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading\u2026</td></tr>';
       const { data } = await db.from('memories').select('*').order('submitted_at', { ascending: false });
-      const memories = data || [];
-      if (!memories.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">\U0001f4f7</div><p>No memories submitted yet.</p></div></td></tr>'; return; }
-      tbody.innerHTML = memories.map(m => {
+      memoriesData = data || [];
+      if (!memoriesData.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">\U0001f4f7</div><p>No memories submitted yet.</p></div></td></tr>'; return; }
+      tbody.innerHTML = memoriesData.map(m => {
         const ids = extractDriveIds(m.photo_urls||[]);
         return `
         <tr>
@@ -855,10 +857,43 @@ new_tail = '''    // ── HELPERS ──────────────�
           <td>${badge(m.approved?"approved":"pending")}</td>
           <td>
             ${!m.approved?`<button class="btn btn-success btn-sm" onclick="approveMemory(${m.id})">Approve</button>`:""}
-            <button class="btn btn-danger btn-sm" onclick="confirmDeleteMemory(${m.id})">Delete</button>
+            <button class="btn btn-secondary btn-sm" onclick="openMemoryEdit(${m.id})">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteMemory(${m.id})">Delete</button>
           </td>
         </tr>`;
       }).join("");
+    }
+
+    function openMemoryEdit(id) {
+      const m = memoriesData.find(x => x.id === id);
+      if (!m) return;
+      const form = document.getElementById("memory-edit-form");
+      form.style.display = "block";
+      form.scrollIntoView({ behavior: "smooth" });
+      document.getElementById("mef-id").value       = m.id;
+      document.getElementById("mef-name").value     = m.uploader_name || "";
+      document.getElementById("mef-email").value    = m.email         || "";
+      document.getElementById("mef-event").value    = m.event_name    || "";
+      document.getElementById("mef-caption").value  = m.caption       || "";
+      document.getElementById("mef-approved").value = m.approved ? "true" : "false";
+    }
+
+    function cancelMemoryEdit() {
+      document.getElementById("memory-edit-form").style.display = "none";
+    }
+
+    async function submitMemoryEdit() {
+      const id  = document.getElementById("mef-id").value;
+      const row = {
+        uploader_name: document.getElementById("mef-name").value.trim(),
+        email:         document.getElementById("mef-email").value.trim()   || null,
+        event_name:    document.getElementById("mef-event").value.trim()   || null,
+        caption:       document.getElementById("mef-caption").value.trim() || null,
+        approved:      document.getElementById("mef-approved").value === "true",
+      };
+      const { error } = await db.from('memories').update(row).eq('id', id);
+      if (!error) { toast("Memory saved!", "success"); cancelMemoryEdit(); loadMemories(); }
+      else toast("Error: " + error.message, "error");
     }
 
     async function approveMemory(id) {
