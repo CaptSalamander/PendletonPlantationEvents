@@ -121,6 +121,35 @@
 }
 
 
+/* ── TEXT-ONLY NOTE CARD ──────────────────────────────────────
+   Shown in place of a photo grid when a memory has no photos.
+   Styled like a handwritten note — cream background, forest accent. */
+.memory-note-card {
+  background: var(--warm-white);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-left: 3px solid var(--forest);
+  border-radius: 4px;
+  padding: 18px 22px;
+  margin-bottom: 12px;
+  max-width: 680px;
+}
+
+.memory-note-caption {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--charcoal);
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+
+.memory-note-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+
 /* ── INDIVIDUAL MEMORY ITEM ───────────────────────────────────
    Each photo tile. Maintains a fixed 4:3 aspect ratio to keep
    the grid uniform regardless of the original image dimensions.

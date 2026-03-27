@@ -411,11 +411,7 @@
         errorMsg.style.display = "block";
         return;
       }
-      if (selectedFiles.length === 0) {
-        errorMsg.textContent = "Please choose at least one photo to share.";
-        errorMsg.style.display = "block";
-        return;
-      }
+      // Photos are optional — text-only memories are allowed.
 
       // ── Show overlay & encode photos ──────────────────────
       btn.disabled = true;
@@ -440,28 +436,43 @@
       }
 
       // ── Step 1: POST to GAS — upload photos + send email ──
-      // GAS returns { success: true, photoUrls: [...] }.
-      // Not using no-cors so we can read the photo URLs from the response.
-      overlayStatus.textContent = "Uploading photos… 📸";
+      // Only runs when photos were selected. Text-only submissions skip this.
       let photoUrls = [];
-      try {
-        const gasRes  = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({
-            uploader_name: firstName + " " + lastName,
-            email:         email,
-            event_name:    eventName,
-            caption:       caption,
-            photos:        photosPayload,
-          }),
-        });
-        const gasData = await gasRes.json();
-        if (gasData.photoUrls) photoUrls = gasData.photoUrls;
-      } catch (gasErr) {
-        // GAS failure should not block the Supabase insert.
-        // Photos simply won't be attached, but the record is still saved.
-        console.warn("GAS photo upload / email failed:", gasErr);
+
+      if (selectedFiles.length > 0) {
+        overlayStatus.textContent = "Uploading photos… 📸";
+        let gasOk = false;
+        try {
+          const gasRes  = await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({
+              uploader_name: firstName + " " + lastName,
+              email:         email,
+              event_name:    eventName,
+              caption:       caption,
+              photos:        photosPayload,
+            }),
+          });
+          const gasData = await gasRes.json();
+          console.log("GAS response:", gasData);
+          if (gasData.photoUrls && gasData.photoUrls.length) {
+            photoUrls = gasData.photoUrls;
+            gasOk = true;
+          } else if (gasData.error) {
+            console.warn("GAS returned error:", gasData.error);
+          }
+        } catch (gasErr) {
+          console.warn("GAS photo upload failed:", gasErr);
+        }
+
+        if (!gasOk) {
+          overlay.classList.remove("visible");
+          btn.disabled = false;
+          errorMsg.textContent = "Photo upload failed — please try again or contact mandyvaliquette00@gmail.com.";
+          errorMsg.style.display = "block";
+          return;
+        }
       }
 
       // ── Step 2: Insert into Supabase ──────────────────────

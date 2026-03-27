@@ -225,40 +225,53 @@
       Object.keys(groups).forEach(eventName => {
         const subs = groups[eventName];
 
-        // Collect all photos for this event group.
+        // Separate photo and text-only submissions.
+        const photoSubs    = subs.filter(s => s.photoIds.length > 0);
+        const textOnlySubs = subs.filter(s => s.photoIds.length === 0);
+
+        // Collect all photos across photo submissions.
         const eventPhotos = [];
-        subs.forEach(sub => {
+        photoSubs.forEach(sub => {
           sub.photoIds.forEach(id => {
             eventPhotos.push({
-              src: driveThumb(id),
+              src:     driveThumb(id),
               fullSrc: driveFull(id),
               caption: eventName + (sub.caption ? " — " + sub.caption : ""),
             });
           });
         });
 
-        // Record the starting index in allPhotos before appending.
         const startIndex = allPhotos.length;
         allPhotos.push(...eventPhotos);
 
-        // Most recent uploader and caption for the group header.
         const latest = subs[0];
 
-        html += `
-          <div class="memory-event-group">
-            <div class="memory-event-heading">
-              <span class="memory-event-title">${eventName}</span>
-              ${latest.caption ? `<span class="memory-event-caption">${latest.caption}</span>` : ""}
-              <span class="memory-event-meta">Shared by ${latest.uploader}</span>
-            </div>
-            <div class="memory-event-grid">
-              ${eventPhotos.map((p, j) => `
-                <div class="memory-item" data-index="${startIndex + j}">
-                  <img src="${p.src}" alt="${eventName}" loading="lazy" />
-                  <div class="memory-overlay"><div class="memory-caption">${eventName}</div></div>
-                </div>`).join("")}
-            </div>
+        html += `<div class="memory-event-group">
+          <div class="memory-event-heading">
+            <span class="memory-event-title">${eventName}</span>
+            <span class="memory-event-meta">Shared by ${latest.uploader}</span>
           </div>`;
+
+        // Text-only note cards.
+        textOnlySubs.forEach(sub => {
+          html += `<div class="memory-note-card">
+            ${sub.caption ? `<div class="memory-note-caption">"${sub.caption}"</div>` : ""}
+            <div class="memory-note-meta">— ${sub.uploader}</div>
+          </div>`;
+        });
+
+        // Photo grid (only rendered if there are photos).
+        if (eventPhotos.length > 0) {
+          html += `<div class="memory-event-grid">
+            ${eventPhotos.map((p, j) => `
+              <div class="memory-item" data-index="${startIndex + j}">
+                <img src="${p.src}" alt="${eventName}" loading="lazy" />
+                <div class="memory-overlay"><div class="memory-caption">${eventName}</div></div>
+              </div>`).join("")}
+          </div>`;
+        }
+
+        html += `</div>`;
       });
 
       grid.innerHTML = html;
@@ -367,11 +380,11 @@
       .then(({ data, error }) => {
         if (!error && data && data.length > 0) {
           const submissions = data.map(row => ({
-            event:    row.event_name   || '',
-            caption:  row.caption      || '',
+            event:    row.event_name    || 'Community Memory',
+            caption:  row.caption       || '',
             uploader: row.uploader_name || 'A neighbor',
             photoIds: (row.photo_urls || []).map(extractDriveId).filter(Boolean),
-          })).filter(s => s.photoIds.length > 0);
+          }));
           if (submissions.length > 0) renderGrid(submissions);
         }
       });
