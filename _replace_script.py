@@ -45,7 +45,7 @@ new_tail = '''    // ── HELPERS ──────────────�
       document.getElementById("confirm-modal").classList.add("hidden");
       modalCallback = null;
     }
-    function modalConfirm() { closeModal(); if (modalCallback) modalCallback(); }
+    function modalConfirm() { const cb = modalCallback; closeModal(); if (cb) cb(); }
 
 
     // ── LOGIN / AUTH ──────────────────────────────────────────
