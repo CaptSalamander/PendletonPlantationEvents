@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="submit-memory-styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <script src="account-offer.js"></script>
 </head>
 
 <body>
@@ -213,6 +214,8 @@
           gallery on the homepage.<br /><br />
           <em>These are the moments that make Pendleton Plantation feel like home.</em>
         </p>
+        <!-- Account creation offer injected here after success -->
+        <div id="account-offer-container"></div>
       </div>
 
 
@@ -493,6 +496,7 @@
         overlay.classList.remove("visible");
         document.getElementById("form-content").style.display = "none";
         document.getElementById("success-msg").style.display = "block";
+        showAccountOffer(document.getElementById("uploader_email").value);
 
       } catch (err) {
         overlay.classList.remove("visible");

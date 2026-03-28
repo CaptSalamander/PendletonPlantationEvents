@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="nominations-styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <script src="account-offer.js"></script>
 </head>
 
 <body>
@@ -304,6 +305,8 @@
           Keep an eye on the <a href="awards.html">Awards page</a> to cast your vote!<br /><br />
           <em>It's neighbors like you that make Pendleton Plantation such a special place to call home.</em>
         </p>
+        <!-- Account creation offer injected here after success -->
+        <div id="account-offer-container"></div>
       </div>
 
       <!-- ── LOADING OVERLAY ─────────────────────────────────────
@@ -677,6 +680,7 @@
         overlay.classList.remove("visible");
         document.getElementById("form-content").style.display = "none";
         document.getElementById("success-msg").style.display = "block";
+        showAccountOffer(document.getElementById("nom_email").value);
 
       } catch (err) {
         overlay.classList.remove("visible");

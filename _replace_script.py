@@ -764,7 +764,7 @@ new_tail = '''    // ── HELPERS ──────────────�
       // Send confirmation email to the nominator via GAS.
       if (n.nominator_email) {
         try {
-          await fetch(NOM_SCRIPT_URL, {
+          const gasResp = await fetch(NOM_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain" },
             body: JSON.stringify({
@@ -776,8 +776,16 @@ new_tail = '''    // ── HELPERS ──────────────�
               custom_award:    n.custom_award    || "",
             }),
           });
+          const gasJson = await gasResp.json().catch(() => null);
+          if (!gasJson || !gasJson.success) {
+            toast("DB updated, but email failed: " + (gasJson?.error || "GAS returned an error. Check that the script is deployed."), "error");
+            loadNominations();
+            return;
+          }
         } catch (gasErr) {
-          console.warn("Confirmation email failed:", gasErr);
+          toast("DB updated, but email failed: " + gasErr.message, "error");
+          loadNominations();
+          return;
         }
       }
 
