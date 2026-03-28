@@ -31,6 +31,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <script src="nav-auth.js"></script>
 
   <style>
     /* ── Account-specific overrides ─────────────────────────── */
@@ -197,7 +198,8 @@
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
       <li><a href="account.html" class="nav-active">My Account</a></li>
-      <li><a href="admin.html">Admin</a></li>
+      <li><a id="nav-account-btn" href="account.html" class="nav-cta">Sign In / Register</a></li>
+      <li id="nav-admin-item" style="display:none"><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
 

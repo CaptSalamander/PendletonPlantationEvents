@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="dashboard-styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <script src="nav-auth.js"></script>
 </head>
 
 <body>
@@ -84,7 +85,8 @@
       </li>
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
-      <li><a href="admin.html">Admin</a></li>
+      <li><a id="nav-account-btn" href="account.html" class="nav-cta">Sign In / Register</a></li>
+      <li id="nav-admin-item" style="display:none"><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
 
@@ -134,7 +136,7 @@
       <button class="dash-tab admin-only" data-tab="volunteers" onclick="setTab('volunteers')" style="display:none">Volunteers</button>
       <button class="dash-tab admin-only" data-tab="supplies" onclick="setTab('supplies')" style="display:none">Supplies</button>
       <button class="dash-tab admin-only" data-tab="shopping" onclick="setTab('shopping')" style="display:none">Shopping List</button>
-      <button class="dash-tab admin-only" data-tab="potluck" onclick="setTab('potluck')" style="display:none">Potluck</button>
+      <button class="dash-tab" data-tab="potluck" onclick="setTab('potluck')">Potluck</button>
       <button class="dash-tab admin-only" data-tab="attendees" onclick="setTab('attendees')" style="display:none">Attendees</button>
       <button class="dash-tab active" data-tab="lookup" onclick="setTab('lookup')">My Sign-Up</button>
     </div>
@@ -302,7 +304,7 @@
     // ============================================================
     function setTab(tab) {
       // Guard: non-admin cannot switch to admin-only tabs
-      const adminTabs = ['overview','volunteers','supplies','shopping','potluck','attendees'];
+      const adminTabs = ['overview','volunteers','supplies','shopping','attendees'];
       if (!isAdmin && adminTabs.includes(tab)) return;
 
       currentTab = tab;
