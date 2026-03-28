@@ -116,6 +116,7 @@ new_tail = '''    // ── HELPERS ──────────────�
       else if (currentPanel === "announcements") loadAnnouncements();
       else if (currentPanel === "memories")      loadMemories();
       else if (currentPanel === "bulletin")      loadBulletin();
+      else if (currentPanel === "volunteers")    initVolunteersPanel();
       else if (currentPanel === "links")         loadLinks();
       else if (currentPanel === "documents")     loadDocuments();
     }
@@ -394,16 +395,18 @@ new_tail = '''    // ── HELPERS ──────────────�
     }
 
     async function confirmArchive() {
-      showModal("\u26a0\ufe0f","Archive Sign-Ups",
-        "This will mark all current sign-ups as archived. This cannot be undone.",
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: pastRows } = await db.from('events').select('id, event_name')
+        .lt('event_date', today).order('event_date', { ascending: false }).limit(1);
+      const ev = pastRows?.[0];
+      if (!ev) { toast("No past events found to archive.", "error"); return; }
+      showModal("\u26a0\ufe0f", "Archive Sign-Ups",
+        `This will archive all sign-ups for "${ev.event_name || ev.id}". This cannot be undone.`,
         async () => {
           try {
-            const { data: cfg } = await db.from('config').select('value').eq('key','current_event_id').maybeSingle();
-            const eventId = cfg?.value;
-            if (!eventId) { toast("No current_event_id set in config.", "error"); return; }
-            const { error } = await db.from('signups').update({ archived: true }).eq('event_id', eventId).eq('archived', false);
+            const { error } = await db.from('signups').update({ archived: true }).eq('event_id', ev.id).eq('archived', false);
             if (error) throw error;
-            toast("Sign-ups archived for: " + eventId, "success");
+            toast("Sign-ups archived for: " + (ev.event_name || ev.id), "success");
           } catch (e) { toast("Error: " + e.message, "error"); }
         });
     }
@@ -670,22 +673,30 @@ new_tail = '''    // ── HELPERS ──────────────�
 
     async function loadNominations() {
       const tbody = document.getElementById("nominations-tbody");
-      tbody.innerHTML = '<tr><td colspan="6" class="admin-loading">Loading\u2026</td></tr>';
-      const { data, error } = await db.from('award_nominations').select('*').order('submitted_at', { ascending: false });
-      if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:20px;">${esc(error.message)}</td></tr>`; return; }
+      tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading\u2026</td></tr>';
+      const [{ data, error }, { data: voteRows }] = await Promise.all([
+        db.from('award_nominations').select('*').order('submitted_at', { ascending: false }),
+        db.from('nomination_votes').select('nomination_id')
+      ]);
+      if (error) { tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger);padding:20px;">${esc(error.message)}</td></tr>`; return; }
       nominationsData = data || [];
+      const voteCounts = {};
+      (voteRows || []).forEach(v => { voteCounts[v.nomination_id] = (voteCounts[v.nomination_id] || 0) + 1; });
       if (!nominationsData.length) {
-        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">\U0001f4dd</div><p>No nominations yet.</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">\U0001f4dd</div><p>No nominations yet.</p></div></td></tr>';
         return;
       }
       tbody.innerHTML = nominationsData.map(n => {
         const contest = contestsData.find(c => c.id === n.contest_id);
+        const vc = voteCounts[n.id] || 0;
+        const voteLabel = vc ? `<strong>${vc}</strong>` : `<span style="color:var(--muted)">\u2014</span>`;
         return `
         <tr>
           <td>${esc(fmtDate(n.submitted_at))}</td>
           <td>${esc(contest ? contest.award_name : (n.contest_id||"\u2014"))}</td>
           <td>${esc(n.nominee_name||"")}</td>
           <td>${esc(n.nominator_name||"")}</td>
+          <td style="text-align:center;">${voteLabel}</td>
           <td>${badge(n.approved ? "received" : "pending")}</td>
           <td>
             ${!n.approved ? `<button class="btn btn-success btn-sm" onclick="markNominationReceived(${n.id})">Mark Received</button>` : ""}
@@ -1010,6 +1021,216 @@ new_tail = '''    // ── HELPERS ──────────────�
         if (!error) { toast("Post deleted.", "success"); loadBulletin(); }
         else toast("Error.", "error");
       });
+    }
+
+
+    // ====================================================
+    //  VOLUNTEERS
+    // ====================================================
+    let volunteersData = [];
+    let volEventsCache = [];
+
+    async function initVolunteersPanel() {
+      const { data: evs } = await db.from('events').select('id, event_name, event_date').order('event_date', { ascending: false });
+      volEventsCache = evs || [];
+      const evSel = document.getElementById('vol-filter-event');
+      evSel.innerHTML = '<option value="">All Events</option>' +
+        volEventsCache.map(e => `<option value="${esc(e.id)}">${esc(e.event_name)}${e.event_date ? ' \xb7 ' + fmtDate(e.event_date) : ''}</option>`).join('');
+      await loadVolunteers();
+    }
+
+    async function onVolEventFilterChange() {
+      // When event filter changes, refresh role filter options then reload list
+      const eventId = document.getElementById('vol-filter-event').value;
+      const roleSel = document.getElementById('vol-filter-role');
+      roleSel.innerHTML = '<option value="">All Roles</option>';
+      if (eventId) {
+        const { data: roles } = await db.from('event_volunteer_roles').select('role_label').eq('event_id', eventId).order('sort_order');
+        (roles || []).forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.role_label; opt.textContent = r.role_label;
+          roleSel.appendChild(opt);
+        });
+      }
+      await loadVolunteers();
+    }
+
+    async function loadVolunteers() {
+      const tbody = document.getElementById('volunteers-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" class="admin-loading">Loading\u2026</td></tr>';
+
+      const eventId      = document.getElementById('vol-filter-event').value;
+      const roleFilter   = document.getElementById('vol-filter-role').value;
+      const archivedSel  = document.getElementById('vol-filter-archived').value;
+
+      let q = db.from('signups')
+        .select('id, event_id, submitted_at, first_name, last_name, email, phone, address, attending, notes, archived, signup_volunteer_roles(role_label)');
+      if (eventId)              q = q.eq('event_id', eventId);
+      if (archivedSel === 'active')    q = q.eq('archived', false);
+      if (archivedSel === 'archived')  q = q.eq('archived', true);
+      q = q.order('submitted_at', { ascending: false });
+
+      const { data, error } = await q;
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger);padding:20px;">${esc(error.message)}</td></tr>`;
+        return;
+      }
+
+      // Keep only rows that have at least one volunteer role
+      let rows = (data || []).filter(s => s.signup_volunteer_roles && s.signup_volunteer_roles.length > 0);
+
+      // Apply role filter client-side
+      if (roleFilter) {
+        rows = rows.filter(s => s.signup_volunteer_roles.some(r => r.role_label === roleFilter));
+      }
+
+      volunteersData = rows;
+      document.getElementById('vol-summary').textContent =
+        rows.length ? `Showing ${rows.length} volunteer${rows.length !== 1 ? 's' : ''}` : '';
+
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">\uD83D\uDE4B</div><p>No volunteers found.</p></div></td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map(s => {
+        const ev    = volEventsCache.find(e => e.id === s.event_id);
+        const roles = (s.signup_volunteer_roles || []).map(r => esc(r.role_label)).join(', ');
+        return `
+        <tr${s.archived ? ' style="opacity:0.6;"' : ''}>
+          <td><strong>${esc(s.first_name)} ${esc(s.last_name)}</strong></td>
+          <td>${esc(s.email || '')}</td>
+          <td>${esc(s.phone || '\u2014')}</td>
+          <td>${esc(s.address || '\u2014')}</td>
+          <td>${esc(ev ? ev.event_name : (s.event_id || '\u2014'))}</td>
+          <td>${ev && ev.event_date ? esc(fmtDate(ev.event_date)) : '\u2014'}</td>
+          <td>${roles || '\u2014'}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="openVolunteerForm(${s.id})">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteVolunteer(${s.id})">Delete</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function openVolunteerForm(id) {
+      const form = document.getElementById('volunteer-form');
+      form.style.display = 'block';
+      form.scrollIntoView({ behavior: 'smooth' });
+
+      // Populate event dropdown in form
+      const evSel = document.getElementById('vf-event');
+      evSel.innerHTML = volEventsCache.map(e =>
+        `<option value="${esc(e.id)}">${esc(e.event_name)}${e.event_date ? ' \xb7 ' + fmtDate(e.event_date) : ''}</option>`
+      ).join('');
+
+      if (id) {
+        document.getElementById('vol-form-title').textContent = 'Edit Volunteer';
+        const s = volunteersData.find(x => x.id === id);
+        if (!s) return;
+        document.getElementById('vf-id').value        = s.id;
+        document.getElementById('vf-first').value     = s.first_name  || '';
+        document.getElementById('vf-last').value      = s.last_name   || '';
+        document.getElementById('vf-email').value     = s.email       || '';
+        document.getElementById('vf-phone').value     = s.phone       || '';
+        document.getElementById('vf-address').value   = s.address     || '';
+        document.getElementById('vf-attending').value = s.attending   || '';
+        document.getElementById('vf-notes').value     = s.notes       || '';
+        evSel.value = s.event_id || '';
+        await loadEventRolesForForm((s.signup_volunteer_roles || []).map(r => r.role_label));
+      } else {
+        document.getElementById('vol-form-title').textContent = 'Add Volunteer';
+        document.getElementById('vf-id').value = '';
+        ['vf-first','vf-last','vf-email','vf-phone','vf-address','vf-notes'].forEach(f => { document.getElementById(f).value = ''; });
+        document.getElementById('vf-attending').value = '';
+        if (evSel.options.length > 0) evSel.value = evSel.options[0].value;
+        await loadEventRolesForForm([]);
+      }
+    }
+
+    async function loadEventRolesForForm(selectedRoles) {
+      const eventId = document.getElementById('vf-event').value;
+      const wrap    = document.getElementById('vf-roles-wrap');
+      if (!eventId) {
+        wrap.innerHTML = '<span style="color:var(--muted);font-size:0.85rem;">Select an event above to see available roles.</span>';
+        return;
+      }
+      const { data: roles } = await db.from('event_volunteer_roles')
+        .select('role_label, role_detail').eq('event_id', eventId).order('sort_order');
+      if (!roles || !roles.length) {
+        wrap.innerHTML = '<span style="color:var(--muted);font-size:0.85rem;">No volunteer roles defined for this event.</span>';
+        return;
+      }
+      wrap.innerHTML = roles.map(r => `
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--cream);border:1.5px solid rgba(44,61,46,0.12);border-radius:8px;cursor:pointer;min-width:160px;">
+          <input type="checkbox" value="${esc(r.role_label)}" class="vf-role-cb"${(selectedRoles||[]).includes(r.role_label) ? ' checked' : ''} style="width:15px;height:15px;" />
+          <span style="font-size:0.88rem;color:var(--forest);">${esc(r.role_label)}</span>
+        </label>`).join('');
+    }
+
+    function cancelVolunteerForm() {
+      document.getElementById('volunteer-form').style.display = 'none';
+    }
+
+    async function saveVolunteerEdit() {
+      const id        = document.getElementById('vf-id').value;
+      const eventId   = document.getElementById('vf-event').value;
+      const firstName = document.getElementById('vf-first').value.trim();
+      const lastName  = document.getElementById('vf-last').value.trim();
+      const email     = document.getElementById('vf-email').value.trim();
+      const phone     = document.getElementById('vf-phone').value.trim()   || null;
+      const address   = document.getElementById('vf-address').value.trim() || null;
+      const attending = document.getElementById('vf-attending').value      || null;
+      const notes     = document.getElementById('vf-notes').value.trim()   || null;
+      const roles     = [...document.querySelectorAll('.vf-role-cb:checked')].map(cb => cb.value);
+
+      if (!firstName || !lastName || !email || !eventId) {
+        toast('First name, last name, email, and event are required.', 'error');
+        return;
+      }
+
+      const row = { event_id: eventId, first_name: firstName, last_name: lastName, email, phone, address, attending, notes };
+
+      try {
+        let signupId;
+        if (id) {
+          const { error } = await db.from('signups').update(row).eq('id', id);
+          if (error) throw error;
+          signupId = parseInt(id);
+        } else {
+          const { data: ins, error } = await db.from('signups').insert(row).select('id').single();
+          if (error) throw error;
+          signupId = ins.id;
+        }
+
+        // Replace volunteer roles
+        await db.from('signup_volunteer_roles').delete().eq('signup_id', signupId);
+        if (roles.length) {
+          const { error: rErr } = await db.from('signup_volunteer_roles').insert(
+            roles.map(r => ({ signup_id: signupId, role_label: r }))
+          );
+          if (rErr) throw rErr;
+        }
+
+        toast('Volunteer saved!', 'success');
+        cancelVolunteerForm();
+        loadVolunteers();
+      } catch (e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    function confirmDeleteVolunteer(id) {
+      const s    = volunteersData.find(x => x.id === id);
+      const name = s ? `${s.first_name} ${s.last_name}` : 'this volunteer';
+      showModal('\uD83D\uDDD1\uFE0F', 'Delete Volunteer',
+        `Delete sign-up for "${name}"? This also removes their donation pledges and role assignments.`,
+        async () => {
+          try {
+            const { error } = await db.from('signups').delete().eq('id', id);
+            if (error) throw error;
+            toast('Volunteer deleted.', 'success');
+            loadVolunteers();
+          } catch (e) { toast('Error: ' + e.message, 'error'); }
+        });
     }
 
 

@@ -109,7 +109,7 @@
         <h2 class="section-title">Active <em>Competitions</em></h2>
         <div class="section-rule"></div>
         <p class="awards-section-sub">
-          Know a neighbor who deserves recognition? Nominate them below.
+          Know a neighbor who deserves recognition? Nominate them — and when voting opens, the whole neighborhood gets a say. The board considers community votes when choosing winners.
         </p>
       </div>
 
@@ -189,6 +189,57 @@
       <a href="nominations.html" class="btn-nominate-primary">Nominate a Neighbor →</a>
     </div>
   </section>
+
+
+  <!-- ── VOTING MODAL ─────────────────────────────────────────
+       Full-screen overlay opened when a resident clicks "Cast Your Vote"
+       on a contest card. Shows approved nominees with live vote counts,
+       collects name + email, and submits one vote per email per contest. -->
+  <div class="voting-modal-overlay" id="voting-modal" aria-modal="true" role="dialog">
+    <div class="voting-modal-card">
+
+      <button class="voting-modal-close" id="voting-modal-close" aria-label="Close voting panel">×</button>
+
+      <div class="voting-modal-header">
+        <p class="section-eyebrow" style="margin-bottom:8px;">✦ &nbsp; Community Vote &nbsp; ✦</p>
+        <h2 class="voting-modal-title" id="voting-modal-title">Cast Your Vote</h2>
+        <div class="section-rule" style="margin:14px auto 0;max-width:60px;"></div>
+        <p class="voting-intro" id="voting-intro">Select a nominee and submit your vote below. The board will take neighborhood votes into account when making their final decision — one vote per person per contest.</p>
+      </div>
+
+      <!-- Nominee list + form (hidden after successful vote) -->
+      <div id="voting-form-section">
+        <div id="voting-nominees-list" class="voting-nominees-list">
+          <p class="voting-loading">Loading nominees…</p>
+        </div>
+
+        <div class="voting-fields">
+          <div class="voting-field">
+            <label for="voter-name">Your Name <span class="voting-optional">(optional)</span></label>
+            <input type="text" id="voter-name" placeholder="First and last name" autocomplete="name" />
+          </div>
+          <div class="voting-field">
+            <label for="voter-email">Your Email <span class="voting-req">*</span></label>
+            <input type="email" id="voter-email" placeholder="you@example.com" autocomplete="email" />
+            <div class="voting-field-hint">Used to ensure one vote per person. Not shared publicly.</div>
+          </div>
+        </div>
+
+        <div id="vote-error" class="vote-error" style="display:none;"></div>
+
+        <button class="btn-vote-submit" id="btn-vote-submit" onclick="submitVote()">Submit My Vote →</button>
+      </div>
+
+      <!-- Success state (shown after vote is recorded) -->
+      <div id="voting-success-section" class="voting-success" style="display:none;">
+        <div class="voting-success-icon">🗳️</div>
+        <h3 class="voting-success-title">Vote Recorded!</h3>
+        <p class="voting-success-msg" id="voting-success-msg"></p>
+        <button class="btn-event-ghost" onclick="closeVotingModal()" style="margin-top:20px;">Close</button>
+      </div>
+
+    </div>
+  </div>
 
 
   <!-- ── FOOTER ───────────────────────────────────────────────-->
@@ -318,6 +369,7 @@
   // ── MAP SUPABASE CONTEST ROW → local format ───────────────
   function apiContestToLocal(c) {
     return {
+      id:          c.id,
       icon:        c.icon        || "🏆",
       badge:       c.badge       || "",
       bannerColor: c.banner_color || "banner-gold",
@@ -437,7 +489,7 @@
     let actionHtml;
     switch (c.status) {
       case 'open':         actionHtml = `<a href="nominations.html" class="btn-event-primary">Nominate Someone →</a>`; break;
-      case 'voting':       actionHtml = `<a href="nominations.html" class="btn-event-primary">Cast Your Vote →</a>`; break;
+      case 'voting':       actionHtml = `<button class="btn-event-primary btn-vote-open" onclick='openVotingModal(${JSON.stringify(c.id)}, ${JSON.stringify(c.award)})'>🗳️ Cast Your Vote →</button>`; break;
       case 'awarded':      actionHtml = `<a href="#winners" class="btn-event-ghost">See Past Winners →</a>`; break;
       default:             actionHtml = `<span class="comp-status-note">${badgeLabel}</span>`;
     }
@@ -645,6 +697,157 @@
       initWinners([]);
     }
   })();
+
+
+  // ── COMMUNITY VOTING ──────────────────────────────────────
+  // Opens the voting modal, loads approved nominees + live vote
+  // counts for the selected contest, and handles submission.
+  // One vote per voter_email per contest (enforced by DB UNIQUE).
+
+  let _vContestId   = null;
+  let _vContestName = '';
+  let _vNominees    = [];
+
+  function _escHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function openVotingModal(contestId, contestName) {
+    _vContestId   = contestId;
+    _vContestName = contestName;
+    _vNominees    = [];
+
+    // Reset form state
+    document.getElementById('voting-form-section').style.display  = '';
+    document.getElementById('voting-success-section').style.display = 'none';
+    document.getElementById('voter-name').value  = '';
+    document.getElementById('voter-email').value = '';
+    document.getElementById('vote-error').style.display = 'none';
+    document.getElementById('voting-modal-title').textContent = contestName;
+    document.getElementById('voting-nominees-list').innerHTML =
+      '<p class="voting-loading">Loading nominees…</p>';
+
+    // Show modal, lock scroll
+    document.getElementById('voting-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // Fetch nominees + existing vote counts in parallel
+    const [nomRes, voteRes] = await Promise.all([
+      db.from('award_nominations')
+        .select('id, nominee_name, award_category, nominator_name')
+        .eq('contest_id', contestId)
+        .eq('approved', true),
+      db.from('nomination_votes')
+        .select('nomination_id')
+        .eq('contest_id', contestId),
+    ]);
+
+    _vNominees = nomRes.data || [];
+
+    if (_vNominees.length === 0) {
+      document.getElementById('voting-nominees-list').innerHTML =
+        '<p class="voting-empty">No nominees have been approved for this contest yet — check back soon!</p>';
+      return;
+    }
+
+    // Count votes per nominee
+    const counts = {};
+    (voteRes.data || []).forEach(v => {
+      counts[v.nomination_id] = (counts[v.nomination_id] || 0) + 1;
+    });
+
+    // Sort by vote count descending so leaders show first
+    const sorted = [..._vNominees].sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+    const totalVotes = (voteRes.data || []).length;
+
+    document.getElementById('voting-nominees-list').innerHTML =
+      `<p class="voting-total-label">${totalVotes} vote${totalVotes === 1 ? '' : 's'} cast so far</p>` +
+      sorted.map(n => {
+        const votes = counts[n.id] || 0;
+        const pct   = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+        return `
+        <label class="vote-option">
+          <input type="radio" name="vote-choice" value="${n.id}" />
+          <div class="vote-option-body">
+            <div class="vote-nominee-name">${_escHtml(n.nominee_name)}</div>
+            ${n.award_category ? `<div class="vote-nominee-cat">${_escHtml(n.award_category)}</div>` : ''}
+            <div class="vote-bar-wrap">
+              <div class="vote-bar" style="width:${pct}%"></div>
+            </div>
+            <div class="vote-count-label">${votes} vote${votes === 1 ? '' : 's'}</div>
+          </div>
+        </label>`;
+      }).join('');
+  }
+
+  async function submitVote() {
+    const selected   = document.querySelector('input[name="vote-choice"]:checked');
+    const voterName  = document.getElementById('voter-name').value.trim();
+    const voterEmail = document.getElementById('voter-email').value.trim().toLowerCase();
+    const errorEl    = document.getElementById('vote-error');
+    const btn        = document.getElementById('btn-vote-submit');
+
+    errorEl.style.display = 'none';
+
+    if (!selected) {
+      errorEl.textContent = 'Please select a nominee before submitting.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    if (!voterEmail) {
+      errorEl.textContent = 'Please enter your email address.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    if (!voterEmail.includes('@')) {
+      errorEl.textContent = 'Please enter a valid email address.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    const nominationId = parseInt(selected.value, 10);
+    const { error } = await db.from('nomination_votes').insert({
+      nomination_id: nominationId,
+      contest_id:    _vContestId,
+      voter_name:    voterName || null,
+      voter_email:   voterEmail,
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Submit My Vote →';
+
+    if (error) {
+      if (error.code === '23505') {
+        errorEl.textContent = "It looks like you've already voted in this contest. Only one vote per email address is allowed.";
+      } else {
+        errorEl.textContent = 'Something went wrong — please try again.';
+      }
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const nomineeName = _vNominees.find(n => n.id === nominationId)?.nominee_name || 'your nominee';
+    document.getElementById('voting-form-section').style.display  = 'none';
+    document.getElementById('voting-success-section').style.display = '';
+    document.getElementById('voting-success-msg').textContent =
+      `Your vote for ${nomineeName} has been counted! Thank you for participating — the board will take neighborhood votes into account when making the final decision.`;
+  }
+
+  function closeVotingModal() {
+    document.getElementById('voting-modal').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('voting-modal-close').addEventListener('click', closeVotingModal);
+  document.getElementById('voting-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeVotingModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('voting-modal').classList.contains('active')) closeVotingModal();
+  });
 
 </script>
 

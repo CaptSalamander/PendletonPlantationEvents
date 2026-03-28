@@ -23,6 +23,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 </head>
 
 <body>
@@ -70,6 +72,7 @@
         <div class="sidebar-nav-item"        data-panel="announcements" onclick="showPanel('announcements')"><span class="nav-icon">📢</span> Announcements</div>
         <div class="sidebar-nav-item"        data-panel="memories"     onclick="showPanel('memories')">     <span class="nav-icon">📷</span> Memories</div>
         <div class="sidebar-nav-item"        data-panel="bulletin"     onclick="showPanel('bulletin')">     <span class="nav-icon">📋</span> Bulletin Board</div>
+        <div class="sidebar-nav-item" data-panel="volunteers" onclick="showPanel('volunteers')"><span class="nav-icon">🙋</span> Volunteers</div>
         <div class="sidebar-section-label">Resources</div>
         <div class="sidebar-nav-item"        data-panel="links"        onclick="showPanel('links')">        <span class="nav-icon">🔗</span> Links</div>
         <div class="sidebar-nav-item"        data-panel="documents"    onclick="showPanel('documents')">    <span class="nav-icon">📄</span> Documents</div>
@@ -95,11 +98,11 @@
 
           <!-- Archive card -->
           <div class="archive-card">
-            <h3>⚠️ Archive Current Sign-Ups</h3>
+            <h3>⚠️ Archive Past Event Sign-Ups</h3>
             <p style="font-size:0.88rem; color:#7a7060; margin-bottom:16px;">
-              Marks all sign-ups for the current event (set via <code>current_event_id</code> in Settings → Config) as archived so they no longer appear in active views. The event record itself is preserved. <strong>This action cannot be undone.</strong>
+              Marks all sign-ups for the most recent past event as archived so they no longer appear in active views. The event record itself is preserved. <strong>This action cannot be undone.</strong>
             </p>
-            <button class="btn btn-warning" onclick="confirmArchive()">Archive Sign-Ups &amp; Advance to Next Event</button>
+            <button class="btn btn-warning" onclick="confirmArchive()">Archive Past Event Sign-Ups</button>
           </div>
 
           <div class="admin-table-wrap">
@@ -211,8 +214,10 @@
             </div>
 
             <div class="form-field form-full" style="margin-bottom:16px;">
-              <label>Long Description (Sign-Up page body — HTML allowed)</label>
-              <textarea id="ef-long" class="tall" placeholder="Full event description with schedule. HTML tags allowed."></textarea>
+              <label>Long Description (Sign-Up page body)</label>
+              <div id="ef-long-toolbar" class="rich-toolbar"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button><button class="ql-link"></button><button class="ql-clean"></button><button type="button" class="ql-emoji-btn" title="Insert emoji">😊</button></div>
+              <div id="ef-long-editor" class="rich-editor-area"></div>
+              <textarea id="ef-long" style="display:none"></textarea>
             </div>
 
             <!-- Organizer info -->
@@ -343,7 +348,11 @@
                 </div>
                 <div class="form-field"><label>Prize</label><input type="text" id="cf-prize" /></div>
               </div>
-              <div class="form-field form-full" style="margin-bottom:14px;"><label>Description</label><textarea id="cf-desc" class="tall"></textarea></div>
+              <div class="form-field form-full" style="margin-bottom:14px;"><label>Description</label>
+                <div id="cf-desc-toolbar" class="rich-toolbar"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button><button class="ql-link"></button><button class="ql-clean"></button><button type="button" class="ql-emoji-btn" title="Insert emoji">😊</button></div>
+                <div id="cf-desc-editor" class="rich-editor-area"></div>
+                <textarea id="cf-desc" style="display:none"></textarea>
+              </div>
               <div class="btn-row">
                 <button class="btn btn-primary" onclick="submitContestForm()">💾 Save</button>
                 <button class="btn btn-secondary" onclick="cancelContestForm()">Cancel</button>
@@ -391,8 +400,8 @@
           <div id="awards-nominations-panel" style="display:none;">
             <div class="admin-table-wrap">
               <table class="admin-table">
-                <thead><tr><th>Date</th><th>Contest</th><th>Nominee</th><th>Nominator</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody id="nominations-tbody"><tr><td colspan="6" class="admin-loading">Loading…</td></tr></tbody>
+                <thead><tr><th>Date</th><th>Contest</th><th>Nominee</th><th>Nominator</th><th>Votes</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="nominations-tbody"><tr><td colspan="7" class="admin-loading">Loading…</td></tr></tbody>
               </table>
             </div>
             <div class="admin-form" id="nomination-form" style="display:none;">
@@ -472,7 +481,11 @@
               </div>
             </div>
             <div class="form-field form-full" style="margin-bottom:14px;"><label>Title *</label><input type="text" id="af-title" /></div>
-            <div class="form-field form-full" style="margin-bottom:14px;"><label>Body *</label><textarea id="af-body" class="tall"></textarea></div>
+            <div class="form-field form-full" style="margin-bottom:14px;"><label>Body *</label>
+              <div id="af-body-toolbar" class="rich-toolbar"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button><button class="ql-link"></button><button class="ql-clean"></button><button type="button" class="ql-emoji-btn" title="Insert emoji">😊</button></div>
+              <div id="af-body-editor" class="rich-editor-area"></div>
+              <textarea id="af-body" style="display:none"></textarea>
+            </div>
             <div class="form-grid-2" style="margin-bottom:14px;">
               <div class="form-field"><label>Link URL (optional)</label><input type="text" id="af-link" placeholder="signup.html" /></div>
               <div class="form-field"><label>Link Text (optional)</label><input type="text" id="af-link-text" placeholder="Sign Up Now →" /></div>
@@ -546,10 +559,100 @@
               </select>
             </div>
             <div class="form-field form-full" style="margin-bottom:14px;"><label>Title</label><input type="text" id="bef-title" /></div>
-            <div class="form-field form-full" style="margin-bottom:14px;"><label>Content</label><textarea id="bef-content" class="tall"></textarea></div>
+            <div class="form-field form-full" style="margin-bottom:14px;"><label>Content</label>
+              <div id="bef-content-toolbar" class="rich-toolbar"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button><button class="ql-link"></button><button class="ql-clean"></button><button type="button" class="ql-emoji-btn" title="Insert emoji">😊</button></div>
+              <div id="bef-content-editor" class="rich-editor-area"></div>
+              <textarea id="bef-content" style="display:none"></textarea>
+            </div>
             <div class="btn-row">
               <button class="btn btn-primary" onclick="submitBulletinEdit()">💾 Save</button>
               <button class="btn btn-secondary" onclick="cancelBulletinEdit()">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ══════════════════════════════════════════════════
+             VOLUNTEERS PANEL
+        ══════════════════════════════════════════════════ -->
+        <div class="admin-panel" id="panel-volunteers">
+          <div class="admin-page-title">Volunteers</div>
+          <div class="admin-page-subtitle">View, manage, and add volunteers for any event. Filter by event, date, or role.</div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="openVolunteerForm(null)">+ Add Volunteer</button>
+          </div>
+
+          <!-- Filters -->
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px;padding:16px 20px;background:rgba(44,61,46,0.04);border-radius:12px;border:1px solid rgba(44,61,46,0.08);">
+            <div class="form-field" style="flex:2;min-width:180px;margin:0;">
+              <label style="font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Event</label>
+              <select id="vol-filter-event" onchange="onVolEventFilterChange()" style="width:100%;padding:8px 10px;border:1.5px solid rgba(44,61,46,0.18);border-radius:8px;">
+                <option value="">All Events</option>
+              </select>
+            </div>
+            <div class="form-field" style="flex:1;min-width:140px;margin:0;">
+              <label style="font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Role</label>
+              <select id="vol-filter-role" onchange="loadVolunteers()" style="width:100%;padding:8px 10px;border:1.5px solid rgba(44,61,46,0.18);border-radius:8px;">
+                <option value="">All Roles</option>
+              </select>
+            </div>
+            <div class="form-field" style="flex:1;min-width:120px;margin:0;">
+              <label style="font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Status</label>
+              <select id="vol-filter-archived" onchange="loadVolunteers()" style="width:100%;padding:8px 10px;border:1.5px solid rgba(44,61,46,0.18);border-radius:8px;">
+                <option value="active">Active</option>
+                <option value="archived">Archived</option>
+                <option value="all">All</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Volunteer count summary -->
+          <div id="vol-summary" style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;"></div>
+
+          <!-- Table -->
+          <div class="admin-table-wrap">
+            <table class="admin-table" id="volunteers-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th><th>Event</th><th>Date</th><th>Role(s)</th><th>Actions</th></tr></thead>
+              <tbody id="volunteers-tbody"><tr><td colspan="8" class="admin-loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+
+          <!-- Add / Edit form -->
+          <div class="edit-form-card" id="volunteer-form" style="display:none;margin-top:28px;">
+            <h3 id="vol-form-title">Edit Volunteer</h3>
+            <input type="hidden" id="vf-id" />
+            <div class="form-grid-2">
+              <div class="form-field" style="grid-column:1/-1;">
+                <label>Event <span class="req">*</span></label>
+                <select id="vf-event" onchange="loadEventRolesForForm([])"></select>
+              </div>
+              <div class="form-field"><label>First Name <span class="req">*</span></label><input type="text" id="vf-first" placeholder="Jane" /></div>
+              <div class="form-field"><label>Last Name <span class="req">*</span></label><input type="text" id="vf-last" placeholder="Smith" /></div>
+              <div class="form-field"><label>Email <span class="req">*</span></label><input type="email" id="vf-email" placeholder="jane@email.com" /></div>
+              <div class="form-field"><label>Phone</label><input type="tel" id="vf-phone" placeholder="(864) 555-0123" /></div>
+              <div class="form-field" style="grid-column:1/-1;"><label>Address</label><input type="text" id="vf-address" placeholder="123 Maple Lane" /></div>
+              <div class="form-field">
+                <label>Attending?</label>
+                <select id="vf-attending">
+                  <option value="">— Not specified —</option>
+                  <option value="Yes — I'll be there!">Yes — I'll be there!</option>
+                  <option value="Yes, but I cannot attend in person">Yes, but I cannot attend in person</option>
+                  <option value="Not sure yet">Not sure yet</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div class="form-field"><label>Notes</label><textarea id="vf-notes" rows="2" placeholder="Any notes..."></textarea></div>
+            </div>
+            <div class="form-field" style="margin-top:14px;">
+              <label style="font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--forest);display:block;margin-bottom:10px;">Volunteer Role(s)</label>
+              <div id="vf-roles-wrap" style="display:flex;flex-wrap:wrap;gap:10px;">
+                <span style="color:var(--muted);font-size:0.85rem;">Select an event above to see available roles.</span>
+              </div>
+            </div>
+            <div class="btn-row" style="margin-top:20px;">
+              <button class="btn btn-primary" onclick="saveVolunteerEdit()">Save Volunteer</button>
+              <button class="btn btn-secondary" onclick="cancelVolunteerForm()">Cancel</button>
             </div>
           </div>
         </div>
@@ -771,6 +874,77 @@
     function modalConfirm() { const cb = modalCallback; closeModal(); if (cb) cb(); }
 
 
+    // ── RICH TEXT EDITORS ─────────────────────────────────────
+    const _quills = {};
+    const RICH_EDITOR_IDS = ['ef-long', 'cf-desc', 'af-body', 'bef-content'];
+
+    function initRichEditors() {
+      RICH_EDITOR_IDS.forEach(id => {
+        _quills[id] = new Quill('#' + id + '-editor', {
+          modules: { toolbar: '#' + id + '-toolbar' },
+          theme: 'snow'
+        });
+        const emojiBtn = document.querySelector('#' + id + '-toolbar .ql-emoji-btn');
+        if (emojiBtn) emojiBtn.addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation(); _showEmojiPicker(this, id);
+        });
+      });
+      document.addEventListener('click', function(e) {
+        const p = document.getElementById('emoji-picker-panel');
+        if (p && !p.contains(e.target) && !e.target.classList.contains('ql-emoji-btn')) p.style.display = 'none';
+      });
+    }
+
+    function setQuillContent(id, html) {
+      if (_quills[id]) _quills[id].root.innerHTML = html || '';
+    }
+
+    function syncQuillToTextarea(id) {
+      if (!_quills[id]) return;
+      const html = _quills[id].root.innerHTML;
+      document.getElementById(id).value = (html === '<p><br></p>') ? '' : html;
+    }
+
+    // Emoji picker
+    const _EMOJIS = [
+      '😀','😄','😊','😂','🤣','🥰','😍','🤩','😎','🥳','😢','😅','🙄','😬','🤔',
+      '❤️','🧡','💛','💚','💙','💜','🤍','💕','💖','💯','✅','❌','⭐','✨','🔥',
+      '👋','🙌','👏','🤝','👍','👎','🙏','💪','✌️','🤞','🫶','💃','🎉','🎊','🎈',
+      '🏆','🥇','🥈','🥉','🎁','🎀','🎂','🧁','🍪','🍕','🌮','☕','🥂','🍦','🍓',
+      '🌟','💫','🌈','☀️','🌙','❄️','🌿','🌸','🌺','🌻','🍃','🌳','🐾','🦋','🐝',
+      '🏠','🏡','📍','📌','📅','⏰','🔔','📢','📣','📝','💡','🔑','🔒','📧','📱',
+    ];
+    let _emojiTargetId = null, _emojiPickerEl = null;
+
+    function _showEmojiPicker(btn, targetId) {
+      _emojiTargetId = targetId;
+      if (!_emojiPickerEl) {
+        _emojiPickerEl = document.createElement('div');
+        _emojiPickerEl.id = 'emoji-picker-panel';
+        _emojiPickerEl.innerHTML =
+          '<div class="ep-label">Click to insert</div>' +
+          _EMOJIS.map(e => `<button type="button" class="ep-btn" data-e="${e}">${e}</button>`).join('');
+        _emojiPickerEl.addEventListener('click', function(ev) {
+          const b = ev.target.closest('.ep-btn');
+          if (b && _quills[_emojiTargetId]) {
+            const q = _quills[_emojiTargetId];
+            q.focus();
+            const range = q.getSelection(true);
+            q.insertText(range ? range.index : 0, b.dataset.e);
+            _emojiPickerEl.style.display = 'none';
+          }
+        });
+        document.body.appendChild(_emojiPickerEl);
+      }
+      const rect = btn.getBoundingClientRect();
+      _emojiPickerEl.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+      _emojiPickerEl.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 300) + 'px';
+      _emojiPickerEl.style.display = _emojiPickerEl.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', initRichEditors);
+
+
     // ── LOGIN / AUTH ──────────────────────────────────────────
     async function doLogin() {
       const email = document.getElementById("login-email").value.trim();
@@ -839,6 +1013,7 @@
       else if (currentPanel === "announcements") loadAnnouncements();
       else if (currentPanel === "memories")      loadMemories();
       else if (currentPanel === "bulletin")      loadBulletin();
+      else if (currentPanel === "volunteers")    initVolunteersPanel();
       else if (currentPanel === "links")         loadLinks();
       else if (currentPanel === "documents")     loadDocuments();
     }
@@ -912,6 +1087,7 @@
       document.getElementById("ef-short").value       = ev.short_description  || "";
       document.getElementById("ef-medium").value      = ev.medium_description || "";
       document.getElementById("ef-long").value        = ev.long_description   || "";
+      setQuillContent('ef-long', ev.long_description || '');
       document.getElementById("ef-org-name").value    = ev.organizer_name     || "";
       document.getElementById("ef-org-email").value   = ev.organizer_email    || "";
       document.getElementById("ef-org-phone").value   = ev.organizer_phone    || "";
@@ -956,6 +1132,7 @@
       document.getElementById("ef-status").value      = "Draft";
       document.getElementById("ef-color").value       = "card-color-1";
       document.getElementById("ef-org-contact").value = "Email";
+      setQuillContent('ef-long', '');
       renderVolRolesFromData([]);
       renderDonationCatsFromData([]);
     }
@@ -1058,7 +1235,7 @@
         signups_open_date:  document.getElementById("ef-signup-open").value  || null,
         short_description:  document.getElementById("ef-short").value.trim() || null,
         medium_description: document.getElementById("ef-medium").value.trim()|| null,
-        long_description:   document.getElementById("ef-long").value.trim()  || null,
+        long_description:   (syncQuillToTextarea('ef-long'), document.getElementById("ef-long").value.trim()  || null),
         emoji_row:          document.getElementById("ef-emoji").value.trim() || null,
         headline_adjective: document.getElementById("ef-adjective").value.trim() || null,
         location_name:      document.getElementById("ef-loc-name").value.trim()  || null,
@@ -1117,16 +1294,20 @@
     }
 
     async function confirmArchive() {
-      showModal("⚠️","Archive Sign-Ups",
-        "This will mark all current sign-ups as archived. This cannot be undone.",
+      // Find the most recent past event to determine which signups to archive.
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: pastRows } = await db.from('events').select('id, event_name')
+        .lt('event_date', today).order('event_date', { ascending: false }).limit(1);
+      const ev = pastRows?.[0];
+      if (!ev) { toast("No past events found to archive.", "error"); return; }
+
+      showModal("⚠️", "Archive Sign-Ups",
+        `This will archive all sign-ups for "${ev.event_name || ev.id}". This cannot be undone.`,
         async () => {
           try {
-            const { data: cfg } = await db.from('config').select('value').eq('key','current_event_id').maybeSingle();
-            const eventId = cfg?.value;
-            if (!eventId) { toast("No current_event_id set in config.", "error"); return; }
-            const { error } = await db.from('signups').update({ archived: true }).eq('event_id', eventId).eq('archived', false);
+            const { error } = await db.from('signups').update({ archived: true }).eq('event_id', ev.id).eq('archived', false);
             if (error) throw error;
-            toast("Sign-ups archived for: " + eventId, "success");
+            toast("Sign-ups archived for: " + (ev.event_name || ev.id), "success");
           } catch (e) { toast("Error: " + e.message, "error"); }
         });
     }
@@ -1181,6 +1362,7 @@
       if (!contestId) {
         document.getElementById("contest-form-title").textContent = "New Contest";
         ["cf-name","cf-id","cf-period","cf-deadline","cf-icon","cf-badge","cf-prize","cf-desc"].forEach(id => document.getElementById(id).value="");
+        setQuillContent('cf-desc', '');
         updateBadgePreview();
         return;
       }
@@ -1199,6 +1381,7 @@
       document.getElementById("cf-banner").value   = c.banner_color || "banner-green";
       document.getElementById("cf-prize").value    = c.prize        || "";
       document.getElementById("cf-desc").value     = c.description  || "";
+      setQuillContent('cf-desc', c.description || '');
     }
 
     function cancelContestForm() { document.getElementById("contest-form").style.display = "none"; }
@@ -1228,7 +1411,7 @@
         category:     document.getElementById("cf-cat").value,
         period:       document.getElementById("cf-period").value.trim() || null,
         status:       document.getElementById("cf-status").value,
-        description:  document.getElementById("cf-desc").value.trim()   || null,
+        description:  (syncQuillToTextarea('cf-desc'), document.getElementById("cf-desc").value.trim()   || null),
         deadline:     document.getElementById("cf-deadline").value.trim()|| null,
         prize:        document.getElementById("cf-prize").value.trim()  || null,
       };
@@ -1393,22 +1576,31 @@
 
     async function loadNominations() {
       const tbody = document.getElementById("nominations-tbody");
-      tbody.innerHTML = '<tr><td colspan="6" class="admin-loading">Loading…</td></tr>';
-      const { data, error } = await db.from('award_nominations').select('*').order('submitted_at', { ascending: false });
-      if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:20px;">${esc(error.message)}</td></tr>`; return; }
+      tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading…</td></tr>';
+      const [{ data, error }, { data: voteRows }] = await Promise.all([
+        db.from('award_nominations').select('*').order('submitted_at', { ascending: false }),
+        db.from('nomination_votes').select('nomination_id')
+      ]);
+      if (error) { tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger);padding:20px;">${esc(error.message)}</td></tr>`; return; }
       nominationsData = data || [];
+      // Build a vote-count map keyed by nomination_id
+      const voteCounts = {};
+      (voteRows || []).forEach(v => { voteCounts[v.nomination_id] = (voteCounts[v.nomination_id] || 0) + 1; });
       if (!nominationsData.length) {
-        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📝</div><p>No nominations yet.</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📝</div><p>No nominations yet.</p></div></td></tr>';
         return;
       }
       tbody.innerHTML = nominationsData.map(n => {
         const contest = contestsData.find(c => c.id === n.contest_id);
+        const vc = voteCounts[n.id] || 0;
+        const voteLabel = vc ? `<strong>${vc}</strong>` : `<span style="color:var(--muted)">—</span>`;
         return `
         <tr>
           <td>${esc(fmtDate(n.submitted_at))}</td>
           <td>${esc(contest ? contest.award_name : (n.contest_id||"—"))}</td>
           <td>${esc(n.nominee_name||"")}</td>
           <td>${esc(n.nominator_name||"")}</td>
+          <td style="text-align:center;">${voteLabel}</td>
           <td>${badge(n.approved ? "received" : "pending")}</td>
           <td>
             ${!n.approved ? `<button class="btn btn-success btn-sm" onclick="markNominationReceived(${n.id})">Mark Received</button>` : ""}
@@ -1537,6 +1729,7 @@
         document.getElementById("af-title-label").textContent = "New Announcement";
         document.getElementById("af-id").value = "";
         ["af-day","af-month","af-title","af-body","af-link","af-link-text"].forEach(x=>document.getElementById(x).value="");
+        setQuillContent('af-body', '');
         document.getElementById("af-published").checked = true;
         return;
       }
@@ -1548,6 +1741,7 @@
       document.getElementById("af-month").value     = a.month     || "";
       document.getElementById("af-title").value     = a.title     || "";
       document.getElementById("af-body").value      = a.body      || "";
+      setQuillContent('af-body', a.body || '');
       document.getElementById("af-link").value      = a.link      || "";
       document.getElementById("af-link-text").value = a.link_text || "";
       document.getElementById("af-published").checked = a.published === true;
@@ -1558,6 +1752,7 @@
     async function submitAnnouncementForm() {
       const id    = document.getElementById("af-id").value.trim();
       const title = document.getElementById("af-title").value.trim();
+      syncQuillToTextarea('af-body');
       const body  = document.getElementById("af-body").value.trim();
       if (!title || !body) { toast("Title and body are required.", "error"); return; }
       const row = {
@@ -1711,6 +1906,7 @@
       document.getElementById("bef-cat").value     = p.category || "";
       document.getElementById("bef-title").value   = p.title    || "";
       document.getElementById("bef-content").value = p.content  || "";
+      setQuillContent('bef-content', p.content || '');
     }
 
     function cancelBulletinEdit() { document.getElementById("bulletin-edit-form").style.display = "none"; }
@@ -1720,7 +1916,7 @@
       const row = {
         category: document.getElementById("bef-cat").value,
         title:    document.getElementById("bef-title").value.trim(),
-        content:  document.getElementById("bef-content").value.trim(),
+        content:  (syncQuillToTextarea('bef-content'), document.getElementById("bef-content").value.trim()),
       };
       const { error } = await db.from('bulletin_posts').update(row).eq('id', id);
       if (!error) { toast("Post updated!", "success"); cancelBulletinEdit(); loadBulletin(); }
@@ -1733,6 +1929,216 @@
         if (!error) { toast("Post deleted.", "success"); loadBulletin(); }
         else toast("Error.", "error");
       });
+    }
+
+
+    // ====================================================
+    //  VOLUNTEERS
+    // ====================================================
+    let volunteersData = [];
+    let volEventsCache = [];
+
+    async function initVolunteersPanel() {
+      const { data: evs } = await db.from('events').select('id, event_name, event_date').order('event_date', { ascending: false });
+      volEventsCache = evs || [];
+      const evSel = document.getElementById('vol-filter-event');
+      evSel.innerHTML = '<option value="">All Events</option>' +
+        volEventsCache.map(e => `<option value="${esc(e.id)}">${esc(e.event_name)}${e.event_date ? ' · ' + fmtDate(e.event_date) : ''}</option>`).join('');
+      await loadVolunteers();
+    }
+
+    async function onVolEventFilterChange() {
+      // When event filter changes, refresh role filter options then reload list
+      const eventId = document.getElementById('vol-filter-event').value;
+      const roleSel = document.getElementById('vol-filter-role');
+      roleSel.innerHTML = '<option value="">All Roles</option>';
+      if (eventId) {
+        const { data: roles } = await db.from('event_volunteer_roles').select('role_label').eq('event_id', eventId).order('sort_order');
+        (roles || []).forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.role_label; opt.textContent = r.role_label;
+          roleSel.appendChild(opt);
+        });
+      }
+      await loadVolunteers();
+    }
+
+    async function loadVolunteers() {
+      const tbody = document.getElementById('volunteers-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" class="admin-loading">Loading…</td></tr>';
+
+      const eventId      = document.getElementById('vol-filter-event').value;
+      const roleFilter   = document.getElementById('vol-filter-role').value;
+      const archivedSel  = document.getElementById('vol-filter-archived').value;
+
+      let q = db.from('signups')
+        .select('id, event_id, submitted_at, first_name, last_name, email, phone, address, attending, notes, archived, signup_volunteer_roles(role_label)');
+      if (eventId)              q = q.eq('event_id', eventId);
+      if (archivedSel === 'active')    q = q.eq('archived', false);
+      if (archivedSel === 'archived')  q = q.eq('archived', true);
+      q = q.order('submitted_at', { ascending: false });
+
+      const { data, error } = await q;
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger);padding:20px;">${esc(error.message)}</td></tr>`;
+        return;
+      }
+
+      // Keep only rows that have at least one volunteer role
+      let rows = (data || []).filter(s => s.signup_volunteer_roles && s.signup_volunteer_roles.length > 0);
+
+      // Apply role filter client-side
+      if (roleFilter) {
+        rows = rows.filter(s => s.signup_volunteer_roles.some(r => r.role_label === roleFilter));
+      }
+
+      volunteersData = rows;
+      document.getElementById('vol-summary').textContent =
+        rows.length ? `Showing ${rows.length} volunteer${rows.length !== 1 ? 's' : ''}` : '';
+
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🙋</div><p>No volunteers found.</p></div></td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map(s => {
+        const ev    = volEventsCache.find(e => e.id === s.event_id);
+        const roles = (s.signup_volunteer_roles || []).map(r => esc(r.role_label)).join(', ');
+        return `
+        <tr${s.archived ? ' style="opacity:0.6;"' : ''}>
+          <td><strong>${esc(s.first_name)} ${esc(s.last_name)}</strong></td>
+          <td>${esc(s.email || '')}</td>
+          <td>${esc(s.phone || '—')}</td>
+          <td>${esc(s.address || '—')}</td>
+          <td>${esc(ev ? ev.event_name : (s.event_id || '—'))}</td>
+          <td>${ev && ev.event_date ? esc(fmtDate(ev.event_date)) : '—'}</td>
+          <td>${roles || '—'}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="openVolunteerForm(${s.id})">Edit</button>
+            <button class="btn btn-danger    btn-sm" onclick="confirmDeleteVolunteer(${s.id})">Delete</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function openVolunteerForm(id) {
+      const form = document.getElementById('volunteer-form');
+      form.style.display = 'block';
+      form.scrollIntoView({ behavior: 'smooth' });
+
+      // Populate event dropdown in form
+      const evSel = document.getElementById('vf-event');
+      evSel.innerHTML = volEventsCache.map(e =>
+        `<option value="${esc(e.id)}">${esc(e.event_name)}${e.event_date ? ' · ' + fmtDate(e.event_date) : ''}</option>`
+      ).join('');
+
+      if (id) {
+        document.getElementById('vol-form-title').textContent = 'Edit Volunteer';
+        const s = volunteersData.find(x => x.id === id);
+        if (!s) return;
+        document.getElementById('vf-id').value        = s.id;
+        document.getElementById('vf-first').value     = s.first_name  || '';
+        document.getElementById('vf-last').value      = s.last_name   || '';
+        document.getElementById('vf-email').value     = s.email       || '';
+        document.getElementById('vf-phone').value     = s.phone       || '';
+        document.getElementById('vf-address').value   = s.address     || '';
+        document.getElementById('vf-attending').value = s.attending   || '';
+        document.getElementById('vf-notes').value     = s.notes       || '';
+        evSel.value = s.event_id || '';
+        await loadEventRolesForForm((s.signup_volunteer_roles || []).map(r => r.role_label));
+      } else {
+        document.getElementById('vol-form-title').textContent = 'Add Volunteer';
+        document.getElementById('vf-id').value = '';
+        ['vf-first','vf-last','vf-email','vf-phone','vf-address','vf-notes'].forEach(f => { document.getElementById(f).value = ''; });
+        document.getElementById('vf-attending').value = '';
+        if (evSel.options.length > 0) evSel.value = evSel.options[0].value;
+        await loadEventRolesForForm([]);
+      }
+    }
+
+    async function loadEventRolesForForm(selectedRoles) {
+      const eventId = document.getElementById('vf-event').value;
+      const wrap    = document.getElementById('vf-roles-wrap');
+      if (!eventId) {
+        wrap.innerHTML = '<span style="color:var(--muted);font-size:0.85rem;">Select an event above to see available roles.</span>';
+        return;
+      }
+      const { data: roles } = await db.from('event_volunteer_roles')
+        .select('role_label, role_detail').eq('event_id', eventId).order('sort_order');
+      if (!roles || !roles.length) {
+        wrap.innerHTML = '<span style="color:var(--muted);font-size:0.85rem;">No volunteer roles defined for this event.</span>';
+        return;
+      }
+      wrap.innerHTML = roles.map(r => `
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--cream);border:1.5px solid rgba(44,61,46,0.12);border-radius:8px;cursor:pointer;min-width:160px;">
+          <input type="checkbox" value="${esc(r.role_label)}" class="vf-role-cb"${(selectedRoles||[]).includes(r.role_label) ? ' checked' : ''} style="width:15px;height:15px;" />
+          <span style="font-size:0.88rem;color:var(--forest);">${esc(r.role_label)}</span>
+        </label>`).join('');
+    }
+
+    function cancelVolunteerForm() {
+      document.getElementById('volunteer-form').style.display = 'none';
+    }
+
+    async function saveVolunteerEdit() {
+      const id        = document.getElementById('vf-id').value;
+      const eventId   = document.getElementById('vf-event').value;
+      const firstName = document.getElementById('vf-first').value.trim();
+      const lastName  = document.getElementById('vf-last').value.trim();
+      const email     = document.getElementById('vf-email').value.trim();
+      const phone     = document.getElementById('vf-phone').value.trim()   || null;
+      const address   = document.getElementById('vf-address').value.trim() || null;
+      const attending = document.getElementById('vf-attending').value      || null;
+      const notes     = document.getElementById('vf-notes').value.trim()   || null;
+      const roles     = [...document.querySelectorAll('.vf-role-cb:checked')].map(cb => cb.value);
+
+      if (!firstName || !lastName || !email || !eventId) {
+        toast('First name, last name, email, and event are required.', 'error');
+        return;
+      }
+
+      const row = { event_id: eventId, first_name: firstName, last_name: lastName, email, phone, address, attending, notes };
+
+      try {
+        let signupId;
+        if (id) {
+          const { error } = await db.from('signups').update(row).eq('id', id);
+          if (error) throw error;
+          signupId = parseInt(id);
+        } else {
+          const { data: ins, error } = await db.from('signups').insert(row).select('id').single();
+          if (error) throw error;
+          signupId = ins.id;
+        }
+
+        // Replace volunteer roles
+        await db.from('signup_volunteer_roles').delete().eq('signup_id', signupId);
+        if (roles.length) {
+          const { error: rErr } = await db.from('signup_volunteer_roles').insert(
+            roles.map(r => ({ signup_id: signupId, role_label: r }))
+          );
+          if (rErr) throw rErr;
+        }
+
+        toast('Volunteer saved!', 'success');
+        cancelVolunteerForm();
+        loadVolunteers();
+      } catch (e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    function confirmDeleteVolunteer(id) {
+      const s    = volunteersData.find(x => x.id === id);
+      const name = s ? `${s.first_name} ${s.last_name}` : 'this volunteer';
+      showModal('🗑️', 'Delete Volunteer',
+        `Delete sign-up for "${name}"? This also removes their donation pledges and role assignments.`,
+        async () => {
+          try {
+            const { error } = await db.from('signups').delete().eq('id', id);
+            if (error) throw error;
+            toast('Volunteer deleted.', 'success');
+            loadVolunteers();
+          } catch (e) { toast('Error: ' + e.message, 'error'); }
+        });
     }
 
 

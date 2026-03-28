@@ -343,11 +343,19 @@
       body.innerHTML = '<div class="dash-loading">Loading sign-up data…</div>';
 
       try {
-        // Get current event ID from config
-        const { data: cfg } = await db.from("config").select("value").eq("key", "current_event_id").maybeSingle();
-        currentEventId = cfg?.value;
+        // Find the next upcoming Confirmed event; fall back to most recent past event.
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: upRows } = await db.from("events").select("id, event_name")
+          .eq("status", "Confirmed").gte("event_date", today).order("event_date").limit(1);
+        if (upRows?.[0]) {
+          currentEventId = upRows[0].id;
+        } else {
+          const { data: pastRows } = await db.from("events").select("id, event_name")
+            .lt("event_date", today).order("event_date", { ascending: false }).limit(1);
+          currentEventId = pastRows?.[0]?.id || null;
+        }
         if (!currentEventId) {
-          body.innerHTML = `<div class="dash-error">No current event configured. Ask the admin to set <em>current_event_id</em> in Settings.</div>`;
+          body.innerHTML = `<div class="dash-error">No events found yet. Create an event in the admin panel to get started.</div>`;
           return;
         }
 

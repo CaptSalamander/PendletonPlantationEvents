@@ -628,3 +628,83 @@ body {
   .modal-card { padding: 24px 20px; }
   .btn-row { flex-direction: column; }
 }
+
+
+/* ── QUILL RICH TEXT EDITOR ───────────────────────────────── */
+.rich-toolbar.ql-toolbar.ql-snow {
+  border: 1px solid rgba(44,61,46,0.22);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background: #f5f2ec;
+  padding: 6px 8px;
+}
+.rich-editor-area.ql-container.ql-snow {
+  border: 1px solid rgba(44,61,46,0.22);
+  border-radius: 0 0 4px 4px;
+  background: #fff;
+  min-height: 130px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.9rem;
+  color: #2c2c2c;
+}
+.rich-editor-area .ql-editor { min-height: 120px; padding: 10px 12px; }
+.rich-editor-area .ql-editor.ql-blank::before { color: #aaa; font-style: italic; }
+
+/* Toolbar icon colors — forest green */
+.rich-toolbar .ql-stroke { stroke: #2c3d2e; }
+.rich-toolbar .ql-fill   { fill:   #2c3d2e; }
+.rich-toolbar .ql-picker  { color:  #2c3d2e; }
+.rich-toolbar button:hover .ql-stroke,
+.rich-toolbar .ql-picker-label:hover .ql-stroke { stroke: #c9a84c; }
+.rich-toolbar button:hover .ql-fill { fill: #c9a84c; }
+.rich-toolbar button.ql-active .ql-stroke { stroke: #c9a84c; }
+.rich-toolbar button.ql-active .ql-fill   { fill:   #c9a84c; }
+.rich-toolbar button.ql-active            { color:  #c9a84c; }
+
+/* Emoji button in toolbar */
+.rich-toolbar .ql-emoji-btn {
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 5px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-radius: 3px;
+  transition: background 0.15s;
+  vertical-align: middle;
+}
+.rich-toolbar .ql-emoji-btn:hover { background: rgba(201,168,76,0.15); }
+
+/* Emoji picker panel */
+#emoji-picker-panel {
+  position: absolute;
+  z-index: 9999;
+  background: #fff;
+  border: 1px solid rgba(201,168,76,0.35);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+  display: none;
+  width: 292px;
+  max-height: 230px;
+  overflow-y: auto;
+}
+#emoji-picker-panel .ep-label {
+  font-size: 0.62rem;
+  color: #aaa;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+#emoji-picker-panel .ep-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 3px 4px;
+  border-radius: 4px;
+  transition: background 0.12s;
+  line-height: 1;
+}
+#emoji-picker-panel .ep-btn:hover { background: rgba(201,168,76,0.18); }

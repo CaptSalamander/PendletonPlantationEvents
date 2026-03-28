@@ -35,6 +35,8 @@
   <link rel="stylesheet" href="post-to-board-styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 </head>
 
 <body>
@@ -185,9 +187,9 @@
 
           <div class="field">
             <label for="post_content">Message <span class="req">*</span></label>
-            <textarea id="post_content"
-              placeholder="Share the details — the more specific, the more helpful it will be for your neighbors…"
-              required></textarea>
+            <div id="post_content-toolbar" class="rich-toolbar"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button><button class="ql-link"></button><button class="ql-clean"></button><button type="button" class="ql-emoji-btn" title="Insert emoji">😊</button></div>
+            <div id="post_content-editor" class="rich-editor-area"></div>
+            <textarea id="post_content" style="display:none"></textarea>
           </div>
 
           <div class="divider"></div>
@@ -431,6 +433,9 @@
       const address = document.getElementById("poster_address").value.trim();
       const category = document.getElementById("post_category").value;
       const title = document.getElementById("post_title").value.trim();
+      // Sync Quill → textarea before reading
+      const _qHtml = _postQuill ? _postQuill.root.innerHTML : '';
+      document.getElementById("post_content").value = (_qHtml === '<p><br></p>') ? '' : _qHtml;
       const content = document.getElementById("post_content").value.trim();
 
       if (!firstName || !lastName) {
@@ -553,6 +558,61 @@
       }
     });
 
+  </script>
+
+  <script>
+    // ── RICH TEXT EDITOR (post_content) ───────────────────────
+    let _postQuill = null;
+
+    const _PTB_EMOJIS = [
+      '😀','😄','😊','😂','🤣','🥰','😍','🤩','😎','🥳','😢','😅','🙄','😬','🤔',
+      '❤️','🧡','💛','💚','💙','💜','🤍','💕','💖','💯','✅','❌','⭐','✨','🔥',
+      '👋','🙌','👏','🤝','👍','👎','🙏','💪','✌️','🤞','🫶','💃','🎉','🎊','🎈',
+      '🏆','🥇','🥈','🥉','🎁','🎀','🎂','🧁','🍪','🍕','🌮','☕','🥂','🍦','🍓',
+      '🌟','💫','🌈','☀️','🌙','❄️','🌿','🌸','🌺','🌻','🍃','🌳','🐾','🦋','🐝',
+      '🏠','🏡','📍','📌','📅','⏰','🔔','📢','📣','📝','💡','🔑','🔒','📧','📱',
+    ];
+    let _ptbPickerEl = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      _postQuill = new Quill('#post_content-editor', {
+        modules: { toolbar: '#post_content-toolbar' },
+        theme: 'snow',
+        placeholder: 'Share the details — the more specific, the more helpful it will be for your neighbors…'
+      });
+
+      document.querySelector('#post_content-toolbar .ql-emoji-btn')
+        .addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          if (!_ptbPickerEl) {
+            _ptbPickerEl = document.createElement('div');
+            _ptbPickerEl.id = 'ptb-emoji-panel';
+            _ptbPickerEl.innerHTML =
+              '<div class="ep-label">Click to insert</div>' +
+              _PTB_EMOJIS.map(em => `<button type="button" class="ep-btn" data-e="${em}">${em}</button>`).join('');
+            _ptbPickerEl.addEventListener('click', function(ev) {
+              const b = ev.target.closest('.ep-btn');
+              if (b && _postQuill) {
+                _postQuill.focus();
+                const r = _postQuill.getSelection(true);
+                _postQuill.insertText(r ? r.index : 0, b.dataset.e);
+                _ptbPickerEl.style.display = 'none';
+              }
+            });
+            document.body.appendChild(_ptbPickerEl);
+          }
+          const rect = this.getBoundingClientRect();
+          _ptbPickerEl.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+          _ptbPickerEl.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 300) + 'px';
+          _ptbPickerEl.style.display = _ptbPickerEl.style.display === 'block' ? 'none' : 'block';
+        });
+
+      document.addEventListener('click', function(e) {
+        if (_ptbPickerEl && !_ptbPickerEl.contains(e.target) && !e.target.classList.contains('ql-emoji-btn')) {
+          _ptbPickerEl.style.display = 'none';
+        }
+      });
+    });
   </script>
 
 </body>

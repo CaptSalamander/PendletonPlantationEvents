@@ -290,6 +290,21 @@
         </div><!-- end #form-content -->
 
 
+        <!-- ── PAST EVENT PANEL ────────────────────────────── -->
+        <!-- Shown instead of the form when displaying the most recent past event. -->
+        <div id="past-event-panel" style="display:none; text-align:center; padding:40px 24px;">
+          <div style="font-size:2.8rem; margin-bottom:14px;">🌸</div>
+          <h2 style="font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:400; color:var(--primary,#2c3d2e); margin-bottom:12px;">
+            This event has <em>passed</em>
+          </h2>
+          <p style="font-size:0.95rem; color:#666; line-height:1.65; max-width:380px; margin:0 auto 28px;">
+            Sign-ups are closed, but the memories live on! Check out photos and highlights from the community gallery.
+          </p>
+          <a href="memories.html" style="display:inline-block; padding:14px 34px; background:var(--primary,#2c3d2e); color:#fff; border-radius:30px; text-decoration:none; font-family:'Jost',sans-serif; font-size:0.88rem; font-weight:500; letter-spacing:0.06em; text-transform:uppercase;">
+            View Memories →
+          </a>
+        </div>
+
         <!-- ── SUCCESS MESSAGE ─────────────────────────────── -->
         <div class="success-msg" id="success-msg">
           <div class="big-emoji" id="success-emoji"></div>
@@ -323,22 +338,25 @@
     // ── LOAD EVENT ON PAGE START ──────────────────────────────
     (async function loadEvent() {
       try {
-        // Check config table for a pinned current event, else use next by date.
-        const { data: cfgRow } = await db.from('config')
-          .select('value').eq('key', 'current_event_id').maybeSingle();
-        const eventId = cfgRow?.value;
+        // Always show the next upcoming Confirmed event.
+        // If none exists, fall back to the most recent past event (read-only / View Memory).
+        const today = new Date().toISOString().slice(0, 10);
 
-        let evQuery = db.from('events').select('*');
-        if (eventId) {
-          evQuery = evQuery.eq('id', eventId);
-        } else {
-          const today = new Date().toISOString().slice(0, 10);
-          evQuery = evQuery.gte('event_date', today).order('event_date').limit(1);
+        const { data: upcomingRows, error: upErr } = await db.from('events').select('*')
+          .eq('status', 'Confirmed').gte('event_date', today).order('event_date').limit(1);
+        if (upErr) throw upErr;
+
+        let ev = upcomingRows?.[0];
+        let isPast = false;
+
+        if (!ev) {
+          const { data: pastRows, error: pastErr } = await db.from('events').select('*')
+            .lt('event_date', today).order('event_date', { ascending: false }).limit(1);
+          if (pastErr) throw pastErr;
+          ev = pastRows?.[0];
+          isPast = true;
         }
-        const { data: evRows, error: evErr } = await evQuery;
-        if (evErr) throw evErr;
 
-        const ev = Array.isArray(evRows) ? evRows[0] : evRows;
         if (!ev) {
           document.getElementById("loading-state").style.display = "none";
           document.getElementById("no-event-state").style.display = "block";
@@ -388,13 +406,19 @@
         };
 
         populatePage(EVENT);
-        buildVolunteerGrid(EVENT.volunteerRoles);
-        buildDonationGrid(EVENT.donationItems);
-        setupAccordions();
-        fetchCounts();
-
         document.getElementById("loading-state").style.display = "none";
         document.getElementById("main-content").style.display  = "block";
+
+        if (isPast) {
+          // Hide the sign-up form; show the "event has passed" panel instead.
+          document.getElementById("form-content").style.display      = "none";
+          document.getElementById("past-event-panel").style.display  = "block";
+        } else {
+          buildVolunteerGrid(EVENT.volunteerRoles);
+          buildDonationGrid(EVENT.donationItems);
+          setupAccordions();
+          fetchCounts();
+        }
 
       } catch (err) {
         console.error("loadEvent error:", err);

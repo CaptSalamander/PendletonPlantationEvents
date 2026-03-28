@@ -221,6 +221,19 @@ CREATE TABLE IF NOT EXISTS award_nominations (
   approved           BOOLEAN     DEFAULT FALSE
 );
 
+-- ── nomination_votes ─────────────────────────────────────────
+-- Stores one vote per voter_email per contest (UNIQUE constraint).
+-- Voters do not need an account.
+CREATE TABLE IF NOT EXISTS nomination_votes (
+  id             BIGSERIAL    PRIMARY KEY,
+  nomination_id  BIGINT       NOT NULL REFERENCES award_nominations(id) ON DELETE CASCADE,
+  contest_id     TEXT         NOT NULL REFERENCES award_contests(id) ON DELETE CASCADE,
+  voter_name     TEXT,
+  voter_email    TEXT         NOT NULL,
+  created_at     TIMESTAMPTZ  DEFAULT NOW(),
+  UNIQUE(contest_id, voter_email)
+);
+
 -- ── winners ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS winners (
   id           BIGSERIAL   PRIMARY KEY,
@@ -523,6 +536,19 @@ CREATE POLICY "an: admin update"
 
 CREATE POLICY "an: admin delete"
   ON award_nominations FOR DELETE USING (is_admin());
+
+-- ── nomination_votes policies ─────────────────────────────────
+ALTER TABLE nomination_votes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "nv: anyone can vote"
+  ON nomination_votes FOR INSERT WITH CHECK (true);
+
+-- Public can read vote counts (aggregated by the app — no PII exposed beyond what voter submitted)
+CREATE POLICY "nv: public reads"
+  ON nomination_votes FOR SELECT USING (true);
+
+CREATE POLICY "nv: admin delete"
+  ON nomination_votes FOR DELETE USING (is_admin());
 
 -- ── winners policies ─────────────────────────────────────────
 CREATE POLICY "w: public read"

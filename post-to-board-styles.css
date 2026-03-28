@@ -442,3 +442,62 @@ select option[value=""][disabled] { color: #aaa; }
   text-align: center; font-size: 0.78rem;
   color: var(--soft-text); margin-top: 28px; line-height: 1.6;
 }
+
+
+/* ── QUILL RICH TEXT EDITOR ───────────────────────────────── */
+.rich-toolbar.ql-toolbar.ql-snow {
+  border: 1px solid rgba(139,58,42,0.2);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: #fdf9f7;
+  padding: 6px 8px;
+}
+.rich-editor-area.ql-container.ql-snow {
+  border: 1px solid rgba(139,58,42,0.2);
+  border-radius: 0 0 8px 8px;
+  background: #fff;
+  min-height: 130px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+}
+.rich-editor-area .ql-editor { min-height: 120px; padding: 12px 14px; }
+.rich-editor-area .ql-editor.ql-blank::before { color: #bbb; font-style: italic; }
+
+.rich-toolbar .ql-stroke { stroke: #8b3a2a; }
+.rich-toolbar .ql-fill   { fill:   #8b3a2a; }
+.rich-toolbar .ql-picker  { color:  #8b3a2a; }
+.rich-toolbar button:hover .ql-stroke { stroke: #c9a84c; }
+.rich-toolbar button:hover .ql-fill   { fill:   #c9a84c; }
+.rich-toolbar button.ql-active .ql-stroke { stroke: #c9a84c; }
+.rich-toolbar button.ql-active            { color:  #c9a84c; }
+
+.rich-toolbar .ql-emoji-btn {
+  font-size: 1rem; line-height: 1;
+  padding: 2px 5px; cursor: pointer;
+  border: none; background: none;
+  border-radius: 3px; transition: background 0.15s;
+  vertical-align: middle;
+}
+.rich-toolbar .ql-emoji-btn:hover { background: rgba(201,168,76,0.15); }
+
+#ptb-emoji-panel {
+  position: absolute; z-index: 9999;
+  background: #fff;
+  border: 1px solid rgba(201,168,76,0.35);
+  border-radius: 8px; padding: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+  display: none; width: 292px;
+  max-height: 230px; overflow-y: auto;
+}
+#ptb-emoji-panel .ep-label {
+  font-size: 0.62rem; color: #aaa;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 6px; padding: 0 2px;
+}
+#ptb-emoji-panel .ep-btn {
+  background: none; border: none;
+  font-size: 1.25rem; cursor: pointer;
+  padding: 3px 4px; border-radius: 4px;
+  transition: background 0.12s; line-height: 1;
+}
+#ptb-emoji-panel .ep-btn:hover { background: rgba(201,168,76,0.18); }
