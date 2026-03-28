@@ -137,6 +137,50 @@
       color: var(--soft-text);
       font-style: italic;
     }
+
+    /* ── Edit Profile section ────────────────────────────────── */
+    .profile-edit-section {
+      margin-bottom: 28px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--gold-mid);
+    }
+    .profile-edit-toggle {
+      background: none;
+      border: 1.5px solid var(--gold-mid);
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      color: var(--forest);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .profile-edit-toggle:hover {
+      background: var(--gold-mid);
+    }
+    .profile-edit-form {
+      margin-top: 20px;
+    }
+    .profile-edit-form .field-divider {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--soft-text);
+      margin: 18px 0 10px;
+    }
+    .profile-hint {
+      font-size: 0.82rem;
+      color: var(--soft-text);
+      margin: -4px 0 12px;
+      line-height: 1.5;
+    }
+    .pe-success {
+      font-size: 0.88rem;
+      color: #2c6e49;
+      font-weight: 500;
+      margin-top: 10px;
+    }
   </style>
 </head>
 
@@ -306,6 +350,47 @@
           <button class="btn-signout" onclick="doSignOut()">Sign Out</button>
         </div>
 
+        <!-- ── EDIT PROFILE ───────────────────────────────── -->
+        <div class="profile-edit-section">
+          <button class="profile-edit-toggle" onclick="toggleProfileEdit()">✏️ Edit Profile</button>
+
+          <div id="profile-edit-form" class="profile-edit-form" style="display:none;">
+
+            <div class="field-divider">Display Name</div>
+            <div class="field">
+              <label for="pe-name">Name shown on your account</label>
+              <input type="text" id="pe-name" placeholder="Your name" autocomplete="name" />
+            </div>
+
+            <div class="field-divider">Email Address</div>
+            <p class="profile-hint">Changing your email will send a confirmation link to the new address.</p>
+            <div class="field">
+              <label for="pe-email">Email</label>
+              <input type="email" id="pe-email" autocomplete="email" />
+            </div>
+
+            <div class="field-divider">Change Password</div>
+            <p class="profile-hint">Leave blank to keep your current password.</p>
+            <div class="field-row">
+              <div class="field">
+                <label for="pe-password">New Password</label>
+                <input type="password" id="pe-password" placeholder="6+ characters" autocomplete="new-password" />
+              </div>
+              <div class="field">
+                <label for="pe-confirm">Confirm New Password</label>
+                <input type="password" id="pe-confirm" placeholder="••••••••" autocomplete="new-password" />
+              </div>
+            </div>
+
+            <div class="error-msg" id="pe-error"></div>
+            <div class="pe-success" id="pe-success" style="display:none;">✓ Profile updated successfully.</div>
+
+            <div class="submit-area">
+              <button class="submit-btn" id="pe-btn" onclick="saveProfile()">Save Changes →</button>
+            </div>
+          </div>
+        </div>
+
         <!-- My Sign-Ups -->
         <div class="history-section">
           <h3>📅 My Event Sign-Ups</h3>
@@ -461,12 +546,103 @@
       document.getElementById('auth-view').style.display    = 'none';
       document.getElementById('account-view').style.display = 'block';
 
-      // Derive a display name from the email address.
-      const displayName = user.email.split('@')[0];
-      document.getElementById('account-greeting').textContent =
-        'Welcome, ' + displayName + '!';
+      // Set a temporary greeting from email; loadProfile() will refine it.
+      const fallback = user.email.split('@')[0];
+      document.getElementById('account-greeting').textContent = 'Welcome, ' + fallback + '!';
 
+      loadProfile(user);
       loadHistory(user.id, user.email);
+    }
+
+
+    // ── LOAD + PRE-FILL PROFILE ───────────────────────────────
+    async function loadProfile(user) {
+      const { data: profile } = await db
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const displayName = profile?.display_name || user.email.split('@')[0];
+      document.getElementById('account-greeting').textContent = 'Welcome, ' + displayName + '!';
+
+      // Pre-fill edit form
+      document.getElementById('pe-name').value  = profile?.display_name || '';
+      document.getElementById('pe-email').value = user.email || '';
+    }
+
+
+    // ── TOGGLE EDIT FORM ──────────────────────────────────────
+    function toggleProfileEdit() {
+      const form = document.getElementById('profile-edit-form');
+      const isOpen = form.style.display !== 'none';
+      form.style.display = isOpen ? 'none' : 'block';
+    }
+
+
+    // ── SAVE PROFILE CHANGES ──────────────────────────────────
+    async function saveProfile() {
+      const name     = document.getElementById('pe-name').value.trim();
+      const email    = document.getElementById('pe-email').value.trim();
+      const password = document.getElementById('pe-password').value;
+      const confirm  = document.getElementById('pe-confirm').value;
+      const errEl    = document.getElementById('pe-error');
+      const successEl = document.getElementById('pe-success');
+      const btn      = document.getElementById('pe-btn');
+
+      showError('pe-error', '');
+      successEl.style.display = 'none';
+
+      if (!email) { showError('pe-error', 'Email cannot be empty.'); return; }
+      if (password && password.length < 6) { showError('pe-error', 'New password must be at least 6 characters.'); return; }
+      if (password && password !== confirm) { showError('pe-error', 'Passwords do not match.'); return; }
+
+      btn.disabled    = true;
+      btn.textContent = 'Saving…';
+
+      const { data: { session } } = await db.auth.getSession();
+      const authUpdates = {};
+      if (email !== session?.user?.email) authUpdates.email    = email;
+      if (password)                       authUpdates.password = password;
+
+      const promises = [];
+
+      if (Object.keys(authUpdates).length) {
+        promises.push(db.auth.updateUser(authUpdates));
+      }
+
+      if (session) {
+        promises.push(
+          db.from('profiles')
+            .update({ display_name: name || null })
+            .eq('id', session.user.id)
+        );
+      }
+
+      const results = await Promise.allSettled(promises);
+      btn.disabled    = false;
+      btn.textContent = 'Save Changes →';
+
+      // Check for auth update error (first promise if it was queued)
+      const authResult = Object.keys(authUpdates).length ? results[0] : null;
+      if (authResult?.value?.error) {
+        showError('pe-error', authResult.value.error.message);
+        return;
+      }
+
+      // Update greeting with new display name
+      const displayName = name || email.split('@')[0];
+      document.getElementById('account-greeting').textContent = 'Welcome, ' + displayName + '!';
+
+      // Clear password fields
+      document.getElementById('pe-password').value = '';
+      document.getElementById('pe-confirm').value  = '';
+
+      successEl.style.display = 'block';
+      setTimeout(() => {
+        successEl.style.display = 'none';
+        document.getElementById('profile-edit-form').style.display = 'none';
+      }, 2500);
     }
 
 
