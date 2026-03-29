@@ -572,17 +572,16 @@ select {
 
 
 /* ── SUBMIT OVERLAY ───────────────────────────────────────────
-   Covers the card with a semi-transparent wash and a centered
-   spinning ring while the form is being submitted. Hidden by
-   default; shown by JavaScript during submission. */
+   Full-viewport overlay shown while the form is submitting.
+   Fixed position ensures the spinner is always centered even
+   on long-scroll pages. */
 .submit-overlay {
   display: none;
-  position: absolute;
+  position: fixed;
   inset: 0;
-  border-radius: 20px;           /* Matches the card's border-radius. */
   background: rgba(253, 248, 239, 0.88);
   backdrop-filter: blur(3px);
-  z-index: 10;
+  z-index: 999;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -590,7 +589,7 @@ select {
 }
 .submit-overlay.visible { display: flex; }
 
-/* The card needs position: relative so the overlay is anchored to it. */
+/* Still needed for any stacking context — harmless with fixed overlay. */
 .card { position: relative; }
 
 /* Spinning ring built entirely from CSS border + animation. */

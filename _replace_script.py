@@ -119,6 +119,7 @@ new_tail = '''    // ── HELPERS ──────────────�
       else if (currentPanel === "announcements") loadAnnouncements();
       else if (currentPanel === "memories")      loadMemories();
       else if (currentPanel === "bulletin")      loadBulletin();
+      else if (currentPanel === "directory")     loadDirectory();
       else if (currentPanel === "volunteers")    initVolunteersPanel();
       else if (currentPanel === "links")         loadLinks();
       else if (currentPanel === "documents")     loadDocuments();
@@ -645,20 +646,19 @@ new_tail = '''    // ── HELPERS ──────────────�
       const row = prepData.find(r => r.id === prepId);
       if (!row) { toast("Row not found.", "error"); return; }
       const winnerRow = {
-        nomination_id: row.nomination_id,
-        award:         row.award,
-        winner_name:   row.winner_name,
-        icon:          row.icon,
-        badge:         row.badge,
-        banner_color:  row.banner_color,
-        period:        row.period,
-        year:          row.year,
-        photo_id:      row.photo_id,
-        prize:         row.prize,
-        blurb:         row.blurb,
-        quote1:        row.quote1,
-        quote2:        row.quote2,
-        quote3:        row.quote3,
+        award:         row.award        || null,
+        winner_name:   row.winner_name  || null,
+        icon:          row.icon         || null,
+        badge:         row.badge        || null,
+        banner_color:  row.banner_color || null,
+        period:        row.period       || null,
+        year:          row.year         || null,
+        photo_id:      row.photo_id     || null,
+        prize:         row.prize        || null,
+        blurb:         row.blurb        || null,
+        quote1:        row.quote1       || null,
+        quote2:        row.quote2       || null,
+        quote3:        row.quote3       || null,
       };
       const { error: winErr } = await db.from('winners').insert(winnerRow);
       if (winErr) { toast("Error: " + winErr.message, "error"); return; }
@@ -702,6 +702,7 @@ new_tail = '''    // ── HELPERS ──────────────�
           <td style="text-align:center;">${voteLabel}</td>
           <td>${badge(n.approved ? "received" : "pending")}</td>
           <td>
+            <button class="btn btn-outline   btn-sm" onclick="previewNomination(${n.id})">Preview</button>
             ${!n.approved ? `<button class="btn btn-success btn-sm" onclick="markNominationReceived(${n.id})">Mark Received</button>` : ""}
             <button class="btn btn-secondary btn-sm" onclick="openNominationForm(${n.id})">Edit</button>
             <button class="btn btn-danger    btn-sm" onclick="confirmDeleteNomination(${n.id})">Delete</button>
@@ -909,6 +910,7 @@ new_tail = '''    // ── HELPERS ──────────────�
           <td><div class="thumb-grid">${ids.slice(0,3).map(id=>`<img src="https://drive.google.com/thumbnail?id=${esc(id)}&sz=w70" onerror="this.style.display='none'" />`).join("")}</div></td>
           <td>${badge(m.approved?"approved":"pending")}</td>
           <td>
+            <button class="btn btn-outline   btn-sm" onclick="previewMemory(${m.id})">Preview</button>
             ${!m.approved?`<button class="btn btn-success btn-sm" onclick="approveMemory(${m.id})">Approve</button>`:""}
             <button class="btn btn-secondary btn-sm" onclick="openMemoryEdit(${m.id})">Edit</button>
             <button class="btn btn-danger    btn-sm" onclick="confirmDeleteMemory(${m.id})">Delete</button>
@@ -986,6 +988,7 @@ new_tail = '''    // ── HELPERS ──────────────�
           <td><div class="thumb-grid">${ids.slice(0,2).map(id=>`<img src="https://drive.google.com/thumbnail?id=${esc(id)}&sz=w70" onerror="this.style.display='none'" />`).join("")}</div></td>
           <td>${badge(p.approved?"approved":"pending")}</td>
           <td>
+            <button class="btn btn-outline   btn-sm" onclick="previewBulletin(${p.id})">Preview</button>
             ${!p.approved?`<button class="btn btn-success btn-sm" onclick="approveBulletin(${p.id})">Approve</button>`:""}
             <button class="btn btn-secondary btn-sm" onclick="openBulletinEdit(${p.id})">Edit</button>
             <button class="btn btn-danger    btn-sm" onclick="confirmDeleteBulletin(${p.id})">Delete</button>
@@ -1700,6 +1703,129 @@ new_tail = '''    // ── HELPERS ──────────────�
         btn.disabled = false;
         btn.textContent = "Import All Rows";
       }
+    }
+
+
+    // ====================================================
+    //  PREVIEW MODAL HELPERS (D1 Bulletin, D2 Nominations, D3 Memories)
+    // ====================================================
+
+    function openPreviewModal(title, bodyHtml, actionsHtml) {
+      document.getElementById('preview-modal-title').textContent = title;
+      document.getElementById('preview-modal-body').innerHTML    = bodyHtml;
+      document.getElementById('preview-modal-actions').innerHTML = actionsHtml || '';
+      document.getElementById('preview-modal').classList.remove('hidden');
+    }
+
+    function closePreviewModal() {
+      document.getElementById('preview-modal').classList.add('hidden');
+    }
+
+    // ── D1: Bulletin Board preview ──────────────────────────────
+    function previewBulletin(id) {
+      const p = bulletinData.find(x => x.id === id);
+      if (!p) return;
+      const ids = extractDriveIds(p.photo_urls || []);
+      const photos = ids.map(did =>
+        `<img src="https://drive.google.com/thumbnail?id=${esc(did)}&sz=w200"
+             style="width:120px;height:90px;object-fit:cover;border-radius:4px;margin:4px;"
+             onerror="this.style.display='none'" />`
+      ).join('');
+      const body =
+        `<div style="margin-bottom:12px;">
+           <span style="display:inline-block;padding:3px 10px;background:var(--forest);color:var(--cream);border-radius:20px;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;">${esc(p.category||'')}</span>
+         </div>
+         <h2 style="margin:0 0 8px;font-size:1.2rem;">${esc(p.title||'')}</h2>
+         <p style="font-size:0.8rem;color:var(--muted);margin:0 0 16px;">${esc(fmtDate(p.submitted_at))} · ${esc(p.poster_name||'')}</p>
+         <div style="line-height:1.7;margin-bottom:16px;">${p.content || ''}</div>
+         ${photos ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px;">${photos}</div>` : ''}
+         <div style="font-size:0.8rem;color:var(--muted);border-top:1px solid rgba(44,61,46,0.1);padding-top:12px;">
+           ${p.show_email && p.email   ? `<div>Email: ${esc(p.email)}</div>` : ''}
+           ${p.show_phone && p.phone   ? `<div>Phone: ${esc(p.phone)}</div>` : ''}
+           ${p.address                 ? `<div>Address: ${esc(p.address)}</div>` : ''}
+         </div>`;
+      const actions = !p.approved
+        ? `<button class="btn btn-success" onclick="approveBulletin(${id});closePreviewModal()">Approve</button>
+           <button class="btn btn-danger"  onclick="confirmDeleteBulletin(${id});closePreviewModal()">Delete</button>`
+        : `<button class="btn btn-secondary" onclick="openBulletinEdit(${id});closePreviewModal()">Edit</button>
+           <button class="btn btn-danger"    onclick="confirmDeleteBulletin(${id});closePreviewModal()">Delete</button>`;
+      openPreviewModal('Bulletin Post Preview', body, actions);
+    }
+
+    // ── D2: Nomination preview ──────────────────────────────────
+    function previewNomination(id) {
+      const n = nominationsData.find(x => x.id === id);
+      if (!n) return;
+      const contest = contestsData.find(c => c.id === n.contest_id);
+      const ids = extractDriveIds(n.photo_urls || []);
+      const photos = ids.map(did =>
+        `<img src="https://drive.google.com/thumbnail?id=${esc(did)}&sz=w200"
+             style="width:120px;height:90px;object-fit:cover;border-radius:4px;margin:4px;"
+             onerror="this.style.display='none'" />`
+      ).join('');
+      const body =
+        `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+           <div>
+             <div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Nominator</div>
+             <div style="font-weight:600;">${esc(n.nominator_name||'—')}</div>
+             <div style="font-size:0.85rem;color:var(--muted);">${esc(n.nominator_email||'')}</div>
+             <div style="font-size:0.85rem;color:var(--muted);">${esc(n.nominator_phone||'')}</div>
+             <div style="font-size:0.85rem;color:var(--muted);">${esc(n.nominator_address||'')}</div>
+           </div>
+           <div>
+             <div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Nominee</div>
+             <div style="font-weight:600;">${esc(n.nominee_name||'—')}</div>
+             <div style="font-size:0.85rem;color:var(--muted);">${esc(n.nominee_address||'')}</div>
+           </div>
+         </div>
+         <div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Award</div>
+         <div style="font-weight:600;margin-bottom:16px;">${esc(contest ? contest.award_name : (n.contest_id||'—'))}${n.custom_award ? ` — ${esc(n.custom_award)}` : ''}</div>
+         <div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Reasons</div>
+         <div style="white-space:pre-wrap;line-height:1.6;margin-bottom:16px;">${esc(n.reasons||'—')}</div>
+         ${photos ? `<div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Photos</div>
+         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px;">${photos}</div>` : ''}`;
+      const actions = !n.approved
+        ? `<button class="btn btn-success" onclick="markNominationReceived(${id});closePreviewModal()">Mark Received</button>
+           <button class="btn btn-secondary" onclick="openNominationForm(${id});closePreviewModal()">Edit</button>
+           <button class="btn btn-danger"    onclick="confirmDeleteNomination(${id});closePreviewModal()">Delete</button>`
+        : `<button class="btn btn-secondary" onclick="openNominationForm(${id});closePreviewModal()">Edit</button>
+           <button class="btn btn-danger"    onclick="confirmDeleteNomination(${id});closePreviewModal()">Delete</button>`;
+      openPreviewModal('Nomination Preview', body, actions);
+    }
+
+    // ── D3: Memory preview ──────────────────────────────────────
+    function previewMemory(id) {
+      const m = memoriesData.find(x => x.id === id);
+      if (!m) return;
+      const ids = extractDriveIds(m.photo_urls || []);
+      const photos = ids.map(did =>
+        `<img src="https://drive.google.com/thumbnail?id=${esc(did)}&sz=w300"
+             style="width:150px;height:110px;object-fit:cover;border-radius:4px;margin:4px;"
+             onerror="this.style.display='none'" />`
+      ).join('');
+      const body =
+        `<div style="margin-bottom:16px;">
+           <div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Event</div>
+           <div style="font-weight:600;font-size:1.05rem;">${esc(m.event_name||'—')}</div>
+         </div>
+         <div style="margin-bottom:16px;">
+           <div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Uploaded by</div>
+           <div>${esc(m.uploader_name||'—')} · <span style="color:var(--muted);">${esc(m.email||'')}</span></div>
+           <div style="font-size:0.8rem;color:var(--muted);">${esc(fmtDate(m.submitted_at))}</div>
+         </div>
+         ${m.caption ? `<div style="margin-bottom:16px;">
+           <div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Caption</div>
+           <div style="line-height:1.6;">${esc(m.caption)}</div>
+         </div>` : ''}
+         ${photos ? `<div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Photos (${ids.length})</div>
+         <div style="display:flex;flex-wrap:wrap;gap:4px;">${photos}</div>` : ''}`;
+      const actions = !m.approved
+        ? `<button class="btn btn-success" onclick="approveMemory(${id});closePreviewModal()">Approve</button>
+           <button class="btn btn-secondary" onclick="openMemoryEdit(${id});closePreviewModal()">Edit</button>
+           <button class="btn btn-danger"    onclick="confirmDeleteMemory(${id});closePreviewModal()">Delete</button>`
+        : `<button class="btn btn-secondary" onclick="openMemoryEdit(${id});closePreviewModal()">Edit</button>
+           <button class="btn btn-danger"    onclick="confirmDeleteMemory(${id});closePreviewModal()">Delete</button>`;
+      openPreviewModal('Memory Preview', body, actions);
     }
 
   </script>

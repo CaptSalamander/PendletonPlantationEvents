@@ -191,6 +191,10 @@
                   <input type="checkbox" id="opt_in_newsletter" />
                   Sign me up for the neighborhood newsletter
                 </label>
+                <label style="display:flex; align-items:center; gap:10px; font-weight:400; cursor:pointer;">
+                  <input type="checkbox" id="anonymous" />
+                  Keep my name off the public team roster (show me as "Anonymous")
+                </label>
               </div>
             </div>
 
@@ -338,6 +342,24 @@
 
     // Holds the loaded event data (normalized to camelCase for existing helpers)
     let EVENT = null;
+
+
+    // ── AUTOPOPULATE FROM PROFILE ─────────────────────────────
+    (async function prefillFromProfile() {
+      try {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) return;
+        const { data: profile } = await db.from('profiles')
+          .select('first_name, last_name, phone, address')
+          .eq('id', session.user.id).maybeSingle();
+        if (!profile) return;
+        if (profile.first_name) document.getElementById('first_name').value = profile.first_name;
+        if (profile.last_name)  document.getElementById('last_name').value  = profile.last_name;
+        if (session.user.email) document.getElementById('email').value      = session.user.email;
+        if (profile.phone)      document.getElementById('phone').value      = profile.phone;
+        if (profile.address)    document.getElementById('address').value    = profile.address;
+      } catch (_) { /* non-critical — fail silently */ }
+    })();
 
 
     // ── LOAD EVENT ON PAGE START ──────────────────────────────
@@ -638,6 +660,7 @@
           special_skills:    document.getElementById("special_skills").value.trim()    || null,
           opt_in_events:     document.getElementById("opt_in_events").checked,
           opt_in_newsletter: document.getElementById("opt_in_newsletter").checked,
+          anonymous:         document.getElementById("anonymous").checked,
         };
 
         const { data: inserted, error: signupError } = await db
@@ -668,18 +691,26 @@
         }
         if (junctionInserts.length > 0) await Promise.all(junctionInserts);
 
-        // 3. Fire-and-forget email notification via GAS.
+        // 3. Fire-and-forget email notification + confirmation via GAS.
         if (EMAIL_SCRIPT_URL) {
           fetch(EMAIL_SCRIPT_URL, {
             method:  "POST",
             mode:    "no-cors",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body:    new URLSearchParams({
-              action:     "signupNotify",
-              first_name: signupRow.first_name,
-              last_name:  signupRow.last_name,
-              email:      signupRow.email,
-              event:      EVENT.eventName,
+              action:          "signupNotify",
+              first_name:      signupRow.first_name,
+              last_name:       signupRow.last_name,
+              email:           signupRow.email,
+              event:           EVENT.eventName,
+              attending:       signupRow.attending,
+              adults:          signupRow.num_adults,
+              children:        signupRow.num_children,
+              roles:           volunteerChecked.join(", "),
+              potluck:         signupRow.potluck_item      || "",
+              other_donation:  signupRow.other_donation    || "",
+              cash_donation:   signupRow.cash_donation     || "",
+              notes:           signupRow.notes             || "",
             }).toString(),
           }).catch(() => {});
         }

@@ -42,6 +42,8 @@ Check all functionality systematically
 
 Winner prep may not be pulling all data properly
 
+Signed in users should be able to view the event dashboard panels but not contact information, or who signed up for what donations. They should be able to see the team. Maybe add checkbox for people to stay anonymous in the sign up for an event process and those people's names are hidden.
+
 
 
 Long Term Goal:

@@ -351,6 +351,26 @@
     // ============================================================
 
 
+    // ── AUTOPOPULATE FROM PROFILE ─────────────────────────────
+    // If the user is signed in, pre-fill the nominator contact fields
+    // from their saved profile so they don't have to retype them.
+    (async function prefillFromProfile() {
+      try {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) return;
+        const { data: profile } = await db.from('profiles')
+          .select('first_name, last_name, phone, address')
+          .eq('id', session.user.id).maybeSingle();
+        if (!profile) return;
+        if (profile.first_name) document.getElementById('nom_first').value   = profile.first_name;
+        if (profile.last_name)  document.getElementById('nom_last').value    = profile.last_name;
+        if (session.user.email) document.getElementById('nom_email').value   = session.user.email;
+        if (profile.phone)      document.getElementById('nom_phone').value   = profile.phone;
+        if (profile.address)    document.getElementById('nom_address').value = profile.address;
+      } catch (_) { /* non-critical — fail silently */ }
+    })();
+
+
     // ── PHOTO MANAGEMENT ─────────────────────────────────────
     // selectedFiles holds the File objects chosen by the user.
     // We manage this manually so we can add / remove individual

@@ -701,20 +701,28 @@ section {
 
 /* ── EVENT CARD ───────────────────────────────────────────────
    A single event card with a colored top banner, status badge,
-   and body text. The card is a clickable anchor element. */
+   and body text. Card body links to event detail; CTA button
+   at the bottom links to sign-up. */
 .event-card {
   background: var(--cream);
   border: 1px solid rgba(201, 168, 76, 0.2);
   border-radius: 4px;
   overflow: hidden;
   /* Clip the colored top banner to the card corners. */
-  text-decoration: none;
-  color: inherit;
   display: flex;
   flex-direction: column;
   /* Stack the top banner above the body text. */
   transition: transform 0.25s, box-shadow 0.25s;
   position: relative;
+}
+
+/* Inner anchor that wraps the top banner + card body text. */
+.event-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 /* On hover: lift the card and add a deeper shadow. */
@@ -890,9 +898,46 @@ section {
   transition: transform 0.2s;
 }
 
-/* On card hover: slide the arrow 4px to the right. */
-.event-card:hover .event-link::after {
+/* On card body hover: slide the arrow 4px to the right. */
+.event-card:hover .event-link::after,
+.event-card-link:hover .event-link::after {
   transform: translateX(4px);
+}
+
+/* ── EVENT CARD CTA BUTTON ────────────────────────────────────
+   The sign-up / see-memories call-to-action at the bottom of
+   restructured event cards. Sits outside the body link so
+   clicking the button goes to signup.html while clicking the
+   card body goes to the event detail page. */
+.event-card-footer {
+  padding: 0 26px 22px;
+}
+
+.event-cta-btn {
+  display: inline-block;
+  padding: 9px 20px;
+  font-size: 0.73rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--forest);
+  color: var(--cream);
+  border-radius: 3px;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.event-cta-btn:hover {
+  background: var(--moss);
+  color: #fff;
+}
+
+.event-cta-soon {
+  font-size: 0.73rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-style: italic;
 }
 
 
@@ -1200,7 +1245,7 @@ section {
   margin-top: 40px;
 }
 
-/* An individual award card. */
+/* An individual award card. Rendered as <a> — suppress default link styles. */
 .award-card {
   background: rgba(255, 255, 255, 0.05);
   /* Very subtle white tint on the dark background. */
@@ -1209,6 +1254,10 @@ section {
   padding: 32px 24px 28px;
   text-align: center;
   transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  display: block;
 }
 
 /* On hover: brighten the card and lift it slightly. */

@@ -217,7 +217,7 @@
 
     <!-- Buttons below the photo grid. -->
     <div style="text-align:center; margin-bottom:14px; display:flex; flex-direction:column; align-items:center; gap:16px;">
-      <a href="memories.html" class="btn-outline">View All Memories →</a>
+      <a href="memories.html" class="btn-tertiary">View All Memories →</a>
       <a href="submit-memory.html" class="btn-tertiary">Have photos from a neighborhood event? Upload them →</a>
     </div>
   </section>
@@ -423,17 +423,22 @@
     const eventDate = ev.event_date ? new Date(ev.event_date + "T00:00:00") : null;
     const isPast = eventDate && eventDate < today;
     const isConfirmed = ev.status === "Confirmed";
+    const id = ev.id || "";
 
-    let statusLabel, statusClass, link, linkText;
+    let statusLabel, statusClass, detailLink, signupLink, linkText;
     if (isPast) {
       statusLabel = "Past Event"; statusClass = "status-closed";
-      link = "#events"; linkText = "See Memories";
+      detailLink = id ? `events.html#${id}` : "events.html";
+      signupLink = null; linkText = "See Memories →";
     } else if (isConfirmed) {
       statusLabel = "Sign-Ups Open"; statusClass = "status-open";
-      link = "signup.html"; linkText = "Sign Up Now";
+      detailLink = id ? `events.html#${id}` : "events.html";
+      signupLink = id ? `signup.html?event=${id}` : "signup.html";
+      linkText = "Sign Up Now";
     } else {
       statusLabel = "Coming Soon"; statusClass = "status-soon";
-      link = "#events"; linkText = "Details Coming Soon";
+      detailLink = id ? `events.html#${id}` : "events.html";
+      signupLink = null; linkText = "Details Coming Soon";
     }
 
     // Format event_date as "Month D, YYYY"
@@ -453,7 +458,7 @@
       time: ev.event_time || "",
       name: ev.event_name || "",
       desc: ev.short_description || "",
-      link, linkText,
+      detailLink, signupLink, linkText,
     };
   }
 
@@ -501,13 +506,16 @@
     const awardsGrid = document.getElementById("awards-grid");
     function renderAwards(awardList) {
       if (!awardsGrid) return;
-      awardsGrid.innerHTML = awardList.map(a => `
-      <div class="award-card${a.empty ? " award-empty" : ""}">
+      awardsGrid.innerHTML = awardList.map(a => {
+        const href = a.empty ? "awards.html#competitions" : "awards.html#winners";
+        return `
+      <a href="${href}" class="award-card${a.empty ? " award-empty" : ""}">
         <div class="award-icon">${a.icon}</div>
         <div class="award-category">${a.category}</div>
         <div class="award-winner">${a.winner}</div>
         <div class="award-period">${a.period}</div>
-      </div>`).join("");
+      </a>`;
+      }).join("");
     }
 
     // Render fallback immediately, then replace with live data from Supabase.
@@ -534,19 +542,31 @@
     const eventsGrid = document.getElementById("events-grid");
     function renderEvents(eventList) {
       if (!eventsGrid) return;
-      eventsGrid.innerHTML = eventList.map(e => `
-      <a href="${e.link}" class="event-card">
-        <div class="event-card-top ${e.colorClass}">
-          ${e.emoji}
-          <span class="event-status ${e.statusClass}">${e.statusLabel}</span>
-        </div>
-        <div class="event-card-body">
-          <div class="event-date">${e.date}${e.time ? `<span class="event-time"> · ${e.time}</span>` : ""}</div>
-          <div class="event-name">${e.name}</div>
-          <div class="event-desc">${e.desc}</div>
-          <div class="event-link">${e.linkText}</div>
-        </div>
-      </a>`).join("");
+      eventsGrid.innerHTML = eventList.map(e => {
+        // Fallback events may only have e.link; prefer detailLink when available.
+        const bodyHref = e.detailLink || e.link || "#events";
+        let footer = "";
+        if (e.signupLink) {
+          footer = `<div class="event-card-footer"><a href="${e.signupLink}" class="event-cta-btn">${e.linkText} →</a></div>`;
+        } else if (e.linkText && e.linkText !== "Sign Up Now") {
+          footer = `<div class="event-card-footer"><span class="event-cta-soon">${e.linkText}</span></div>`;
+        }
+        return `
+      <div class="event-card">
+        <a href="${bodyHref}" class="event-card-link">
+          <div class="event-card-top ${e.colorClass}">
+            ${e.emoji}
+            <span class="event-status ${e.statusClass}">${e.statusLabel}</span>
+          </div>
+          <div class="event-card-body">
+            <div class="event-date">${e.date}${e.time ? `<span class="event-time"> · ${e.time}</span>` : ""}</div>
+            <div class="event-name">${e.name}</div>
+            <div class="event-desc">${e.desc}</div>
+          </div>
+        </a>
+        ${footer}
+      </div>`;
+      }).join("");
     }
 
     // Render fallback immediately, then replace with live data from Supabase.

@@ -29,10 +29,23 @@
 CREATE TABLE IF NOT EXISTS profiles (
   id            UUID        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   display_name  TEXT,
+  first_name    TEXT,
+  last_name     TEXT,
+  phone         TEXT,
+  address       TEXT,
   role          TEXT        NOT NULL DEFAULT 'user'
                             CHECK (role IN ('user', 'admin')),
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Migration: add contact columns to existing profiles table.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS first_name TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_name  TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone      TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS address    TEXT;
+
+-- Migration: add anonymous flag to signups table.
+ALTER TABLE signups ADD COLUMN IF NOT EXISTS anonymous BOOLEAN DEFAULT false;
 
 -- ── config ───────────────────────────────────────────────────
 -- Key-value store for organizer info and site settings.
@@ -125,6 +138,7 @@ CREATE TABLE IF NOT EXISTS signups (
   special_skills    TEXT,
   opt_in_events     BOOLEAN     DEFAULT FALSE,
   opt_in_newsletter BOOLEAN     DEFAULT FALSE,
+  anonymous         BOOLEAN     DEFAULT FALSE,
   archived          BOOLEAN     DEFAULT FALSE
 );
 
@@ -181,6 +195,23 @@ CREATE TABLE IF NOT EXISTS documents (
   url_label   TEXT,
   sort_order  INT         DEFAULT 0,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ── business_directory ───────────────────────────────────────
+-- Resident-owned business listings. Submitted by residents, approved by admin.
+CREATE TABLE IF NOT EXISTS business_directory (
+  id            BIGSERIAL   PRIMARY KEY,
+  user_id       UUID        REFERENCES auth.users(id) ON DELETE SET NULL,
+  owner_name    TEXT        NOT NULL,
+  email         TEXT,
+  phone         TEXT,
+  business_name TEXT        NOT NULL,
+  category      TEXT        NOT NULL,
+  description   TEXT,
+  website       TEXT,
+  address       TEXT,
+  approved      BOOLEAN     DEFAULT false,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ── award_contests ───────────────────────────────────────────
@@ -333,6 +364,7 @@ ALTER TABLE winners            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE winner_prep        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memories           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bulletin_posts     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE business_directory ENABLE ROW LEVEL SECURITY;
 
 -- ── Helper: is the current user an admin? ───────────────────
 CREATE OR REPLACE FUNCTION is_admin()
@@ -614,6 +646,32 @@ CREATE POLICY "bp: admin update"
 CREATE POLICY "bp: admin delete"
   ON bulletin_posts FOR DELETE USING (is_admin());
 
+CREATE POLICY "bd: public reads approved"
+  ON business_directory FOR SELECT
+  USING (approved = true);
+
+CREATE POLICY "bd: owner reads own"
+  ON business_directory FOR SELECT
+  USING (user_id = auth.uid());
+
+CREATE POLICY "bd: anyone can insert"
+  ON business_directory FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "bd: owner can update own"
+  ON business_directory FOR UPDATE
+  USING (user_id = auth.uid());
+
+CREATE POLICY "bd: admin reads all"
+  ON business_directory FOR SELECT
+  USING (is_admin());
+
+CREATE POLICY "bd: admin update"
+  ON business_directory FOR UPDATE USING (is_admin());
+
+CREATE POLICY "bd: admin delete"
+  ON business_directory FOR DELETE USING (is_admin());
+
 
 -- ============================================================
 --  PUBLIC-FACING VIEWS (column-level data protection)
@@ -729,6 +787,24 @@ WHERE s.potluck_item IS NOT NULL
   AND s.archived = false;
 
 GRANT SELECT ON dashboard_potluck TO anon, authenticated;
+
+-- Team roster: attending residents with anonymized names.
+-- Shows "First L." format or "Anonymous" if the signup has anonymous=true.
+-- Available to authenticated users only (not public anon).
+CREATE OR REPLACE VIEW dashboard_team AS
+SELECT
+  s.event_id,
+  CASE
+    WHEN s.anonymous THEN 'Anonymous'
+    ELSE s.first_name || ' ' || left(s.last_name, 1) || '.'
+  END AS display_name,
+  s.num_adults,
+  s.num_children
+FROM signups s
+WHERE s.attending ILIKE 'yes%'
+  AND s.archived = false;
+
+GRANT SELECT ON dashboard_team TO authenticated;
 
 
 -- ============================================================

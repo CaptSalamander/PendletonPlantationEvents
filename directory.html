@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ============================================================
+     File:        directory.html
+     Purpose:     Resident-Owned Business Directory — neighbors can
+                  browse local businesses and service providers owned
+                  by Pendleton Plantation residents. Residents submit
+                  their listing and the HOA approves before it appears.
+     Script:      directory-script.gs  (admin notification email)
+     Styles:      directory-styles.css
+     ============================================================ -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resident Business Directory — Pendleton Plantation</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="directory-styles.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="nav-auth.js"></script>
+</head>
+
+<body>
+
+  <!-- ── NAVIGATION ───────────────────────────────────────────-->
+  <nav>
+    <a class="nav-brand" href="index.html"><span>✦</span> Pendleton Plantation</a>
+
+    <button class="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-links">
+      <li class="nav-has-dropdown">
+        <a href="index.html">Home <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="index.html#awards">Awards</a></li>
+          <li><a href="index.html#events">Events</a></li>
+          <li><a href="index.html#memories">Memories</a></li>
+          <li><a href="index.html#announcements">Announcements</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="awards.html">Awards <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="awards.html#competitions">🏆 Active Competitions</a></li>
+          <li><a href="awards.html#winners">🥇 Past Winners</a></li>
+          <li><a href="nominations.html">📝 Nominate a Neighbor</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="events.html">Events <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="dashboard.html">📊 Event Dashboard</a></li>
+          <li><a href="events.html#Easter">🐣 Easter Egg Hunt</a></li>
+          <li><a href="events.html#IceCreamSocial">🍦 Ice Cream Social</a></li>
+          <li><a href="events.html#July4th">🎆 4th of July</a></li>
+          <li><a href="events.html#ShrimpBoil">🦐 Shrimp Boil</a></li>
+          <li><a href="events.html#TrunkOrTreat">🎃 Trunk or Treat</a></li>
+          <li><a href="events.html#HolidayLights">✨ Holiday Lights</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="memories.html">Memories <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="memories.html">📷 Memory Scrapbook</a></li>
+          <li><a href="submit-memory.html">✍️ Share a Memory</a></li>
+        </ul>
+      </li>
+      <li class="nav-has-dropdown">
+        <a href="bulletin-board.html">Bulletin Board <span class="nav-caret">▾</span></a>
+        <ul class="nav-dropdown">
+          <li><a href="bulletin-board.html">📋 View Board</a></li>
+          <li><a href="post-to-board.html">📝 Post to Board</a></li>
+        </ul>
+      </li>
+      <li><a href="directory.html" class="nav-active">Directory</a></li>
+      <li><a href="links.html">Links</a></li>
+      <li><a href="documents.html">Documents</a></li>
+      <li><a id="nav-account-btn" href="account.html" class="nav-cta">Sign In / Register</a></li>
+      <li id="nav-admin-item" style="display:none"><a href="admin.html">Admin</a></li>
+    </ul>
+  </nav>
+
+
+  <!-- ── PAGE WRAPPER ─────────────────────────────────────────-->
+  <div class="page-wrapper">
+
+    <header class="page-header">
+      <span class="board-icon">🏪 🏘️ 🏪</span>
+      <h1>Resident-Owned<br /><em>Business Directory</em></h1>
+      <p class="subtitle">
+        Support your neighbors! Browse businesses and services run by
+        Pendleton Plantation residents. Own a business? Get listed for free.
+      </p>
+      <button class="list-btn" onclick="openListModal()">🏪 List Your Business</button>
+    </header>
+
+
+    <!-- ── CATEGORY FILTER ─────────────────────────────────────-->
+    <div class="filter-bar" id="filter-bar" role="group" aria-label="Filter by category">
+      <button class="filter-btn active" data-filter="all">All Businesses</button>
+      <button class="filter-btn" data-filter="Trades">🔧 Trades</button>
+      <button class="filter-btn" data-filter="Childcare">👶 Childcare</button>
+      <button class="filter-btn" data-filter="Pet Care">🐾 Pet Care</button>
+      <button class="filter-btn" data-filter="Landscaping">🌿 Landscaping</button>
+      <button class="filter-btn" data-filter="Other">⭐ Other</button>
+    </div>
+
+
+    <!-- ── BUSINESS CARDS ───────────────────────────────────────-->
+    <div class="biz-grid" id="biz-grid"></div>
+
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">🏪</div>
+      <p>No listings in this category yet.<br />
+        <a href="#" onclick="openListModal();return false;" style="color:var(--gold);">
+          Be the first to list your business!
+        </a>
+      </p>
+    </div>
+
+
+    <div class="footer">
+      Pendleton Plantation HOA &nbsp;·&nbsp; Resident Business Directory<br />
+      Listings are reviewed by the HOA before appearing here.
+    </div>
+
+  </div><!-- end .page-wrapper -->
+
+
+  <!-- ── LIST YOUR BUSINESS MODAL ─────────────────────────────-->
+  <div class="modal-overlay hidden" id="list-modal" onclick="if(event.target===this)closeListModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">List Your Business</div>
+        <button class="modal-close-btn" onclick="closeListModal()">✕ Close</button>
+      </div>
+      <div class="modal-body">
+        <div id="list-form-wrap">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Your First Name <span class="req">*</span></label>
+              <input type="text" id="d-first" placeholder="Jane" />
+            </div>
+            <div class="form-group">
+              <label>Your Last Name <span class="req">*</span></label>
+              <input type="text" id="d-last" placeholder="Smith" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Business Name <span class="req">*</span></label>
+            <input type="text" id="d-biz-name" placeholder="Smith's Landscaping" />
+          </div>
+          <div class="form-group">
+            <label>Category <span class="req">*</span></label>
+            <select id="d-category">
+              <option value="">— select one —</option>
+              <option value="Trades">🔧 Trades (plumbing, electric, HVAC, etc.)</option>
+              <option value="Childcare">👶 Childcare / Babysitting</option>
+              <option value="Pet Care">🐾 Pet Care / Dog Walking</option>
+              <option value="Landscaping">🌿 Landscaping / Lawn Care</option>
+              <option value="Other">⭐ Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="d-description" placeholder="Brief description of your services, experience, and service area…"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" id="d-phone" placeholder="(555) 000-0000" />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="d-email" placeholder="jane@example.com" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Website</label>
+            <input type="url" id="d-website" placeholder="https://example.com" />
+          </div>
+          <div class="form-group">
+            <label>Street Address (optional — city/zip not shown)</label>
+            <input type="text" id="d-address" placeholder="123 Pendleton Way" />
+          </div>
+          <button class="submit-btn" id="d-submit-btn" onclick="submitListing()">Submit Listing</button>
+          <p class="form-note">
+            Your listing will be reviewed by the HOA and published within 1–2 business days.
+            You'll receive a confirmation email once it's live.
+          </p>
+        </div>
+        <div id="list-success" class="modal-success" style="display:none">
+          <div class="success-icon">🎉</div>
+          <h3>Listing Submitted!</h3>
+          <p>Thank you! The HOA will review your listing and publish it within 1–2 business days.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── TOAST ─────────────────────────────────────────────────-->
+  <div class="toast" id="toast"></div>
+
+
+  <script>
+
+    // ── GAS notification endpoint ──────────────────────────────
+    // ✏️ EDIT: paste the deployed Web App URL for directory-script.gs here.
+    const DIRECTORY_SCRIPT_URL = 'PASTE_DIRECTORY_SCRIPT_URL_HERE';
+
+    // ── HELPERS ───────────────────────────────────────────────
+    function esc(s) {
+      return String(s ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+    }
+
+    let toastTimer;
+    function toast(msg, isError = false) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'toast toast-show' + (isError ? ' toast-error' : '');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { el.className = 'toast'; }, 4000);
+    }
+
+    // ── CATEGORY BADGE ────────────────────────────────────────
+    const CAT_CLASS = {
+      'Trades':      'cat-trades',
+      'Childcare':   'cat-childcare',
+      'Pet Care':    'cat-petcare',
+      'Landscaping': 'cat-landscaping',
+      'Other':       'cat-other',
+    };
+    const CAT_EMOJI = {
+      'Trades': '🔧', 'Childcare': '👶', 'Pet Care': '🐾',
+      'Landscaping': '🌿', 'Other': '⭐',
+    };
+
+    function categoryBadge(cat) {
+      const cls = CAT_CLASS[cat] || 'cat-other';
+      const emoji = CAT_EMOJI[cat] || '⭐';
+      return `<span class="biz-category-badge ${cls}">${emoji} ${esc(cat)}</span>`;
+    }
+
+    // ── RENDER CARDS ──────────────────────────────────────────
+    let allListings = [];
+    let activeFilter = 'all';
+
+    function renderListings(listings) {
+      const grid = document.getElementById('biz-grid');
+      const empty = document.getElementById('empty-state');
+      grid.innerHTML = '';
+      if (!listings.length) {
+        empty.classList.add('visible');
+        return;
+      }
+      empty.classList.remove('visible');
+      listings.forEach(b => {
+        const contactRows = [];
+        if (b.phone) contactRows.push(
+          `<div class="biz-contact-row"><span class="biz-contact-icon">📞</span><a href="tel:${esc(b.phone)}">${esc(b.phone)}</a></div>`
+        );
+        if (b.email) contactRows.push(
+          `<div class="biz-contact-row"><span class="biz-contact-icon">✉️</span><a href="mailto:${esc(b.email)}">${esc(b.email)}</a></div>`
+        );
+        if (b.website) {
+          const displayUrl = b.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
+          contactRows.push(
+            `<div class="biz-contact-row"><span class="biz-contact-icon">🌐</span><a href="${esc(b.website)}" target="_blank" rel="noopener">${esc(displayUrl)}</a></div>`
+          );
+        }
+
+        grid.insertAdjacentHTML('beforeend', `
+          <div class="biz-card">
+            ${categoryBadge(b.category)}
+            <div class="biz-name">${esc(b.business_name)}</div>
+            <div class="biz-owner">by ${esc(b.owner_name)}</div>
+            ${b.description ? `<div class="biz-description">${esc(b.description)}</div>` : ''}
+            ${contactRows.length ? `<div class="biz-contacts">${contactRows.join('')}</div>` : ''}
+          </div>`);
+      });
+    }
+
+    function applyFilter() {
+      const filtered = activeFilter === 'all'
+        ? allListings
+        : allListings.filter(b => b.category === activeFilter);
+      renderListings(filtered);
+    }
+
+    // ── FILTER BUTTONS ────────────────────────────────────────
+    document.getElementById('filter-bar').addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      applyFilter();
+    });
+
+    // ── FETCH LISTINGS FROM SUPABASE ──────────────────────────
+    async function loadListings() {
+      try {
+        const { data, error } = await db
+          .from('business_directory')
+          .select('id, owner_name, business_name, category, description, phone, email, website')
+          .eq('approved', true)
+          .order('business_name', { ascending: true });
+        if (error) throw error;
+        allListings = data || [];
+        applyFilter();
+      } catch (err) {
+        console.error('Error loading directory:', err);
+        toast('Could not load listings. Please refresh.', true);
+        renderListings([]);
+      }
+    }
+
+    // ── MODAL OPEN / CLOSE ────────────────────────────────────
+    function openListModal() {
+      prefillFromProfile();
+      document.getElementById('list-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeListModal() {
+      document.getElementById('list-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // ── AUTOFILL FROM PROFILE ─────────────────────────────────
+    async function prefillFromProfile() {
+      try {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) return;
+        const { data: profile } = await db.from('profiles')
+          .select('first_name, last_name, phone, address')
+          .eq('id', session.user.id).maybeSingle();
+        if (!profile) return;
+        document.getElementById('d-first').value   = profile.first_name || '';
+        document.getElementById('d-last').value    = profile.last_name  || '';
+        document.getElementById('d-phone').value   = profile.phone      || '';
+        document.getElementById('d-address').value = profile.address    || '';
+        document.getElementById('d-email').value   = session.user.email || '';
+      } catch (_) { /* silent */ }
+    }
+
+    // ── SUBMIT LISTING ────────────────────────────────────────
+    async function submitListing() {
+      const first    = document.getElementById('d-first').value.trim();
+      const last     = document.getElementById('d-last').value.trim();
+      const bizName  = document.getElementById('d-biz-name').value.trim();
+      const category = document.getElementById('d-category').value;
+      const desc     = document.getElementById('d-description').value.trim();
+      const phone    = document.getElementById('d-phone').value.trim();
+      const email    = document.getElementById('d-email').value.trim();
+      const website  = document.getElementById('d-website').value.trim();
+      const address  = document.getElementById('d-address').value.trim();
+
+      if (!first || !last) { toast('Please enter your first and last name.', true); return; }
+      if (!bizName)         { toast('Please enter a business name.', true); return; }
+      if (!category)        { toast('Please select a category.', true); return; }
+
+      const btn = document.getElementById('d-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+
+      try {
+        // Get session for user_id (optional — guests can submit too)
+        const { data: { session } } = await db.auth.getSession();
+        const userId = session?.user?.id || null;
+
+        const row = {
+          user_id:       userId,
+          owner_name:    `${first} ${last}`,
+          email:         email   || null,
+          phone:         phone   || null,
+          business_name: bizName,
+          category:      category,
+          description:   desc    || null,
+          website:       website || null,
+          address:       address || null,
+          approved:      false,
+        };
+
+        const { error } = await db.from('business_directory').insert([row]);
+        if (error) throw error;
+
+        // Notify admin via GAS (fire-and-forget)
+        if (DIRECTORY_SCRIPT_URL && DIRECTORY_SCRIPT_URL !== 'PASTE_DIRECTORY_SCRIPT_URL_HERE') {
+          fetch(DIRECTORY_SCRIPT_URL, {
+            method: 'POST',
+            mode:   'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+              action:        'directorySubmit',
+              owner_name:    row.owner_name,
+              business_name: row.business_name,
+              category:      row.category,
+              description:   row.description,
+              phone:         row.phone,
+              email:         row.email,
+              website:       row.website,
+            }),
+          }).catch(() => {});
+        }
+
+        // Show success state
+        document.getElementById('list-form-wrap').style.display = 'none';
+        document.getElementById('list-success').style.display = 'block';
+
+      } catch (err) {
+        console.error('Listing submit error:', err);
+        toast('Submission failed — please try again.', true);
+        btn.disabled = false;
+        btn.textContent = 'Submit Listing';
+      }
+    }
+
+    // ── HAMBURGER NAV ─────────────────────────────────────────
+    document.querySelector('.nav-hamburger').addEventListener('click', function () {
+      const links = document.querySelector('.nav-links');
+      const open  = links.classList.toggle('nav-open');
+      this.setAttribute('aria-expanded', open);
+    });
+    document.querySelectorAll('.nav-has-dropdown > a').forEach(a => {
+      a.addEventListener('click', function (e) {
+        if (window.innerWidth <= 768) {
+          e.preventDefault();
+          this.closest('.nav-has-dropdown').classList.toggle('nav-dd-open');
+        }
+      });
+    });
+
+    // ── INIT ──────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', loadListings);
+
+  </script>
+</body>
+</html>

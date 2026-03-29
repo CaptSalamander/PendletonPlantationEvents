@@ -111,6 +111,13 @@ function doPost(e) {
 
     MailApp.sendEmail(NOTIFICATION_EMAIL, subject, body);
 
+    // ── Auto-send confirmation email to nominator ────────────
+    if (data.nominator_email) {
+      try { sendReceivedEmail(data); } catch (emailErr) {
+        Logger.log("Confirmation email error: " + emailErr);
+      }
+    }
+
     output.setContent(JSON.stringify({ success: true, photoUrls: photoUrls }));
 
   } catch (err) {

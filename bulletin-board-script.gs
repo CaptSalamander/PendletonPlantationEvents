@@ -98,6 +98,13 @@ function doPost(e) {
 
     MailApp.sendEmail(NOTIFICATION_EMAIL, subject, body);
 
+    // ── Auto-send confirmation email to poster ────────────────
+    if (data.email) {
+      try { sendConfirmationEmail(data); } catch (emailErr) {
+        Logger.log("Confirmation email error: " + emailErr);
+      }
+    }
+
     output.setContent(JSON.stringify({ success: true, photoUrls: photoUrls }));
 
   } catch (err) {
@@ -106,4 +113,84 @@ function doPost(e) {
   }
 
   return output;
+}
+
+
+// ── sendConfirmationEmail ────────────────────────────────────
+// Sends an HTML confirmation email to the bulletin board poster.
+function sendConfirmationEmail(data) {
+  var to = data.email;
+  if (!to) return;
+
+  var posterName = data.name     || "Neighbor";
+  var postTitle  = data.title    || "Your Post";
+  var category   = data.category || "General";
+
+  var subject = "\u{1F4CB} Post Received \u2014 Pendleton Plantation";
+
+  var htmlBody =
+    '<!DOCTYPE html>' +
+    '<html lang="en"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Post Received</title></head>' +
+    '<body style="margin:0;padding:0;background:#f0ece3;font-family:Georgia,serif;">' +
+    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece3;padding:32px 16px;">' +
+    '<tr><td align="center">' +
+    '<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#faf8f4;border-radius:6px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">' +
+
+    // Header
+    '<tr><td style="background:#2c3d2e;padding:40px 48px 32px;text-align:center;">' +
+      '<div style="color:#c9a84c;font-size:1.1rem;letter-spacing:0.25em;text-transform:uppercase;margin-bottom:10px;">\u2746 &nbsp; Pendleton Plantation &nbsp; \u2746</div>' +
+      '<div style="font-size:3.2rem;margin:12px 0;">\u{1F4CB}</div>' +
+      '<h1 style="color:#f5f0e8;font-family:Georgia,serif;font-size:1.75rem;font-weight:400;margin:8px 0 0;letter-spacing:0.03em;">Post <em>Received</em></h1>' +
+      '<div style="width:60px;height:2px;background:#c9a84c;margin:16px auto 0;"></div>' +
+    '</td></tr>' +
+
+    // Greeting
+    '<tr><td style="padding:40px 48px 8px;">' +
+      '<p style="font-size:1.05rem;color:#2c3d2e;margin:0 0 16px;">Dear <strong>' + posterName + '</strong>,</p>' +
+      '<p style="font-size:1rem;color:#3a3a3a;line-height:1.7;margin:0 0 12px;">' +
+        'Thank you for contributing to our community! Your post has been received and is awaiting review by the HOA before going live on the <a href="https://pendletonplantation.com/bulletin-board.html" style="color:#2c3d2e;">Community Bulletin Board</a>.' +
+      '</p>' +
+    '</td></tr>' +
+
+    // Summary card
+    '<tr><td style="padding:8px 48px 8px;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f0e8;border-left:4px solid #c9a84c;border-radius:0 4px 4px 0;padding:20px 24px;">' +
+        '<tr><td>' +
+          '<div style="font-size:0.72rem;color:#7a6a50;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px;">Post Summary</div>' +
+          '<table cellpadding="0" cellspacing="0" border="0">' +
+            '<tr><td style="color:#7a6a50;font-size:0.85rem;padding:3px 16px 3px 0;white-space:nowrap;">Title</td>' +
+                '<td style="color:#2c3d2e;font-size:0.95rem;font-weight:bold;padding:3px 0;">' + postTitle + '</td></tr>' +
+            '<tr><td style="color:#7a6a50;font-size:0.85rem;padding:3px 16px 3px 0;white-space:nowrap;">Category</td>' +
+                '<td style="color:#2c3d2e;font-size:0.95rem;padding:3px 0;">' + category + '</td></tr>' +
+          '</table>' +
+        '</td></tr>' +
+      '</table>' +
+    '</td></tr>' +
+
+    // Body
+    '<tr><td style="padding:24px 48px 8px;">' +
+      '<p style="font-size:1rem;color:#3a3a3a;line-height:1.7;margin:0;">' +
+        'Once approved, your post will be visible to all Pendleton Plantation neighbors. We typically review posts within 1\u20132 business days.' +
+      '</p>' +
+    '</td></tr>' +
+
+    // Warm sign-off
+    '<tr><td style="padding:24px 48px 8px;">' +
+      '<p style="font-size:1rem;color:#3a3a3a;line-height:1.7;margin:0;">With warm regards,</p>' +
+      '<p style="font-family:Georgia,serif;font-size:1.15rem;color:#2c3d2e;font-style:italic;margin:4px 0 0;">The Pendleton Plantation Committee</p>' +
+    '</td></tr>' +
+
+    // Divider + Footer
+    '<tr><td style="padding:24px 48px 0;"><div style="height:1px;background:rgba(201,168,76,0.25);"></div></td></tr>' +
+    '<tr><td style="padding:20px 48px 32px;text-align:center;">' +
+      '<div style="color:#c9a84c;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px;">\u2746 &nbsp; Pendleton Plantation &nbsp; \u2746</div>' +
+      '<p style="font-size:0.78rem;color:#9a8a70;margin:0;">Easley, South Carolina &nbsp;&bull;&nbsp; Community Events Hub</p>' +
+      '<p style="font-size:0.75rem;color:#b8a88a;margin:8px 0 0;">Questions? Reply to this email or visit <a href="https://pendletonplantation.com" style="color:#c9a84c;text-decoration:none;">pendletonplantation.com</a></p>' +
+    '</td></tr>' +
+
+    '</table></td></tr></table></body></html>';
+
+  MailApp.sendEmail({ to: to, subject: subject, htmlBody: htmlBody, name: "Pendleton Plantation" });
 }

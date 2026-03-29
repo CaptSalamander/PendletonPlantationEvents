@@ -292,6 +292,23 @@
     // ============================================================
 
 
+    // ── AUTOPOPULATE FROM PROFILE ─────────────────────────────
+    (async function prefillFromProfile() {
+      try {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) return;
+        const { data: profile } = await db.from('profiles')
+          .select('first_name, last_name, phone, address')
+          .eq('id', session.user.id).maybeSingle();
+        if (!profile) return;
+        if (profile.first_name) document.getElementById('poster_first').value = profile.first_name;
+        if (profile.last_name)  document.getElementById('poster_last').value  = profile.last_name;
+        if (session.user.email) document.getElementById('poster_email').value = session.user.email;
+        if (profile.phone)      document.getElementById('poster_phone').value = profile.phone;
+      } catch (_) { /* non-critical — fail silently */ }
+    })();
+
+
     // ── PHOTO MANAGEMENT ─────────────────────────────────────
     let selectedFiles = [];
 

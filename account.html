@@ -361,6 +361,28 @@
               <input type="text" id="pe-name" placeholder="Your name" autocomplete="name" maxlength="120" />
             </div>
 
+            <div class="field-divider">Contact Info <span style="font-weight:400;font-style:italic;">(used to prefill forms — optional)</span></div>
+            <div class="field-row">
+              <div class="field">
+                <label for="pe-first">First Name</label>
+                <input type="text" id="pe-first" placeholder="Jane" autocomplete="given-name" maxlength="80" />
+              </div>
+              <div class="field">
+                <label for="pe-last">Last Name</label>
+                <input type="text" id="pe-last" placeholder="Smith" autocomplete="family-name" maxlength="80" />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="pe-phone">Phone <span style="font-weight:400;">(optional)</span></label>
+                <input type="tel" id="pe-phone" placeholder="(555) 123-4567" autocomplete="tel" maxlength="30" />
+              </div>
+              <div class="field">
+                <label for="pe-address">Street Address <span style="font-weight:400;">(optional)</span></label>
+                <input type="text" id="pe-address" placeholder="123 Plantation Dr" autocomplete="street-address" maxlength="150" />
+              </div>
+            </div>
+
             <div class="field-divider">Email Address</div>
             <p class="profile-hint">Changing your email will send a confirmation link to the new address.</p>
             <div class="field">
@@ -561,7 +583,7 @@
     async function loadProfile(user) {
       const { data: profile } = await db
         .from('profiles')
-        .select('display_name')
+        .select('display_name, first_name, last_name, phone, address')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -569,8 +591,12 @@
       document.getElementById('account-greeting').textContent = 'Welcome, ' + displayName + '!';
 
       // Pre-fill edit form
-      document.getElementById('pe-name').value  = profile?.display_name || '';
-      document.getElementById('pe-email').value = user.email || '';
+      document.getElementById('pe-name').value    = profile?.display_name || '';
+      document.getElementById('pe-first').value   = profile?.first_name  || '';
+      document.getElementById('pe-last').value    = profile?.last_name   || '';
+      document.getElementById('pe-phone').value   = profile?.phone       || '';
+      document.getElementById('pe-address').value = profile?.address     || '';
+      document.getElementById('pe-email').value   = user.email || '';
     }
 
 
@@ -585,6 +611,10 @@
     // ── SAVE PROFILE CHANGES ──────────────────────────────────
     async function saveProfile() {
       const name     = document.getElementById('pe-name').value.trim();
+      const firstName = document.getElementById('pe-first').value.trim();
+      const lastName  = document.getElementById('pe-last').value.trim();
+      const phone     = document.getElementById('pe-phone').value.trim();
+      const address   = document.getElementById('pe-address').value.trim();
       const email    = document.getElementById('pe-email').value.trim();
       const password = document.getElementById('pe-password').value;
       const confirm  = document.getElementById('pe-confirm').value;
@@ -616,7 +646,13 @@
       if (session) {
         promises.push(
           db.from('profiles')
-            .update({ display_name: name || null })
+            .update({
+              display_name: name   || null,
+              first_name:   firstName || null,
+              last_name:    lastName  || null,
+              phone:        phone   || null,
+              address:      address || null,
+            })
             .eq('id', session.user.id)
         );
       }

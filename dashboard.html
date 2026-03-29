@@ -137,6 +137,7 @@
       <button class="dash-tab admin-only" data-tab="supplies" onclick="setTab('supplies')" style="display:none">Supplies</button>
       <button class="dash-tab admin-only" data-tab="shopping" onclick="setTab('shopping')" style="display:none">Shopping List</button>
       <button class="dash-tab" data-tab="potluck" onclick="setTab('potluck')">Potluck</button>
+      <button class="dash-tab resident-only" data-tab="team" onclick="setTab('team')" style="display:none">Team</button>
       <button class="dash-tab admin-only" data-tab="attendees" onclick="setTab('attendees')" style="display:none">Attendees</button>
       <button class="dash-tab active" data-tab="lookup" onclick="setTab('lookup')">My Sign-Up</button>
     </div>
@@ -194,6 +195,7 @@
     let currentEventId = null;   // Loaded from config.current_event_id
     let currentTab     = 'lookup';
     let isAdmin        = false;
+    let isResident     = false;  // True for signed-in non-admin users
 
     let volFilter  = 'all';
     let supFilter  = 'all';
@@ -269,6 +271,10 @@
       // Show/hide admin-only tabs
       document.querySelectorAll('.admin-only').forEach(el => {
         el.style.display = isAdmin ? '' : 'none';
+      });
+      // Show/hide resident-only tabs (signed-in non-admin users)
+      document.querySelectorAll('.resident-only').forEach(el => {
+        el.style.display = (isResident && !isAdmin) ? '' : 'none';
       });
       // Show/hide admin login/logout buttons
       const loginBtn = document.getElementById('admin-login-btn');
@@ -485,6 +491,7 @@
       else if (currentTab === 'volunteers') body.innerHTML = renderVolunteers(dashData);
       else if (currentTab === 'supplies') body.innerHTML = renderSupplies(dashData);
       else if (currentTab === 'potluck') body.innerHTML = renderPotluck(dashData);
+      else if (currentTab === 'team') loadAndRenderTeam();
       else if (currentTab === 'attendees') body.innerHTML = renderAttendees(dashData);
       else if (currentTab === 'shopping') body.innerHTML = renderShoppingList();
       else if (currentTab === 'lookup') body.innerHTML = renderLookup();
@@ -1173,6 +1180,42 @@
 
 
     // ============================================================
+    //  TEAM TAB (resident-only — first name + last initial, no PII)
+    // ============================================================
+
+    async function loadAndRenderTeam() {
+      const body = document.getElementById('dash-body');
+      if (!currentEventId) { body.innerHTML = '<div class="dash-loading">No active event.</div>'; return; }
+      body.innerHTML = '<div class="dash-loading">Loading team…</div>';
+      try {
+        const { data, error } = await db.from('dashboard_team').select('*').eq('event_id', currentEventId);
+        if (error) throw error;
+        const rows = data || [];
+        if (!rows.length) {
+          body.innerHTML = '<div class="dash-empty" style="text-align:center;padding:40px;color:var(--muted);">No attendees yet — be the first to sign up!</div>';
+          return;
+        }
+        const items = rows.map(r =>
+          `<div style="padding:10px 16px;border-bottom:1px solid rgba(44,61,46,0.08);display:flex;align-items:center;gap:10px;">
+             <span style="font-size:1.2rem;">👤</span>
+             <span style="font-size:0.95rem;color:var(--forest);">${esc(r.display_name)}</span>
+             ${r.num_adults > 1 || r.num_children > 0
+               ? `<span style="margin-left:auto;font-size:0.8rem;color:var(--muted);">${r.num_adults} adult${r.num_adults!==1?'s':''}${r.num_children>0?', '+r.num_children+' child'+(r.num_children!==1?'ren':''):''}</span>`
+               : ''}
+           </div>`
+        ).join('');
+        body.innerHTML =
+          `<div style="max-width:480px;margin:0 auto;padding:16px 0;">
+             <div style="font-size:0.75rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">${rows.length} neighbor${rows.length!==1?'s':''} attending</div>
+             <div style="background:var(--card-bg,#fff);border-radius:8px;border:1px solid rgba(44,61,46,0.12);overflow:hidden;">${items}</div>
+           </div>`;
+      } catch (err) {
+        body.innerHTML = `<div class="dash-error">Could not load team. <small>${esc(err.message)}</small></div>`;
+      }
+    }
+
+
+    // ============================================================
     //  HELPER FUNCTIONS
     // ============================================================
 
@@ -1234,16 +1277,34 @@
 
     // Restore admin session from Supabase (persisted in localStorage by the SDK).
     // Re-checks profiles.role so a demoted account can't retain admin access on refresh.
+    // For signed-in non-admin users, also auto-loads their sign-up in the My Sign-Up tab.
     (async function init() {
+      let autoQuery = '';
       const { data: { session } } = await db.auth.getSession();
       if (session) {
-        const { data: profile } = await db.from("profiles").select("role").eq("id", session.user.id).single();
+        const { data: profile } = await db.from("profiles")
+          .select("role, first_name, last_name, display_name")
+          .eq("id", session.user.id).single();
         if (profile && profile.role === "admin") {
           isAdmin = true;
           updateAdminUI();
+        } else if (profile) {
+          isResident = true;
+          updateAdminUI();
+          autoQuery = [profile.first_name, profile.last_name]
+            .filter(Boolean).join(' ')
+            || profile.display_name || '';
         }
       }
-      loadDashboard();
+      await loadDashboard();
+      // Auto-trigger My Sign-Up lookup for signed-in residents.
+      if (autoQuery) {
+        const inp = document.getElementById('lookup-input');
+        if (inp) {
+          inp.value = autoQuery;
+          performLookup();
+        }
+      }
     })();
 
     // ── Hamburger nav ──

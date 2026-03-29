@@ -394,11 +394,10 @@ select option[value=""][disabled] { color: #aaa; }
 /* ── SUBMIT OVERLAY ───────────────────────────────────────────*/
 .submit-overlay {
   display: none;
-  position: absolute; inset: 0;
-  border-radius: 20px;
+  position: fixed; inset: 0;
   background: rgba(253, 248, 239, 0.88);
   backdrop-filter: blur(3px);
-  z-index: 10;
+  z-index: 999;
   flex-direction: column;
   align-items: center; justify-content: center;
   gap: 20px;
