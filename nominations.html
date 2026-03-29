@@ -135,29 +135,29 @@
           <div class="field-row">
             <div class="field">
               <label for="nom_first">First Name <span class="req">*</span></label>
-              <input type="text" id="nom_first" placeholder="Jane" required />
+              <input type="text" id="nom_first" placeholder="Jane" required maxlength="80" />
             </div>
             <div class="field">
               <label for="nom_last">Last Name <span class="req">*</span></label>
-              <input type="text" id="nom_last" placeholder="Smith" required />
+              <input type="text" id="nom_last" placeholder="Smith" required maxlength="80" />
             </div>
           </div>
 
           <!-- Email — required so the board can follow up. -->
           <div class="field">
             <label for="nom_email">Email Address <span class="req">*</span></label>
-            <input type="email" id="nom_email" placeholder="you@email.com" required />
+            <input type="email" id="nom_email" placeholder="you@email.com" required maxlength="254" />
           </div>
 
           <!-- Phone + address side by side. -->
           <div class="field-row">
             <div class="field">
               <label for="nom_phone">Phone (optional)</label>
-              <input type="tel" id="nom_phone" placeholder="(864) 555-0123" />
+              <input type="tel" id="nom_phone" placeholder="(864) 555-0123" maxlength="30" />
             </div>
             <div class="field">
               <label for="nom_address">Your Street Address (optional)</label>
-              <input type="text" id="nom_address" placeholder="123 Maple Lane" />
+              <input type="text" id="nom_address" placeholder="123 Maple Lane" maxlength="150" />
             </div>
           </div>
 
@@ -171,18 +171,18 @@
           <div class="field-row">
             <div class="field">
               <label for="nee_first">Nominee First Name <span class="req">*</span></label>
-              <input type="text" id="nee_first" placeholder="Robert" required />
+              <input type="text" id="nee_first" placeholder="Robert" required maxlength="80" />
             </div>
             <div class="field">
               <label for="nee_last">Nominee Last Name <span class="req">*</span></label>
-              <input type="text" id="nee_last" placeholder="Johnson" required />
+              <input type="text" id="nee_last" placeholder="Johnson" required maxlength="80" />
             </div>
           </div>
 
           <!-- Nominee street address. -->
           <div class="field">
             <label for="nee_address">Nominee's Street Address (optional)</label>
-            <input type="text" id="nee_address" placeholder="456 Oak Court" />
+            <input type="text" id="nee_address" placeholder="456 Oak Court" maxlength="150" />
             <span class="field-hint">Helps the board confirm they are a Pendleton Plantation resident.</span>
           </div>
 
@@ -230,7 +230,7 @@
           <!-- Custom award name — shown only when "Other" is selected. -->
           <div class="field" id="custom-award-wrapper">
             <label for="custom_award">Your Award Idea <span class="req">*</span></label>
-            <input type="text" id="custom_award" placeholder="e.g., Best Block Connector, Most Helpful Neighbor…" />
+            <input type="text" id="custom_award" placeholder="e.g., Best Block Connector, Most Helpful Neighbor…" maxlength="120" />
             <span class="field-hint">Give your award a name and the board will consider it!</span>
           </div>
 
@@ -279,7 +279,7 @@
               Submit Nomination ✨
             </button>
 
-            <div class="error-msg" id="error-msg">
+            <div class="error-msg" id="error-msg" role="alert">
               Something went wrong — please try again or contact
               <a href="mailto:mandyvaliquette00@gmail.com">your HOA organizer</a> directly.
             </div>
@@ -608,29 +608,74 @@
       // Not using no-cors so we can read the photo URLs from the response.
       overlayStatus.textContent = selectedFiles.length > 0 ? "Uploading photos… 📸" : "Submitting…";
       let photoUrls = [];
-      try {
-        const gasRes = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({
-            nominator_name:    nomFirst + " " + nomLast,
-            nominator_phone:   nomPhone,
-            nominator_email:   nomEmail,
-            nominator_address: nomAddress,
-            nominee_name:      neeFirst + " " + neeLast,
-            nominee_address:   neeAddress,
-            award_category:    category,
-            custom_award:      customAward,
-            reasons:           reasons,
-            photos:            photosPayload,
-          }),
-        });
-        const gasData = await gasRes.json();
-        if (gasData.photoUrls) photoUrls = gasData.photoUrls;
-      } catch (gasErr) {
-        // GAS failure (e.g. network error) should not block the Supabase insert.
-        // Photos simply won't be attached, but the nomination is still saved.
-        console.warn("GAS photo upload / email failed:", gasErr);
+
+      if (selectedFiles.length > 0) {
+        let gasOk = false;
+        try {
+          const gasAbort = new AbortController();
+          const gasTimeout = setTimeout(() => gasAbort.abort(), 30000);
+          const gasRes = await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            signal: gasAbort.signal,
+            body: JSON.stringify({
+              nominator_name:    nomFirst + " " + nomLast,
+              nominator_phone:   nomPhone,
+              nominator_email:   nomEmail,
+              nominator_address: nomAddress,
+              nominee_name:      neeFirst + " " + neeLast,
+              nominee_address:   neeAddress,
+              award_category:    category,
+              custom_award:      customAward,
+              reasons:           reasons,
+              photos:            photosPayload,
+            }),
+          });
+          clearTimeout(gasTimeout);
+          const gasData = await gasRes.json();
+          if (gasData.photoUrls && gasData.photoUrls.length) {
+            photoUrls = gasData.photoUrls;
+            gasOk = true;
+          } else if (gasData.error) {
+            console.warn("GAS returned error:", gasData.error);
+          }
+        } catch (gasErr) {
+          console.warn("GAS photo upload / email failed:", gasErr);
+        }
+
+        if (!gasOk) {
+          overlay.classList.remove("visible");
+          btn.disabled = false;
+          errorMsg.textContent = "Photo upload failed — please try again or contact mandyvaliquette00@gmail.com.";
+          errorMsg.style.display = "block";
+          return;
+        }
+      } else {
+        // No photos — still call GAS for the notification email, but don't block on failure.
+        try {
+          const gasAbort = new AbortController();
+          const gasTimeout = setTimeout(() => gasAbort.abort(), 30000);
+          await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            signal: gasAbort.signal,
+            body: JSON.stringify({
+              nominator_name:    nomFirst + " " + nomLast,
+              nominator_phone:   nomPhone,
+              nominator_email:   nomEmail,
+              nominator_address: nomAddress,
+              nominee_name:      neeFirst + " " + neeLast,
+              nominee_address:   neeAddress,
+              award_category:    category,
+              custom_award:      customAward,
+              reasons:           reasons,
+              photos:            [],
+            }),
+          });
+          clearTimeout(gasTimeout);
+        } catch (gasErr) {
+          console.warn("GAS email notification failed:", gasErr);
+        }
       }
 
       // ── Step 2: Insert into Supabase ──────────────────────

@@ -129,17 +129,17 @@
           <div class="field-row">
             <div class="field">
               <label for="poster_first">First Name <span class="req">*</span></label>
-              <input type="text" id="poster_first" placeholder="Jane" required />
+              <input type="text" id="poster_first" placeholder="Jane" required maxlength="80" />
             </div>
             <div class="field">
               <label for="poster_last">Last Name <span class="req">*</span></label>
-              <input type="text" id="poster_last" placeholder="Smith" required />
+              <input type="text" id="poster_last" placeholder="Smith" required maxlength="80" />
             </div>
           </div>
 
           <div class="field">
             <label for="poster_email">Email Address <span class="req">*</span></label>
-            <input type="email" id="poster_email" placeholder="you@email.com" required />
+            <input type="email" id="poster_email" placeholder="you@email.com" required maxlength="254" />
             <label class="checkbox-label" style="margin-top:8px;">
               <input type="checkbox" id="show_email" />
               Show my email address publicly on my post
@@ -148,7 +148,7 @@
 
           <div class="field">
             <label for="poster_phone">Phone Number</label>
-            <input type="tel" id="poster_phone" placeholder="(555) 555-1234" />
+            <input type="tel" id="poster_phone" placeholder="(555) 555-1234" maxlength="30" />
             <label class="checkbox-label" style="margin-top:8px;">
               <input type="checkbox" id="show_phone" />
               Show my phone number publicly on my post
@@ -157,7 +157,7 @@
 
           <div class="field">
             <label for="poster_address">Street Address <span class="req">*</span></label>
-            <input type="text" id="poster_address" placeholder="e.g., 123 Magnolia Ct" required />
+            <input type="text" id="poster_address" placeholder="e.g., 123 Magnolia Ct" required maxlength="150" />
             <span class="field-hint">Used to verify you're a Pendleton Plantation resident. Not shown publicly.</span>
           </div>
 
@@ -185,7 +185,7 @@
             <label for="post_title">Title <span class="req">*</span></label>
             <input type="text" id="post_title"
               placeholder="e.g., Found: Black Lab on Oak Lane, Beware of Package Theft, Recommend Jones Plumbing…"
-              required />
+              required maxlength="150" />
           </div>
 
           <div class="field">
@@ -227,7 +227,7 @@
               Submit Post 📋
             </button>
 
-            <div class="error-msg" id="error-msg">
+            <div class="error-msg" id="error-msg" role="alert">
               Something went wrong — please try again or contact
               <a href="mailto:mandyvaliquette00@gmail.com">your HOA organizer</a> directly.
             </div>
@@ -504,29 +504,74 @@
       // Not using no-cors so we can read the photo URLs from the response.
       overlayStatus.textContent = selectedFiles.length > 0 ? "Uploading photos… 📸" : "Submitting…";
       let photoUrls = [];
-      try {
-        const gasRes  = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({
-            name:       firstName + " " + lastName,
-            email:      email,
-            phone:      phone,
-            address:    address,
-            category:   category,
-            title:      title,
-            content:    content,
-            show_phone: showPhone,
-            show_email: showEmail,
-            photos:     photosPayload,
-          }),
-        });
-        const gasData = await gasRes.json();
-        if (gasData.photoUrls) photoUrls = gasData.photoUrls;
-      } catch (gasErr) {
-        // GAS failure should not block the Supabase insert.
-        // Photos simply won't be attached, but the post is still saved.
-        console.warn("GAS photo upload / email failed:", gasErr);
+
+      if (selectedFiles.length > 0) {
+        let gasOk = false;
+        try {
+          const gasAbort = new AbortController();
+          const gasTimeout = setTimeout(() => gasAbort.abort(), 30000);
+          const gasRes = await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            signal: gasAbort.signal,
+            body: JSON.stringify({
+              name:       firstName + " " + lastName,
+              email:      email,
+              phone:      phone,
+              address:    address,
+              category:   category,
+              title:      title,
+              content:    content,
+              show_phone: showPhone,
+              show_email: showEmail,
+              photos:     photosPayload,
+            }),
+          });
+          clearTimeout(gasTimeout);
+          const gasData = await gasRes.json();
+          if (gasData.photoUrls && gasData.photoUrls.length) {
+            photoUrls = gasData.photoUrls;
+            gasOk = true;
+          } else if (gasData.error) {
+            console.warn("GAS returned error:", gasData.error);
+          }
+        } catch (gasErr) {
+          console.warn("GAS photo upload / email failed:", gasErr);
+        }
+
+        if (!gasOk) {
+          overlay.classList.remove("visible");
+          btn.disabled = false;
+          errorMsg.textContent = "Photo upload failed — please try again or contact mandyvaliquette00@gmail.com.";
+          errorMsg.style.display = "block";
+          return;
+        }
+      } else {
+        // No photos — still call GAS for the notification email, but don't block on failure.
+        try {
+          const gasAbort = new AbortController();
+          const gasTimeout = setTimeout(() => gasAbort.abort(), 30000);
+          await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            signal: gasAbort.signal,
+            body: JSON.stringify({
+              name:       firstName + " " + lastName,
+              email:      email,
+              phone:      phone,
+              address:    address,
+              category:   category,
+              title:      title,
+              content:    content,
+              show_phone: showPhone,
+              show_email: showEmail,
+              photos:     [],
+            }),
+          });
+          clearTimeout(gasTimeout);
+        } catch (gasErr) {
+          console.warn("GAS email notification failed:", gasErr);
+        }
       }
 
       // ── Step 2: Insert into Supabase ──────────────────────

@@ -126,17 +126,17 @@
           <div class="field-row">
             <div class="field">
               <label for="uploader_first">First Name <span class="req">*</span></label>
-              <input type="text" id="uploader_first" placeholder="Jane" required />
+              <input type="text" id="uploader_first" placeholder="Jane" required maxlength="80" />
             </div>
             <div class="field">
               <label for="uploader_last">Last Name <span class="req">*</span></label>
-              <input type="text" id="uploader_last" placeholder="Smith" required />
+              <input type="text" id="uploader_last" placeholder="Smith" required maxlength="80" />
             </div>
           </div>
 
           <div class="field">
             <label for="uploader_email">Email Address <span class="req">*</span></label>
-            <input type="email" id="uploader_email" placeholder="you@email.com" required />
+            <input type="email" id="uploader_email" placeholder="you@email.com" required maxlength="254" />
             <span class="field-hint">We'll reach out if we have any questions about your photos.</span>
           </div>
 
@@ -149,7 +149,7 @@
           <div class="field">
             <label for="event_name">Event Name <span class="req">*</span></label>
             <input type="text" id="event_name" placeholder="e.g., Halloween 2025, Easter Egg Hunt, Block Party…"
-              required />
+              required maxlength="120" />
           </div>
 
           <div class="field">
@@ -191,7 +191,7 @@
               Share My Photos 📸
             </button>
 
-            <div class="error-msg" id="error-msg">
+            <div class="error-msg" id="error-msg" role="alert">
               Something went wrong — please try again or contact
               <a href="mailto:mandyvaliquette00@gmail.com">your HOA organizer</a> directly.
             </div>
@@ -448,9 +448,12 @@
         overlayStatus.textContent = "Uploading photos… 📸";
         let gasOk = false;
         try {
-          const gasRes  = await fetch(SCRIPT_URL, {
+          const gasAbort = new AbortController();
+          const gasTimeout = setTimeout(() => gasAbort.abort(), 30000);
+          const gasRes = await fetch(SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain" },
+            signal: gasAbort.signal,
             body: JSON.stringify({
               uploader_name: firstName + " " + lastName,
               email:         email,
@@ -459,8 +462,8 @@
               photos:        photosPayload,
             }),
           });
+          clearTimeout(gasTimeout);
           const gasData = await gasRes.json();
-          console.log("GAS response:", gasData);
           if (gasData.photoUrls && gasData.photoUrls.length) {
             photoUrls = gasData.photoUrls;
             gasOk = true;

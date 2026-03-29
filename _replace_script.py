@@ -26,10 +26,13 @@ new_tail = '''    // ── HELPERS ──────────────�
 
     // ── TOAST ─────────────────────────────────────────────────
     function toast(msg, type) {
+      const container = document.getElementById("toast-container");
+      // Evict the oldest toast when already at the cap.
+      if (container.children.length >= 3) container.firstElementChild.remove();
       const el = document.createElement("div");
       el.className = "toast " + (type || "");
       el.textContent = msg;
-      document.getElementById("toast-container").appendChild(el);
+      container.appendChild(el);
       setTimeout(() => el.remove(), 3500);
     }
 

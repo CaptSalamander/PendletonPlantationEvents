@@ -241,8 +241,7 @@
       </li>
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
-      <li><a href="account.html" class="nav-active">My Account</a></li>
-      <li><a id="nav-account-btn" href="account.html" class="nav-cta">Sign In / Register</a></li>
+      <li><a id="nav-account-btn" href="account.html" class="nav-cta nav-active">My Account</a></li>
       <li id="nav-admin-item" style="display:none"><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
@@ -254,7 +253,7 @@
     <div class="header">
       <div class="trophy-row">🏡 ✦ 🏡</div>
       <h1>My <em>Account</em></h1>
-      <p class="subtitle">
+      <p class="subtitle" id="page-subtitle">
         New to the site? Create a free account to track your event sign-ups,
         nominations, bulletin posts, and memories — all in one place.<br />
         Already a member? Sign in below.
@@ -289,7 +288,7 @@
             <input type="password" id="si-password" placeholder="••••••••" autocomplete="current-password" />
           </div>
 
-          <div class="error-msg" id="si-error"></div>
+          <div class="error-msg" id="si-error" role="alert"></div>
 
           <div class="submit-area">
             <button class="submit-btn" id="si-btn" onclick="doSignIn()">Sign In →</button>
@@ -326,7 +325,7 @@
             </div>
           </div>
 
-          <div class="error-msg" id="su-error"></div>
+          <div class="error-msg" id="su-error" role="alert"></div>
 
           <div class="submit-area">
             <button class="submit-btn" id="su-btn" onclick="doSignUp()">Create Account →</button>
@@ -359,14 +358,14 @@
             <div class="field-divider">Display Name</div>
             <div class="field">
               <label for="pe-name">Name shown on your account</label>
-              <input type="text" id="pe-name" placeholder="Your name" autocomplete="name" />
+              <input type="text" id="pe-name" placeholder="Your name" autocomplete="name" maxlength="120" />
             </div>
 
             <div class="field-divider">Email Address</div>
             <p class="profile-hint">Changing your email will send a confirmation link to the new address.</p>
             <div class="field">
               <label for="pe-email">Email</label>
-              <input type="email" id="pe-email" autocomplete="email" />
+              <input type="email" id="pe-email" autocomplete="email" maxlength="254" />
             </div>
 
             <div class="field-divider">Change Password</div>
@@ -382,7 +381,7 @@
               </div>
             </div>
 
-            <div class="error-msg" id="pe-error"></div>
+            <div class="error-msg" id="pe-error" role="alert"></div>
             <div class="pe-success" id="pe-success" style="display:none;">✓ Profile updated successfully.</div>
 
             <div class="submit-area">
@@ -550,6 +549,9 @@
       const fallback = user.email.split('@')[0];
       document.getElementById('account-greeting').textContent = 'Welcome, ' + fallback + '!';
 
+      document.getElementById('page-subtitle').textContent =
+        'Well, well, well — look who\'s back in the neighborhood. Your sign-ups, nominations, posts, and memories are all right here.';
+
       loadProfile(user);
       loadHistory(user.id, user.email);
     }
@@ -639,10 +641,7 @@
       document.getElementById('pe-confirm').value  = '';
 
       successEl.style.display = 'block';
-      setTimeout(() => {
-        successEl.style.display = 'none';
-        document.getElementById('profile-edit-form').style.display = 'none';
-      }, 2500);
+      setTimeout(() => { successEl.style.display = 'none'; }, 4000);
     }
 
 
@@ -691,7 +690,7 @@
       }
       el.innerHTML = rows.map(r => `
         <div class="history-card">
-          <strong>${esc(r.event_id)}</strong>
+          <strong>${esc(r.event_id || 'Unknown Event')}</strong>
           ${r.attending ? ` &mdash; ${esc(r.attending)}` : ''}
           ${r.potluck_item ? `<br>🍽️ Potluck: ${esc(r.potluck_item)}` : ''}
           ${r.notes ? `<br><em>${esc(r.notes)}</em>` : ''}

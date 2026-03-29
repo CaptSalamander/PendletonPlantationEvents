@@ -1,4 +1,4 @@
-1. Have all submissions email the user with their submission details and confirmation.
+1. Have all submissions email the user with their submission details and confirmation. If this is done we need to make the emails beautiful. Ensure there's a link in the email to update posts.
 2. Add dashboard to track nominations, events, donations, etc.
 3. A Resident-Owned Business & Service Directory
 Neighbors love supporting neighbors. A dedicated page where residents can list their own local businesses, side projects, or services would be a massive value-add for the community. It’s also the perfect spot to compile a community-sourced list of trusted Easley-area providers, such as plumbers, landscapers, teenage babysitters, and pet sitters.
@@ -12,4 +12,37 @@ Neighbors love supporting neighbors. A dedicated page where residents can list t
 11. Add button and code to allow neighbors to sign up to be notified when there's new events, announcements, competitions, bulletins, etc.
 12. Add UI pages to authorize posts, review award nominations and select winners, etc.
 13. Update seasonal decor deadline description.
+Make award previews into links to contests/winner announcements
+Update all Pendleton Plantation specific to be variable
+Event preview cards should link to event previews unless they click sign up specifically
+Check if potluck dashboard displays dish counts if duplicated.
+My sign-up should show up automatically if user has an account. Lookup should only be for people who are not signed in.
+Update message under My Account once user is signed in. Currently says: "My Account
 
+New to the site? Create a free account to track your event sign-ups, nominations, bulletin posts, and memories — all in one place.
+Already a member? Sign in below. "
+
+Extra "MY Account" Link on "My Account" page NAV
+Edit profile needs to allow users to edit contact details, etc. too
+
+Once users are signed in contact info should autopopulate into the forms.
+
+Make progress spinner show up in correct spot on the screen for all pages
+
+Admin link should be available to admins who are signed in on every page
+
+Check all emails for proper functioning
+
+Admin need to be able to preview full posts on all things submitted.
+ i.e. Bulletin board post. Click preview full post then be able to approve or deny
+
+Remove archive from admin panel - no longer being used I believe
+
+Check all functionality systematically
+
+Winner prep may not be pulling all data properly
+
+
+
+Long Term Goal:
+Optimize this website into an application and then make it usable for multiple HOAs. Awards program built in.

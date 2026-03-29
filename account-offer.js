@@ -172,7 +172,7 @@
           <input type="password" id="ao-password" class="ao-input" placeholder="Password (6+ characters)" autocomplete="new-password" />
           <input type="password" id="ao-confirm"  class="ao-input" placeholder="Confirm password"          autocomplete="new-password" />
         </div>
-        <div id="ao-error" class="ao-error"></div>
+        <div id="ao-error" class="ao-error" role="alert"></div>
         <button id="ao-btn" class="ao-btn" onclick="_aoSubmit()">Create Free Account →</button>
         <p class="ao-skip">
           Already have an account? <a href="account.html">Sign in →</a>
@@ -206,7 +206,8 @@
     if (error) {
       btn.disabled    = false;
       btn.textContent = 'Create Free Account →';
-      const already = error.message.toLowerCase().includes('already') ||
+      const already = error.status === 422 ||
+                      error.message.toLowerCase().includes('already') ||
                       error.message.toLowerCase().includes('registered');
       errEl.innerHTML = already
         ? 'An account with this email already exists. <a href="account.html" style="color:#4a6741;font-weight:600;">Sign in →</a>'
