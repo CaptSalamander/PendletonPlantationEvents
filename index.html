@@ -49,6 +49,7 @@
   <!-- Supabase JS client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <script src="site-config.js"></script>
   <script src="nav-auth.js"></script>
 </head>
 
@@ -90,6 +91,7 @@
         <a href="events.html">Events <span class="nav-caret">▾</span></a>
         <ul class="nav-dropdown">
           <li><a href="dashboard.html">📊 Event Dashboard</a></li>
+          <li><a href="calendar.html">📅 Calendar</a></li>
           <li><a href="events.html#Easter">🐣 Easter Egg Hunt</a></li>
           <li><a href="events.html#IceCreamSocial">🍦 Ice Cream Social</a></li>
           <li><a href="events.html#July4th">🎆 4th of July</a></li>
@@ -112,6 +114,8 @@
           <li><a href="post-to-board.html">📝 Post to Board</a></li>
         </ul>
       </li>
+      <li><a href="directory.html">Directory</a></li>
+      <li><a href="residents.html">Residents</a></li>
       <li><a href="links.html">Links</a></li>
       <li><a href="documents.html">Documents</a></li>
       <li><a id="nav-account-btn" href="account.html" class="nav-cta">Sign In / Register</a></li>
@@ -263,10 +267,10 @@
         <!-- ✏️ Update href values with your real email/links if they change. -->
 
         <!-- Card 1: Email the organizer directly. -->
-        <a href="mailto:mandyvaliquette00@gmail.com" class="contact-card">
+        <a href="mailto:mandyvaliquette00@gmail.com" class="contact-card" data-config="organizer_email_link">
           <div class="cc-icon">✉️</div>
           <div class="cc-title">Email the Organizer</div>
-          <div class="cc-sub">mandyvaliquette00@gmail.com</div>
+          <div class="cc-sub" data-config="organizer_email">mandyvaliquette00@gmail.com</div>
         </a>
 
         <!-- Card 2: Link to the event sign-up page. -->
@@ -305,7 +309,7 @@
     <div class="footer-brand">Pendleton Plantation</div>
     <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
     <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp; <a
-        href="mailto:mandyvaliquette00@gmail.com" style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact
+        href="mailto:mandyvaliquette00@gmail.com" data-config="organizer_email_link" style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact
         Us</a></p>
   </footer>
 

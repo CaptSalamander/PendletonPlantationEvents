@@ -758,6 +758,8 @@ new_tail = '''    // ── HELPERS ──────────────�
     }
 
     const NOM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybNrl0_bXnHxWpPkc-9c0egc7UqpwJ5wQyRhqP4qodW6qIGbNKB_XlZsJDMDSQZLc/exec";
+    // \u270f\ufe0f EDIT: paste the deployed Web App URL for notification-script.gs here.
+    const NOTIFICATION_SCRIPT_URL = 'PASTE_NOTIFICATION_SCRIPT_URL_HERE';
 
     async function markNominationReceived(id) {
       const n = nominationsData.find(x => x.id === id);
@@ -1401,6 +1403,203 @@ new_tail = '''    // ── HELPERS ──────────────�
       showModal("\U0001f5d1\ufe0f","Delete Document","Delete this document entry?", async () => {
         const { error } = await db.from('documents').delete().eq('id', id);
         if (!error) { toast("Document deleted.", "success"); loadDocuments(); }
+        else toast("Error.", "error");
+      });
+    }
+
+
+    // ====================================================
+    //  NOTIFICATIONS
+    // ====================================================
+    let notifyContext = 'events';
+
+    async function openNotifyModal(context) {
+      notifyContext = context || 'events';
+      const countEl = document.getElementById('notify-recipient-count');
+      countEl.textContent = 'Counting opted-in residents\u2026';
+      try {
+        const col = notifyContext === 'announcements' ? 'opt_in_newsletter' : 'opt_in_events';
+        const { count } = await db.from('signups')
+          .select('id', { count: 'exact', head: true })
+          .eq(col, true)
+          .eq('archived', false)
+          .not('email', 'is', null);
+        countEl.textContent = `This will send to ${count ?? 0} opted-in resident${count === 1 ? '' : 's'}.`;
+      } catch (_) {
+        countEl.textContent = 'Could not load recipient count.';
+      }
+      document.getElementById('notify-subject').value  = '';
+      document.getElementById('notify-headline').value = '';
+      document.getElementById('notify-body').value     = '';
+      document.getElementById('notify-result').style.display = 'none';
+      document.getElementById('notify-send-btn').disabled    = false;
+      document.getElementById('notify-modal').classList.remove('hidden');
+    }
+
+    function closeNotifyModal() {
+      document.getElementById('notify-modal').classList.add('hidden');
+    }
+
+    async function sendNotification() {
+      const subject  = document.getElementById('notify-subject').value.trim();
+      const headline = document.getElementById('notify-headline').value.trim();
+      const body     = document.getElementById('notify-body').value.trim();
+      if (!subject) { toast('Please enter a subject line.', 'error'); return; }
+      if (!body)    { toast('Please enter a message body.', 'error'); return; }
+
+      const btn = document.getElementById('notify-send-btn');
+      btn.disabled = true;
+      btn.textContent = 'Sending\u2026';
+
+      const col = notifyContext === 'announcements' ? 'opt_in_newsletter' : 'opt_in_events';
+      const { data: rows } = await db.from('signups')
+        .select('email')
+        .eq(col, true)
+        .eq('archived', false)
+        .not('email', 'is', null);
+
+      const emails = [...new Set((rows || []).map(r => r.email).filter(Boolean))];
+      if (!emails.length) {
+        toast('No opted-in recipients found.', 'error');
+        btn.disabled = false; btn.textContent = '\U0001f4e4 Send Notification';
+        return;
+      }
+
+      if (!NOTIFICATION_SCRIPT_URL || NOTIFICATION_SCRIPT_URL === 'PASTE_NOTIFICATION_SCRIPT_URL_HERE') {
+        toast('Notification script URL not configured.', 'error');
+        btn.disabled = false; btn.textContent = '\U0001f4e4 Send Notification';
+        return;
+      }
+
+      try {
+        const resp = await fetch(NOTIFICATION_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            action:     'sendNotification',
+            subject:    subject,
+            headline:   headline || subject,
+            body_html:  body,
+            recipients: emails,
+            sender_name:'Pendleton Plantation HOA',
+          }),
+        });
+        const json = await resp.json();
+        const resultEl = document.getElementById('notify-result');
+        resultEl.textContent = json.success
+          ? `\u2705 Sent to ${json.sent} recipient${json.sent === 1 ? '' : 's'}!`
+          : `Error: ${json.error}`;
+        resultEl.style.display = 'block';
+        resultEl.style.color   = json.success ? 'var(--success)' : 'var(--danger)';
+        if (json.success) toast(`Notification sent to ${json.sent} residents!`, 'success');
+      } catch (err) {
+        toast('Failed to send notification: ' + err.message, 'error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = '\U0001f4e4 Send Notification';
+    }
+
+
+    // ====================================================
+    //  DIRECTORY
+    // ====================================================
+    let directoryData = [];
+
+    async function loadDirectory() {
+      const tbody = document.getElementById("directory-tbody");
+      tbody.innerHTML = '<tr><td colspan="6" class="admin-loading">Loading\u2026</td></tr>';
+      try {
+        const { data, error } = await db
+          .from('business_directory')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        directoryData = data || [];
+        renderDirectoryTable(directoryData);
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:20px;">${esc(e.message)}</td></tr>`;
+      }
+    }
+
+    function renderDirectoryTable(listings) {
+      const tbody = document.getElementById("directory-tbody");
+      if (!listings.length) {
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">\U0001f3ea</div><p>No listings yet.</p></div></td></tr>';
+        return;
+      }
+      tbody.innerHTML = listings.map(b => `
+        <tr>
+          <td><strong>${esc(b.business_name)}</strong></td>
+          <td>${esc(b.owner_name)}</td>
+          <td>${esc(b.category)}</td>
+          <td style="font-size:0.8rem;color:var(--muted);">
+            ${b.phone ? `\u{1F4DE} ${esc(b.phone)}<br>` : ''}
+            ${b.email ? `\u2709\uFE0F ${esc(b.email)}` : ''}
+          </td>
+          <td>${b.approved ? '<span class="badge badge-confirmed">approved</span>' : '<span class="badge badge-draft">pending</span>'}</td>
+          <td>
+            ${!b.approved ? `<button class="btn btn-success btn-sm" onclick="approveDirectoryListing(${b.id})">Approve</button>` : ''}
+            <button class="btn btn-secondary btn-sm" onclick="openDirectoryEdit(${b.id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDeleteDirectoryListing(${b.id},'${esc(b.business_name)}')">Delete</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    async function approveDirectoryListing(id) {
+      const { error } = await db.from('business_directory').update({ approved: true }).eq('id', id);
+      if (!error) { toast("Listing approved!", "success"); loadDirectory(); }
+      else toast("Error approving listing.", "error");
+    }
+
+    function openDirectoryEdit(id) {
+      const b = directoryData.find(x => x.id === id);
+      if (!b) return;
+      document.getElementById("def-id").value          = b.id;
+      document.getElementById("def-owner").value       = b.owner_name    || "";
+      document.getElementById("def-biz-name").value    = b.business_name || "";
+      document.getElementById("def-category").value    = b.category      || "Other";
+      document.getElementById("def-phone").value       = b.phone         || "";
+      document.getElementById("def-email").value       = b.email         || "";
+      document.getElementById("def-website").value     = b.website       || "";
+      document.getElementById("def-address").value     = b.address       || "";
+      document.getElementById("def-description").value = b.description   || "";
+      document.getElementById("def-approved").value    = b.approved ? "true" : "false";
+      const form = document.getElementById("directory-edit-form");
+      form.style.display = "block";
+      form.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function cancelDirectoryEdit() {
+      document.getElementById("directory-edit-form").style.display = "none";
+    }
+
+    async function submitDirectoryEdit() {
+      const id      = document.getElementById("def-id").value;
+      const owner   = document.getElementById("def-owner").value.trim();
+      const bizName = document.getElementById("def-biz-name").value.trim();
+      const cat     = document.getElementById("def-category").value;
+      if (!owner || !bizName || !cat) { toast("Owner name, business name, and category are required.", "error"); return; }
+      const row = {
+        owner_name:    owner,
+        business_name: bizName,
+        category:      cat,
+        phone:         document.getElementById("def-phone").value.trim()       || null,
+        email:         document.getElementById("def-email").value.trim()       || null,
+        website:       document.getElementById("def-website").value.trim()     || null,
+        address:       document.getElementById("def-address").value.trim()     || null,
+        description:   document.getElementById("def-description").value.trim() || null,
+        approved:      document.getElementById("def-approved").value === "true",
+      };
+      const { error } = await db.from('business_directory').update(row).eq('id', id);
+      if (!error) { toast("Listing saved!", "success"); cancelDirectoryEdit(); loadDirectory(); }
+      else toast("Error saving listing.", "error");
+    }
+
+    function confirmDeleteDirectoryListing(id, name) {
+      showModal("\U0001f5d1\ufe0f", "Delete Listing", `Delete "${name}"?`, async () => {
+        const { error } = await db.from('business_directory').delete().eq('id', id);
+        if (!error) { toast("Listing deleted.", "success"); loadDirectory(); }
         else toast("Error.", "error");
       });
     }

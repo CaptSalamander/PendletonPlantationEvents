@@ -214,6 +214,59 @@ CREATE TABLE IF NOT EXISTS business_directory (
   created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ── resident_directory ───────────────────────────────────────
+-- Opt-in resident listing. Residents manage their own entry.
+-- All fields except display_name and user_id are optional.
+CREATE TABLE IF NOT EXISTS resident_directory (
+  id            BIGSERIAL   PRIMARY KEY,
+  user_id       UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  display_name  TEXT        NOT NULL,
+  street        TEXT,           -- street only, no city/zip
+  show_phone    BOOLEAN     DEFAULT false,
+  phone         TEXT,
+  show_email    BOOLEAN     DEFAULT false,
+  email         TEXT,
+  bio           TEXT,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE resident_directory ENABLE ROW LEVEL SECURITY;
+
+-- Authenticated users can read all rows (opt-in directory — visible to neighbours)
+CREATE POLICY "rd: authenticated read"
+  ON resident_directory FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+-- Owners can insert their own row (one per user enforced in app)
+CREATE POLICY "rd: owner insert"
+  ON resident_directory FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+-- Owners can update their own row
+CREATE POLICY "rd: owner update"
+  ON resident_directory FOR UPDATE
+  USING (user_id = auth.uid());
+
+-- Owners can delete their own row
+CREATE POLICY "rd: owner delete"
+  ON resident_directory FOR DELETE
+  USING (user_id = auth.uid());
+
+-- Admins can do anything
+CREATE POLICY "rd: admin all select"
+  ON resident_directory FOR SELECT
+  USING (is_admin());
+
+CREATE POLICY "rd: admin update"
+  ON resident_directory FOR UPDATE USING (is_admin());
+
+CREATE POLICY "rd: admin delete"
+  ON resident_directory FOR DELETE USING (is_admin());
+
+GRANT SELECT ON resident_directory TO authenticated;
+
+
 -- ── award_contests ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS award_contests (
   id           TEXT        PRIMARY KEY,
