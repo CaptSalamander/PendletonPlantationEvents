@@ -285,12 +285,12 @@
 
             <div class="error-msg" id="error-msg" role="alert">
               Something went wrong — please try again or contact
-              <a href="mailto:mandyvaliquette00@gmail.com">your HOA organizer</a> directly.
+              <a href="mailto:mandyvaliquette00@gmail.com" data-config="organizer_email_link">your HOA organizer</a> directly.
             </div>
 
             <p class="fine-print">
               Nominations are kept confidential. Community members will vote when voting opens, and the board considers those votes alongside their own deliberations.<br />
-              Questions? Contact <a href="mailto:mandyvaliquette00@gmail.com">mandyvaliquette00@gmail.com</a>.
+              Questions? Contact <a href="mailto:mandyvaliquette00@gmail.com" data-config="organizer_email_link">mandyvaliquette00@gmail.com</a>.
             </p>
           </div>
 
@@ -653,6 +653,7 @@
               custom_award:      customAward,
               reasons:           reasons,
               photos:            photosPayload,
+              organizerEmail:    (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email) || "",
             }),
           });
           clearTimeout(gasTimeout);
@@ -670,7 +671,7 @@
         if (!gasOk) {
           overlay.classList.remove("visible");
           btn.disabled = false;
-          errorMsg.textContent = "Photo upload failed — please try again or contact mandyvaliquette00@gmail.com.";
+          errorMsg.textContent = "Photo upload failed — please try again or contact " + (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email || "mandyvaliquette00@gmail.com") + ".";
           errorMsg.style.display = "block";
           return;
         }
@@ -694,6 +695,7 @@
               custom_award:      customAward,
               reasons:           reasons,
               photos:            [],
+              organizerEmail:    (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email) || "",
             }),
           });
           clearTimeout(gasTimeout);
@@ -757,7 +759,7 @@
         overlay.classList.remove("visible");
         btn.disabled = false;
         errorMsg.textContent =
-          "Something went wrong — please try again or contact mandyvaliquette00@gmail.com.";
+          "Something went wrong — please try again or contact " + (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email || "mandyvaliquette00@gmail.com") + ".";
         errorMsg.style.display = "block";
         console.error("Nomination Supabase error:", err);
       }

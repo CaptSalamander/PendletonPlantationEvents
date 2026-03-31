@@ -46,8 +46,9 @@ function doPost(e) {
   output.setMimeType(ContentService.MimeType.JSON);
 
   try {
-    var data   = JSON.parse(e.postData.contents);
-    var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+    var data       = JSON.parse(e.postData.contents);
+    var notifyEmail = data.organizerEmail || NOTIFICATION_EMAIL;
+    var folder     = DriveApp.getFolderById(DRIVE_FOLDER_ID);
 
     // ── Upload photos to Drive ───────────────────────────────
     // Photos go into a sub-folder named after the category so
@@ -96,7 +97,7 @@ function doPost(e) {
         : "No photos uploaded") +
       "\n\n(Post record saved to Supabase — approve in admin portal.)";
 
-    MailApp.sendEmail(NOTIFICATION_EMAIL, subject, body);
+    MailApp.sendEmail(notifyEmail, subject, body);
 
     // ── Auto-send confirmation email to poster ────────────────
     if (data.email) {

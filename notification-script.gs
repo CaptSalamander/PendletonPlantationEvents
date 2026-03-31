@@ -70,12 +70,13 @@ function sendNotification(data) {
   var recipients = data.recipients || [];
   if (!recipients.length) return { sent: 0 };
 
-  var subject   = data.subject    || 'Community Update — Pendleton Plantation';
-  var headline  = data.headline   || subject;
-  var bodyHtml  = data.body_html  || '';
-  var senderName = data.sender_name || FROM_NAME;
+  var subject      = data.subject       || 'Community Update — Pendleton Plantation';
+  var headline     = data.headline      || subject;
+  var bodyHtml     = data.body_html     || '';
+  var senderName   = data.sender_name   || FROM_NAME;
+  var replyEmail   = data.organizerEmail || 'mandyvaliquette00@gmail.com';
 
-  var html = buildEmailHtml(headline, bodyHtml);
+  var html = buildEmailHtml(headline, bodyHtml, replyEmail);
 
   // Send in BCC batches of 50 (MailApp daily quota is ~100 recipients)
   var BATCH = 50;
@@ -89,7 +90,7 @@ function sendNotification(data) {
         subject:  subject,
         htmlBody: html,
         name:     senderName,
-        replyTo:  'mandyvaliquette00@gmail.com',
+        replyTo:  replyEmail,
       });
       sent += batch.length;
     } catch (err) {
@@ -101,7 +102,8 @@ function sendNotification(data) {
 
 
 // ── buildEmailHtml ────────────────────────────────────────────
-function buildEmailHtml(headline, bodyHtml) {
+function buildEmailHtml(headline, bodyHtml, replyEmail) {
+  replyEmail = replyEmail || 'mandyvaliquette00@gmail.com';
   return [
     '<div style="font-family:\'DM Sans\',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f5f0e8;border-radius:12px;overflow:hidden;">',
 
@@ -124,7 +126,7 @@ function buildEmailHtml(headline, bodyHtml) {
     '<p style="margin:0;color:#8a9a7a;font-size:0.75rem;line-height:1.6;">',
     'Pendleton Plantation HOA &nbsp;·&nbsp; Community Newsletter<br />',
     'You are receiving this because you opted in to community notifications.<br />',
-    'Questions? Contact <a href="mailto:mandyvaliquette00@gmail.com" style="color:#c9a84c;">mandyvaliquette00@gmail.com</a>',
+    'Questions? Contact <a href="mailto:' + replyEmail + '" style="color:#c9a84c;">' + replyEmail + '</a>',
     '</p>',
     '</div>',
 

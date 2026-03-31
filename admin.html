@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="admin-styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <script src="site-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
   <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
@@ -2478,12 +2479,13 @@
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({
-            action:     'sendNotification',
-            subject:    subject,
-            headline:   headline || subject,
-            body_html:  body,
-            recipients: emails,
-            sender_name:'Pendleton Plantation HOA',
+            action:         'sendNotification',
+            subject:        subject,
+            headline:       headline || subject,
+            body_html:      body,
+            recipients:     emails,
+            sender_name:    (window.SITE_CONFIG && window.SITE_CONFIG.organizer_name) || 'Pendleton Plantation HOA',
+            organizerEmail: (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email) || "",
           }),
         });
         const json = await resp.json();

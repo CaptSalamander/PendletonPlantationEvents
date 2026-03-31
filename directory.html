@@ -405,14 +405,15 @@
             mode:   'no-cors',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
-              action:        'directorySubmit',
-              owner_name:    row.owner_name,
-              business_name: row.business_name,
-              category:      row.category,
-              description:   row.description,
-              phone:         row.phone,
-              email:         row.email,
-              website:       row.website,
+              action:         'directorySubmit',
+              owner_name:     row.owner_name,
+              business_name:  row.business_name,
+              category:       row.category,
+              description:    row.description,
+              phone:          row.phone,
+              email:          row.email,
+              website:        row.website,
+              organizerEmail: (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email) || "",
             }),
           }).catch(() => {});
         }

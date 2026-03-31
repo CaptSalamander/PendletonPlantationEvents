@@ -233,12 +233,12 @@
 
             <div class="error-msg" id="error-msg" role="alert">
               Something went wrong — please try again or contact
-              <a href="mailto:mandyvaliquette00@gmail.com">your HOA organizer</a> directly.
+              <a href="mailto:mandyvaliquette00@gmail.com" data-config="organizer_email_link">your HOA organizer</a> directly.
             </div>
 
             <p class="fine-print">
               Posts are reviewed by the HOA before being published.<br />
-              Questions? Contact <a href="mailto:mandyvaliquette00@gmail.com">mandyvaliquette00@gmail.com</a>.
+              Questions? Contact <a href="mailto:mandyvaliquette00@gmail.com" data-config="organizer_email_link">mandyvaliquette00@gmail.com</a>.
             </p>
           </div>
 
@@ -543,9 +543,10 @@
               category:   category,
               title:      title,
               content:    content,
-              show_phone: showPhone,
-              show_email: showEmail,
-              photos:     photosPayload,
+              show_phone:     showPhone,
+              show_email:     showEmail,
+              photos:         photosPayload,
+              organizerEmail: (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email) || "",
             }),
           });
           clearTimeout(gasTimeout);
@@ -563,7 +564,7 @@
         if (!gasOk) {
           overlay.classList.remove("visible");
           btn.disabled = false;
-          errorMsg.textContent = "Photo upload failed — please try again or contact mandyvaliquette00@gmail.com.";
+          errorMsg.textContent = "Photo upload failed — please try again or contact " + (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email || "mandyvaliquette00@gmail.com") + ".";
           errorMsg.style.display = "block";
           return;
         }
@@ -584,9 +585,10 @@
               category:   category,
               title:      title,
               content:    content,
-              show_phone: showPhone,
-              show_email: showEmail,
-              photos:     [],
+              show_phone:     showPhone,
+              show_email:     showEmail,
+              photos:         [],
+              organizerEmail: (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email) || "",
             }),
           });
           clearTimeout(gasTimeout);
@@ -624,7 +626,7 @@
         overlay.classList.remove("visible");
         btn.disabled = false;
         errorMsg.textContent =
-          "Something went wrong — please try again or contact mandyvaliquette00@gmail.com.";
+          "Something went wrong — please try again or contact " + (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email || "mandyvaliquette00@gmail.com") + ".";
         errorMsg.style.display = "block";
         console.error("Bulletin post Supabase error:", err);
       }

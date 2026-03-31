@@ -34,7 +34,8 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
 
     if (data.action === 'directorySubmit') {
-      sendAdminNotification(data);
+      var notifyEmail = data.organizerEmail || NOTIFICATION_EMAIL;
+      sendAdminNotification(data, notifyEmail);
     }
 
     return ContentService
@@ -58,7 +59,8 @@ function doGet() {
 
 
 // ── sendAdminNotification ────────────────────────────────────
-function sendAdminNotification(data) {
+function sendAdminNotification(data, notifyEmail) {
+  notifyEmail = notifyEmail || NOTIFICATION_EMAIL;
   var subject = '📋 New Directory Listing: ' + (data.business_name || '(no name)');
 
   var rows = [
@@ -118,7 +120,7 @@ function sendAdminNotification(data) {
   ].join('');
 
   MailApp.sendEmail({
-    to:       NOTIFICATION_EMAIL,
+    to:       notifyEmail,
     subject:  subject,
     htmlBody: html,
     name:     'Pendleton Plantation HOA',

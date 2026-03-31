@@ -45,6 +45,8 @@ function doPost(e) {
       return output;
     }
 
+    var notifyEmail = p.organizerEmail || NOTIFICATION_EMAIL;
+
     var firstName = p.first_name || "";
     var lastName  = p.last_name  || "";
     var fullName  = (firstName + " " + lastName).trim() || "A Neighbor";
@@ -67,7 +69,7 @@ function doPost(e) {
       (p.notes     ? "Notes:     " + p.notes     + "\n" : "") +
       "\n(Sign-up record saved to Supabase — view in admin portal.)";
 
-    MailApp.sendEmail(NOTIFICATION_EMAIL, subject, body);
+    MailApp.sendEmail(notifyEmail, subject, body);
 
     // ── Send confirmation email to registrant ────────────────
     if (email) {

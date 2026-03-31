@@ -52,6 +52,7 @@ function doPost(e) {
 
   try {
     var data = JSON.parse(e.postData.contents);
+    var notifyEmail = data.organizerEmail || NOTIFICATION_EMAIL;
 
     // ── Mark Received: send confirmation email to nominator ──
     if (data.action === "mark_received") {
@@ -109,7 +110,7 @@ function doPost(e) {
         : "No photos submitted") +
       "\n\n(Nomination record saved to Supabase — view in admin portal.)";
 
-    MailApp.sendEmail(NOTIFICATION_EMAIL, subject, body);
+    MailApp.sendEmail(notifyEmail, subject, body);
 
     // ── Auto-send confirmation email to nominator ────────────
     if (data.nominator_email) {

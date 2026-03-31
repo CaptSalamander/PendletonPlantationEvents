@@ -42,8 +42,9 @@ function doPost(e) {
   output.setMimeType(ContentService.MimeType.JSON);
 
   try {
-    var data   = JSON.parse(e.postData.contents);
-    var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+    var data        = JSON.parse(e.postData.contents);
+    var notifyEmail = data.organizerEmail || NOTIFICATION_EMAIL;
+    var folder      = DriveApp.getFolderById(DRIVE_FOLDER_ID);
 
     // ── Upload photos to Drive ───────────────────────────────
     // Photos go into a sub-folder named after the event so they
@@ -89,7 +90,7 @@ function doPost(e) {
         : "No photos uploaded") +
       "\n\n(Memory record saved to Supabase — view in admin portal.)";
 
-    MailApp.sendEmail(NOTIFICATION_EMAIL, subject, body);
+    MailApp.sendEmail(notifyEmail, subject, body);
 
     // ── Auto-send confirmation email to uploader ─────────────
     if (data.email) {

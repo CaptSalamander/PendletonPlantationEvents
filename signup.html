@@ -484,7 +484,7 @@
       document.getElementById("success-message").innerHTML     =
         "We can't wait to connect with you!<br />We're so grateful for neighbors like you.";
 
-      const contactEmail = ev.organizerEmail || "mandyvaliquette00@gmail.com";
+      const contactEmail = ev.organizerEmail || (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email) || "mandyvaliquette00@gmail.com";
       const contactLink  = document.getElementById("contact-link");
       contactLink.href        = "mailto:" + contactEmail;
       contactLink.textContent = contactEmail;
@@ -715,6 +715,7 @@
               other_donation:  signupRow.other_donation    || "",
               cash_donation:   signupRow.cash_donation     || "",
               notes:           signupRow.notes             || "",
+              organizerEmail:  EVENT.organizerEmail || (window.SITE_CONFIG && window.SITE_CONFIG.organizer_email) || "",
             }).toString(),
           }).catch(() => {});
         }
