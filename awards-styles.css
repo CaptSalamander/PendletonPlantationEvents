@@ -908,7 +908,7 @@
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   text-align: left;
-  width: 100%;
+  width: 150px;
 }
 
 .vote-option:hover {
