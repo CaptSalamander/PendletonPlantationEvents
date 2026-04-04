@@ -921,19 +921,26 @@
   background: rgba(44, 61, 46, 0.06);
 }
 
-.vote-option-top {
+.vote-option-body {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  gap: 5px;
 }
 
-.vote-option-name {
+.vote-nominee-name {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--forest);
   line-height: 1.2;
+}
+
+.vote-nominee-cat {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0.03em;
 }
 
 .vote-count-label {
@@ -942,8 +949,6 @@
   font-weight: 600;
   color: var(--gold);
   letter-spacing: 0.06em;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .vote-bar-wrap {

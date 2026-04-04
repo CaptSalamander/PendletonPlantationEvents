@@ -180,7 +180,7 @@
 
     <div class="nomination-button-section">
       <!-- Secondary CTA: scrolls to the Announcements section. -->
-      <a href="nominations.html" class="btn-tertiary">Nominate a Neighbor</a>
+      <a href="awards.html" class="btn-tertiary">Nominate a Neighbor</a>
     </div>
   </section>
 
@@ -220,7 +220,8 @@
     <div class="photo-grid" id="photo-grid"></div>
 
     <!-- Buttons below the photo grid. -->
-    <div style="text-align:center; margin-bottom:14px; display:flex; flex-direction:column; align-items:center; gap:16px;">
+    <div
+      style="text-align:center; margin-bottom:14px; display:flex; flex-direction:column; align-items:center; gap:16px;">
       <a href="memories.html" class="btn-tertiary">View All Memories →</a>
       <a href="submit-memory.html" class="btn-tertiary">Have photos from a neighborhood event? Upload them →</a>
     </div>
@@ -309,7 +310,8 @@
     <div class="footer-brand">Pendleton Plantation</div>
     <p>Easley, South Carolina &nbsp;·&nbsp; <strong>Community Events Hub</strong></p>
     <p style="margin-top:10px;">Organized with love by your neighbors &nbsp;·&nbsp; <a
-        href="mailto:mandyvaliquette00@gmail.com" data-config="organizer_email_link" style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact
+        href="mailto:mandyvaliquette00@gmail.com" data-config="organizer_email_link"
+        style="color:rgba(201,168,76,0.6); text-decoration:none;">Contact
         Us</a></p>
   </footer>
 
@@ -495,8 +497,8 @@
     }
 
     // Dropdown toggles (mobile only)
-    document.querySelectorAll('.nav-has-dropdown > a').forEach(function(link) {
-      link.addEventListener('click', function(e) {
+    document.querySelectorAll('.nav-has-dropdown > a').forEach(function (link) {
+      link.addEventListener('click', function (e) {
         if (window.innerWidth <= 1100) {
           e.preventDefault();
           link.parentElement.classList.toggle('open');
