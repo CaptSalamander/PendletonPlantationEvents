@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pendleton Plantation — Something Good Is Coming</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #faf6ef;
+      --warm-white: #fdf9f3;
+      --ink: #1a1612;
+      --brown: #5c3d1e;
+      --gold: #b8943f;
+      --gold-light: #d4b46a;
+      --gold-pale: #f0e2be;
+      --sage: #7a8c6e;
+      --rust: #8b4513;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Lato', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
+    }
+
+    /* ── DECORATIVE BORDER ── */
+    .page-frame {
+      position: fixed;
+      inset: 16px;
+      border: 1px solid var(--gold-light);
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0;
+      animation: fadeIn 1.5s ease 0.5s forwards;
+    }
+    .page-frame::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(184,148,63,0.3);
+    }
+
+    /* Corner ornaments */
+    .corner {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+    }
+    .corner svg { width: 100%; height: 100%; }
+    .corner-tl { top: -1px; left: -1px; }
+    .corner-tr { top: -1px; right: -1px; transform: scaleX(-1); }
+    .corner-bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+    .corner-br { bottom: -1px; right: -1px; transform: scale(-1); }
+
+    /* ── MAIN LAYOUT ── */
+    .container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+      position: relative;
+      text-align: center;
+    }
+
+    /* ── FLOATING LEAVES (decorative) ── */
+    .leaves {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .leaf {
+      position: absolute;
+      opacity: 0;
+      font-size: 1.1rem;
+      animation: drift linear infinite;
+      color: var(--sage);
+    }
+    .leaf:nth-child(1)  { left: 8%;  animation: drift-a 14s linear 0s  infinite; font-size: 0.9rem; }
+    .leaf:nth-child(2)  { left: 18%; animation: drift-b 17s linear 2s  infinite; }
+    .leaf:nth-child(3)  { left: 32%; animation: drift-c 12s linear 1s  infinite; font-size: 0.75rem; }
+    .leaf:nth-child(4)  { left: 47%; animation: drift-e 16s linear 3s  infinite; }
+    .leaf:nth-child(5)  { left: 62%; animation: drift-a 13s linear 5s  infinite; font-size: 0.85rem; }
+    .leaf:nth-child(6)  { left: 75%; animation: drift-c 18s linear 1s  infinite; }
+    .leaf:nth-child(7)  { left: 88%; animation: drift-b 15s linear 4s  infinite; font-size: 0.7rem; }
+    .leaf:nth-child(8)  { left: 55%; animation: drift-e 17s linear 7s  infinite; }
+    .leaf:nth-child(9)  { left: 25%; animation: drift-a 16s linear 9s  infinite; font-size: 0.95rem; }
+    .leaf:nth-child(10) { left: 70%; animation: drift-c 14s linear 2s  infinite; font-size: 0.8rem; }
+    .leaf:nth-child(11) { left: 13%; animation: drift-broom 16s linear 0s  infinite; font-size: 1.1rem; }  /* 🧹 */
+    .leaf:nth-child(12) { left: 42%; animation: drift-f 15s linear 3s  infinite; font-size: 1rem; }        /* 🍋 */
+    .leaf:nth-child(13) { left: 79%; animation: drift-broom 19s linear 6s  infinite; font-size: 1rem; }    /* 🧹 */
+    .leaf:nth-child(14) { left: 58%; animation: drift-f 14s linear 1s  infinite; font-size: 0.95rem; }     /* 🍋 */
+
+    /* Six drift variants — each with a distinct peak opacity */
+    @keyframes drift-a {
+      0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+      5%   { opacity: 0.55; }
+      90%  { opacity: 0.48; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+    @keyframes drift-b {
+      0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+      5%   { opacity: 0.25; }
+      90%  { opacity: 0.18; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+    @keyframes drift-c {
+      0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+      5%   { opacity: 0.38; }
+      90%  { opacity: 0.30; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+    @keyframes drift-broom {
+      0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+      5%   { opacity: 0.50; }
+      90%  { opacity: 0.42; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+    @keyframes drift-e {
+      0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+      5%   { opacity: 0.45; }
+      90%  { opacity: 0.38; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+    @keyframes drift-f {
+      0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+      5%   { opacity: 0.42; }
+      90%  { opacity: 0.35; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* ── CONTENT ── */
+    .inner {
+      position: relative;
+      z-index: 2;
+      max-width: 700px;
+      width: 100%;
+    }
+
+    /* ── EYEBROW ── */
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--gold);
+      font-family: 'Lato', sans-serif;
+      font-weight: 400;
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: slideUp 0.9s ease 0.6s forwards;
+    }
+    .eyebrow-line {
+      width: 48px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold));
+    }
+    .eyebrow-line.right {
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+
+    /* ── LOGO AREA ── */
+    .logo-star {
+      display: block;
+      font-size: 1.5rem;
+      color: var(--gold);
+      margin-bottom: 10px;
+      opacity: 0;
+      animation: fadeIn 1s ease 0.8s forwards;
+      letter-spacing: 0.4em;
+    }
+
+    .logo-wordmark {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      line-height: 1.05;
+      color: var(--ink);
+      opacity: 0;
+      animation: slideUp 1s ease 0.9s forwards;
+    }
+    .logo-wordmark em {
+      font-style: italic;
+      color: var(--brown);
+    }
+
+    /* ── ORNAMENTAL DIVIDER ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 28px auto;
+      opacity: 0;
+      animation: fadeIn 1s ease 1.2s forwards;
+    }
+    .divider-line {
+      flex: 1;
+      max-width: 80px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-light));
+    }
+    .divider-line.right {
+      background: linear-gradient(90deg, var(--gold-light), transparent);
+    }
+    .divider-diamond {
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      transform: rotate(45deg);
+    }
+    .divider-diamond.sm {
+      width: 4px;
+      height: 4px;
+      background: var(--gold-light);
+    }
+
+    /* ── HEADLINE ── */
+    .headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(1.15rem, 3.5vw, 1.55rem);
+      letter-spacing: 0.03em;
+      line-height: 1.7;
+      color: var(--brown);
+      margin-bottom: 8px;
+      opacity: 0;
+      animation: slideUp 1s ease 1.3s forwards;
+    }
+
+    .headline-big {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5.5vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ink);
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: slideUp 1s ease 1.4s forwards;
+    }
+    .headline-big em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    /* ── BODY COPY ── */
+    .body-copy {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+      line-height: 1.85;
+      color: #4a3a2a;
+      max-width: 520px;
+      margin: 0 auto 36px;
+      opacity: 0;
+      animation: slideUp 1s ease 1.6s forwards;
+    }
+
+    /* ── FEATURES COMING SOON SECTION ── */
+    .features-section {
+      margin-bottom: 44px;
+      opacity: 0;
+      animation: slideUp 1s ease 1.8s forwards;
+    }
+    .features-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .features-header-line {
+      flex: 1;
+      max-width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(184,148,63,0.4));
+    }
+    .features-header-line.right {
+      background: linear-gradient(90deg, rgba(184,148,63,0.4), transparent);
+    }
+    .features-header-text {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    @media (max-width: 500px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .feature-card {
+      background: var(--warm-white);
+      border: 1px solid rgba(184,148,63,0.25);
+      border-radius: 3px;
+      padding: 16px 12px 14px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::after {
+      content: 'COMING SOON';
+      position: absolute;
+      top: 6px;
+      right: -22px;
+      background: var(--gold);
+      color: var(--cream);
+      font-family: 'Lato', sans-serif;
+      font-size: 0.42rem;
+      letter-spacing: 0.1em;
+      padding: 2px 28px;
+      transform: rotate(35deg);
+      opacity: 0.7;
+    }
+    .feature-emoji {
+      display: block;
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      line-height: 1;
+    }
+    .feature-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.95rem;
+      font-weight: 400;
+      color: var(--brown);
+      line-height: 1.3;
+    }
+
+    /* ── NOTIFY CTA ── */
+    .notify-box {
+      background: var(--warm-white);
+      border: 1px solid var(--gold-light);
+      border-radius: 3px;
+      padding: 28px 32px;
+      max-width: 440px;
+      margin: 0 auto 40px;
+      opacity: 0;
+      animation: slideUp 1s ease 2s forwards;
+      position: relative;
+    }
+    .notify-box::before {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 1px solid rgba(184,148,63,0.15);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+    .notify-label {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .notify-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      color: #5a4030;
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+    .notify-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      font-family: 'Lato', sans-serif;
+      font-weight: 400;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 11px 24px;
+      border-radius: 2px;
+      transition: all 0.25s ease;
+      display: inline-block;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--gold);
+      color: var(--cream);
+      border: 1px solid var(--gold);
+    }
+    .btn-primary:hover {
+      background: var(--brown);
+      border-color: var(--brown);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--brown);
+      border: 1px solid var(--gold-light);
+    }
+    .btn-ghost:hover {
+      background: var(--gold-pale);
+      border-color: var(--gold);
+    }
+
+    /* ── COUNTDOWN (commented out — uncomment to re-enable)
+    .countdown-wrap {
+      margin-bottom: 44px;
+      opacity: 0;
+      animation: slideUp 1s ease 2.1s forwards;
+    }
+    .countdown-label {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 14px;
+    }
+    .countdown {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .countdown-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .countdown-num {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1;
+      min-width: 2ch;
+      text-align: center;
+    }
+    .countdown-sep {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--gold-light);
+      line-height: 1;
+      padding-top: 4px;
+      font-weight: 300;
+    }
+    .countdown-unit-label {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    ── END COUNTDOWN ── */
+
+    /* ── SOCIAL ── */
+    .social-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      opacity: 0;
+      animation: fadeIn 1s ease 2.4s forwards;
+      margin-bottom: 20px;
+    }
+    .social-link {
+      color: var(--gold);
+      text-decoration: none;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .social-link:hover { color: var(--brown); }
+    .social-dot {
+      width: 3px;
+      height: 3px;
+      background: var(--gold-light);
+      border-radius: 50%;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 16px;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(92,61,30,0.45);
+      opacity: 0;
+      animation: fadeIn 1s ease 2.6s forwards;
+    }
+
+    /* ── DECORATIVE BG CIRCLE ── */
+    .bg-halo {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(70vw, 600px);
+      height: min(70vw, 600px);
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(212,180,106,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 480px) {
+      .page-frame { inset: 10px; }
+      .notify-box { padding: 22px 20px; }
+      .countdown { gap: 10px; }
+      .countdown-sep { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating leaves -->
+  <div class="leaves" aria-hidden="true">
+    <span class="leaf">🌿</span>
+    <span class="leaf">✦</span>
+    <span class="leaf">🌿</span>
+    <span class="leaf">✦</span>
+    <span class="leaf">🌿</span>
+    <span class="leaf">✦</span>
+    <span class="leaf">🌿</span>
+    <span class="leaf">✦</span>
+    <span class="leaf">🌿</span>
+    <span class="leaf">✦</span>
+    <span class="leaf">🧹</span>
+    <span class="leaf">🍋</span>
+    <span class="leaf">🧹</span>
+    <span class="leaf">🍋</span>
+  </div>
+
+  <!-- Background halo glow -->
+  <div class="bg-halo" aria-hidden="true"></div>
+
+  <!-- Decorative frame -->
+  <div class="page-frame" aria-hidden="true">
+    <div class="corner corner-tl">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 26 L2 2 L26 2" stroke="#b8943f" stroke-width="1.2" fill="none"/>
+        <circle cx="2" cy="2" r="2" fill="#b8943f"/>
+      </svg>
+    </div>
+    <div class="corner corner-tr">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 26 L2 2 L26 2" stroke="#b8943f" stroke-width="1.2" fill="none"/>
+        <circle cx="2" cy="2" r="2" fill="#b8943f"/>
+      </svg>
+    </div>
+    <div class="corner corner-bl">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 26 L2 2 L26 2" stroke="#b8943f" stroke-width="1.2" fill="none"/>
+        <circle cx="2" cy="2" r="2" fill="#b8943f"/>
+      </svg>
+    </div>
+    <div class="corner corner-br">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 26 L2 2 L26 2" stroke="#b8943f" stroke-width="1.2" fill="none"/>
+        <circle cx="2" cy="2" r="2" fill="#b8943f"/>
+      </svg>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="inner">
+
+      <!-- Eyebrow -->
+      <div class="eyebrow">
+        <span class="eyebrow-line"></span>
+        Easley, South Carolina
+        <span class="eyebrow-line right"></span>
+      </div>
+
+      <!-- Wordmark -->
+      <span class="logo-star" aria-hidden="true">✦ &nbsp; ✦ &nbsp; ✦</span>
+      <h1 class="logo-wordmark">Pendleton <em>Plantation</em></h1>
+
+      <!-- Divider -->
+      <div class="divider" aria-hidden="true">
+        <div class="divider-line"></div>
+        <div class="divider-diamond sm"></div>
+        <div class="divider-diamond"></div>
+        <div class="divider-diamond sm"></div>
+        <div class="divider-line right"></div>
+      </div>
+
+      <!-- Headline -->
+      <p class="headline">Your neighborhood hub is getting a glow-up.</p>
+      <h2 class="headline-big">Something <em>Good</em><br>Is Coming</h2>
+
+      <!-- Body -->
+      <p class="body-copy">
+        We're sweeping the porch, setting out the sweet tea, and putting the finishing 
+        touches on something your neighborhood is really going to love. 
+        Check back soon — we promise it'll be worth the wait.
+      </p>
+
+      <!-- Features coming soon -->
+      <div class="features-section">
+        <div class="features-header">
+          <span class="features-header-line"></span>
+          <span class="features-header-text">✦ &nbsp; Get excited — check back often for features like these &nbsp; ✦</span>
+          <span class="features-header-line right"></span>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <span class="feature-emoji">🐣</span>
+            <span class="feature-name">Events &amp; Sign-Ups</span>
+          </div>
+          <div class="feature-card">
+            <span class="feature-emoji">🏆</span>
+            <span class="feature-name">Neighbor Awards</span>
+          </div>
+          <div class="feature-card">
+            <span class="feature-emoji">📋</span>
+            <span class="feature-name">Bulletin Board</span>
+          </div>
+          <div class="feature-card">
+            <span class="feature-emoji">📷</span>
+            <span class="feature-name">Memory Gallery</span>
+          </div>
+          <div class="feature-card">
+            <span class="feature-emoji">📅</span>
+            <span class="feature-name">Community Calendar</span>
+          </div>
+          <div class="feature-card">
+            <span class="feature-emoji">🏡</span>
+            <span class="feature-name">HOA Resources</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- COUNTDOWN — commented out; uncomment + set LAUNCH date in script below to re-enable
+      <div class="countdown-wrap">
+        <div class="countdown-label">✦ &nbsp; Coming Real Soon &nbsp; ✦</div>
+        <div class="countdown" id="countdown" aria-live="polite">
+          <div class="countdown-unit">
+            <span class="countdown-num" id="cd-days">- -</span>
+            <span class="countdown-unit-label">Days</span>
+          </div>
+          <div class="countdown-sep" aria-hidden="true">·</div>
+          <div class="countdown-unit">
+            <span class="countdown-num" id="cd-hrs">- -</span>
+            <span class="countdown-unit-label">Hours</span>
+          </div>
+          <div class="countdown-sep" aria-hidden="true">·</div>
+          <div class="countdown-unit">
+            <span class="countdown-num" id="cd-min">- -</span>
+            <span class="countdown-unit-label">Min</span>
+          </div>
+          <div class="countdown-sep" aria-hidden="true">·</div>
+          <div class="countdown-unit">
+            <span class="countdown-num" id="cd-sec">- -</span>
+            <span class="countdown-unit-label">Sec</span>
+          </div>
+        </div>
+      </div>
+      END COUNTDOWN -->
+
+      <!-- CTA Box -->
+      <div class="notify-box">
+        <div class="notify-label">✦ &nbsp; Stay Connected &nbsp; ✦</div>
+        <p class="notify-text">
+          In the meantime, join your neighbors on Facebook or Nextdoor — 
+          the conversation is already happening. You can also reach us through 
+          the Engage Enumerate neighborhood portal.
+        </p>
+        <div class="notify-actions">
+          <a href="https://www.facebook.com/groups/pendletonplantation" target="_blank" rel="noopener" class="btn btn-primary">
+            📘 &nbsp; Facebook Group
+          </a>
+          <a href="https://engageenumerate.com" target="_blank" rel="noopener" class="btn btn-ghost">
+            🏡 &nbsp; Engage Enumerate
+          </a>
+          <a href="mailto:mandyvaliquette00@gmail.com" class="btn btn-ghost">
+            ✉️ &nbsp; Contact Us
+          </a>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <p class="footer">
+        ✦ &nbsp; Pendleton Plantation &nbsp;·&nbsp; Easley, SC &nbsp;·&nbsp; Community Hub &nbsp; ✦
+      </p>
+
+    </div>
+  </main>
+
+  <!-- COUNTDOWN SCRIPT — uncomment (along with CSS + HTML above) to re-enable.
+       Set LAUNCH to your actual target date before going live.
+  <script>
+    const LAUNCH = new Date('2025-05-15T00:00:00');
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function tick() {
+      const now  = new Date();
+      const diff = LAUNCH - now;
+      if (diff <= 0) {
+        ['cd-days','cd-hrs','cd-min','cd-sec'].forEach(id => document.getElementById(id).textContent = '00');
+        return;
+      }
+      document.getElementById('cd-days').textContent = pad(Math.floor(diff / 86400000));
+      document.getElementById('cd-hrs').textContent  = pad(Math.floor((diff % 86400000) / 3600000));
+      document.getElementById('cd-min').textContent  = pad(Math.floor((diff % 3600000)  / 60000));
+      document.getElementById('cd-sec').textContent  = pad(Math.floor((diff % 60000)    / 1000));
+    }
+    tick();
+    setInterval(tick, 1000);
+  </script>
+  END COUNTDOWN SCRIPT -->
